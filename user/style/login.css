@@ -1,10 +1,13 @@
   :root{
     --cream: #F9F5EF;
     --sand-light: #FFF0D3;
+    --summary-bg: #FAF1DE;
     --brown: #5B3A29;
     --brown-soft: #7C6A46;
+    --brown-price: #844525;
     --orange: #FE810A;
     --orange-deep: #FD590C;
+    --border: #E7DCC9;
     --text: #000000;
   }
 
@@ -72,7 +75,7 @@
     min-height: calc(100vh - 100px);
     background:
       linear-gradient(rgba(28,28,28,.35), rgba(28,28,28,.35)),
-      linear-gradient(135deg, #cfe4dd 0%, #6f9c8e 45%, #2f4d45 100%);
+      linear-gradient(135deg, #FFF0D3 0%, #FE810A 45%, #5B3A29 100%);
     background-size: cover;
     background-position: center;
     display:flex;
