@@ -1,0 +1,164 @@
+# Casadive Villa Reservation System
+
+Final Year Project (FYP) — a reservation website for Casadive Villa, covering
+villa rooms and beach campsite packages. Built against the user scope in
+`docs/Casadive Villa Reservation System (Proposal).pdf` (section 4.2):
+Administrator, Staff, and Customer each get the duties defined there.
+
+A working PHP/MySQL app: public pages, a booking form that writes real
+bookings to the database, and role-gated Admin/Staff dashboards with account
+and accommodation management.
+
+## Project structure
+
+```
+.
+├── index.php                  Home page (with a functional quick booking bar)
+├── style/
+│   └── index.css
+├── includes/                   Shared PHP (not web-facing content)
+│   ├── db.php                  PDO connection to MySQL
+│   ├── auth.php                Session + CSRF helpers: attempt_login(), current_user(), require_login(), csrf_field()/csrf_verify()
+│   ├── helpers.php             format_status() — 'checked_in' -> 'Checked In'
+│   ├── header.php              Shared <head> + navbar for public pages
+│   └── footer.php              Shared footer (+ WhatsApp card on index.php)
+├── customer/                    Public-facing pages
+│   ├── villa.php
+│   ├── campsite.php
+│   ├── contact_us.php
+│   ├── gallery.php
+│   ├── bookingform.php          Booking form -> inserts customer/booking/booking_item
+│   ├── mybooking.php            Reference + phone lookup -> printable receipt
+│   └── style/                    CSS for the pages above
+├── user/                        Admin/staff-facing pages
+│   ├── login.php                 Real session-based auth against the `user` table
+│   ├── logout.php
+│   ├── admin_dashboard.php       role=admin only: bookings, accommodations, accounts
+│   ├── manage_account.php        role=admin only: create/edit/delete staff & admin accounts
+│   ├── manage_accommodation.php  role=admin only: create/edit/delete Villa & Campsite packages
+│   ├── staff_dashboard.php       role=staff or admin: bookings, accommodation status, payments
+│   ├── booking_receipt.php       role=admin or staff: view/print any booking's receipt
+│   └── style/
+│       ├── login.css
+│       ├── dashboard.css
+│       └── receipt.css
+├── database/
+│   └── database.sql             MySQL schema + seed data
+├── docs/                        Project deliverables (proposal, SRS, ERD, etc.)
+└── README.md
+```
+
+Every top-level folder (root, `customer/`, `user/`) keeps its own `style/`
+subfolder — no shared/cross-folder stylesheets.
+
+All internal links are relative — `index.php` sits at the site root, and
+pages under `customer/` and `user/` link back to it with `../`.
+
+## Getting started (XAMPP)
+
+1. Copy this folder into `C:\xampp\htdocs\`.
+2. Start **Apache** and **MySQL** from the XAMPP control panel.
+3. Import the schema: open phpMyAdmin (`http://localhost/phpmyadmin`) and run
+   `database/database.sql`, or from a terminal:
+   ```
+   mysql -u root < database/database.sql
+   ```
+   This creates the `casadive_villa_reservation` database, seeds 8
+   Villa/Campsite accommodation packages, and creates two login accounts:
+
+   | Username | Password | Role |
+   |---|---|---|
+   | `admin` | `Admin@12345` | admin |
+   | `staff` | `Staff@12345` | staff |
+
+   Both passwords are stored as bcrypt hashes — change them before any real
+   deployment. `includes/db.php` connects as `root` with no password, XAMPP's
+   default; edit it if your MySQL user differs.
+4. Visit `http://localhost/<project-folder>/index.php`.
+
+## User scope (per the proposal) and what's built
+
+**Administrator** — `user/admin_dashboard.php`, `manage_account.php`, `manage_accommodation.php`
+- Add/update/delete Villa & Campsite packages (price, capacity, status) — `manage_accommodation.php`
+- Manage bookings and their status — inline on the dashboard
+- Monitor payment status per booking (read-only column, sourced from `payment`)
+- Manage staff **and admin** accounts, including changing her own username/
+  password (a "My Account" shortcut in the topbar) — `manage_account.php`
+- Manage customer records — implicit via the bookings list (customer rows are
+  created through the booking flow, no separate customer accounts)
+- Business analytics dashboard (Power BI) — **not built**; out of scope for
+  this environment (no Power BI licence/embed target). The stat tiles on the
+  dashboards are the closest equivalent.
+
+**Staff** — `user/staff_dashboard.php`, `booking_receipt.php`
+- View/manage bookings, update status through the full proposal lifecycle:
+  Pending → Confirmed → Checked-in → Checked-out, or Cancelled
+- Verify/record payment status — a "Record a Payment" form writes to the
+  `payment` table (deposit amount, status, receipt note), shown against each
+  booking and in a running Recent Payments list
+- Update room availability / record maintenance status — a status-only
+  toggle per accommodation (no name/price/capacity edit access — that's
+  admin-only)
+- Generate booking confirmations and receipts — `booking_receipt.php`
+  (print-ready, same layout as the customer-facing one)
+- View customer booking information — the bookings table
+
+**Customer** — `customer/*.php`
+- Browse Villa/Campsite packages, check availability via the homepage's
+  quick booking bar (real check-in/check-out/guests/type inputs that prefill
+  `bookingform.php`) or a package's "Book now" button
+- Make online bookings, receive a reference number and receipt
+- Look up booking status any time via reference + phone
+  (`customer/mybooking.php`) — no customer login exists, so this mirrors an
+  airline "manage my booking" flow
+- Contact the villa — `contact_us.php`
+
+## How the pieces connect
+
+- **Booking flow**: `customer/villa.php` / `campsite.php` "Book now" buttons
+  deep-link into `customer/bookingform.php?accommodation=<package name>`.
+  The homepage's quick booking bar instead passes `check_in`/`check_out`/
+  `guests`/`type`, which prefill the form and (client-side) preselect the
+  first package matching that type. The accommodation dropdown is always
+  populated live from the `accommodation` table. On submit, the form
+  validates server-side (dates, guest count vs. capacity), computes the
+  total/deposit from the DB price, and inserts a `customer` + `booking` +
+  `booking_item` row in one transaction.
+- **Auth**: `user/login.php` checks credentials against `user.password`
+  (bcrypt) via `password_verify()`, then stores a session in
+  `$_SESSION['user']`. `includes/auth.php`'s `require_login($roles)` guards
+  every admin/staff page and redirects/403s as appropriate.
+- **CSRF**: every state-changing POST (login, booking submission, status
+  updates, account/accommodation create-edit-delete, payment recording)
+  carries a per-session token via `csrf_field()`/`csrf_verify()`.
+- **Account management**: `admin_dashboard.php` links to
+  `manage_account.php` (add/edit/delete) and `manage_accommodation.php`
+  (add/edit/delete) — both `require_login(['admin'])`-gated; staff has no
+  such link. Guardrails, enforced server-side (not just hidden in the UI):
+  you can't delete your own account, can't delete/demote/deactivate the
+  last remaining active admin, and editing your **own** account never
+  accepts a role/status change even if the fields are tampered with —
+  another admin has to do that.
+- **MyBooking**: `customer/mybooking.php` looks a booking up by reference +
+  phone and renders a receipt (guest/stay details, special request, price
+  breakdown, deposit vs. balance due) with a `window.print()` button and
+  print-specific CSS. `user/booking_receipt.php` is the same receipt for
+  logged-in staff/admin, viewable by booking ID with no phone check needed.
+
+## Database
+
+See `database/database.sql` for the full schema (`user`, `customer`,
+`accommodation`, `booking`, `booking_item`, `payment`, `review`,
+`notification_status`), based on `docs/ERD Casadive Villa Reservation
+System.drawio.pdf`. `booking.booking_status` follows the proposal's exact
+lifecycle: `pending`, `confirmed`, `checked_in`, `checked_out`, `cancelled`.
+The `review` table exists in the schema but has no UI yet — it wasn't in the
+proposal's five numbered system-scope modules, so it's a known gap rather
+than a silent omission.
+
+## Tech stack
+
+- PHP 8 (PDO, prepared statements throughout)
+- MySQL / MariaDB (via XAMPP)
+- HTML5 / CSS3, vanilla JS (no framework)
+- Google Fonts: Dancing Script, Mulish, Poppins, Raleway, Inter
