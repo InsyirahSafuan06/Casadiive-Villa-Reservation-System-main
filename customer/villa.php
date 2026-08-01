@@ -1,4 +1,16 @@
 <?php
+require_once __DIR__ . '/../includes/db.php';
+
+$villas = $pdo->query(
+    "SELECT * FROM accommodation WHERE accommodation_type = 'Villa' AND status = 'available' ORDER BY accommodation_id"
+)->fetchAll();
+
+$icons = [
+    'room' => '<svg viewBox="0 0 32 32"><path d="M4 18v8h2v-3h20v3h2v-8a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4z" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="10" cy="15" r="2.5"/></svg>',
+    'pool' => '<svg viewBox="0 0 32 32"><path d="M4 24c2.5 0 2.5-3 5-3s2.5 3 5 3 2.5-3 5-3 2.5 3 5 3 2.5-3 5-3v4H4z"/><circle cx="15" cy="10" r="4.5"/></svg>',
+    'wifi' => '<svg viewBox="0 0 32 32"><path d="M16 24a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM5.3 13.3c6-6 15.3-6 21.3 0l-2.7 2.7c-4.7-4.7-11.3-4.7-16 0l-2.7-2.7zM9.3 17.3c4-4 9.3-4 13.3 0l-2.7 2.7c-2.7-2.7-5.3-2.7-8 0l-2.7-2.7zM13.3 21.3c2-2 3.3-2 5.3 0l-2.7 2.7-2.7-2.7z"/></svg>',
+];
+
 $base = '../';
 $active = 'villa';
 $pageTitle = 'Villa Packages — Casadive Villa';
@@ -17,123 +29,46 @@ include __DIR__ . '/../includes/header.php';
   <section class="packages" id="packages">
     <div class="container package-grid">
 
-      <!-- Casa 1 -->
+      <?php foreach ($villas as $villa):
+        $searchText = strtolower(($villa['features'] ?? '') . ' ' . ($villa['description'] ?? ''));
+        $hasPool = strpos($searchText, 'pool') !== false;
+        $hasWifi = strpos($searchText, 'wifi') !== false;
+        $roomLabel = ($hasPool || $hasWifi) ? 'Room' : 'Room Only';
+        $paxLabel = $villa['pax_label'] ?: ('Max ' . (int) $villa['capacity'] . ' guests');
+        $mediaStyle = $villa['image'] ? ' style="background-image:url(\'' . htmlspecialchars($villa['image']) . '\');background-size:cover;background-position:center;"' : '';
+      ?>
       <article class="package-card">
-        <div class="package-media">
+        <div class="package-media"<?= $mediaStyle ?>>
           <div class="package-badges">
-            <span class="badge unit">1 Unit Only</span>
+            <span class="badge">MAX <?= (int) $villa['capacity'] ?> PAX</span>
           </div>
         </div>
         <div class="package-body">
-          <h3 class="package-name">Casa 1</h3>
+          <h3 class="package-name"><?= htmlspecialchars($villa['accommodation_name']) ?></h3>
           <div class="package-features">
-            <div class="feature">
-              <svg viewBox="0 0 32 32"><path d="M4 18v8h2v-3h20v3h2v-8a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4z" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="10" cy="15" r="2.5"/></svg>
-              <span>Room Only</span>
-            </div>
+            <div class="feature"><?= $icons['room'] ?><span><?= $roomLabel ?></span></div>
+            <?php if ($hasPool): ?>
+              <div class="feature"><?= $icons['pool'] ?><span>Pool</span></div>
+            <?php endif; ?>
+            <?php if ($hasWifi): ?>
+              <div class="feature"><?= $icons['wifi'] ?><span>Wifi</span></div>
+            <?php endif; ?>
           </div>
           <hr class="package-divider">
           <div class="package-footer">
-            <span class="package-price">RM 359</span>
+            <span class="package-price">RM <?= number_format((float) $villa['price'], 0) ?></span>
             <div class="package-actions">
-              <a href="accommodation_detail.php?id=1" class="btn view-detail">View Detail</a>
-              <a href="bookingform.php?accommodation=Casa%201" class="btn book-now">Book now</a>
+              <a href="detail.php?id=<?= (int) $villa['accommodation_id'] ?>" class="btn view-detail">View Detail</a>
+              <a href="bookingform.php?accommodation=<?= urlencode($villa['accommodation_name']) ?>" class="btn book-now">Book now</a>
             </div>
           </div>
         </div>
       </article>
+      <?php endforeach; ?>
 
-      <!-- Casa 2 -->
-      <article class="package-card">
-        <div class="package-media"></div>
-        <div class="package-body">
-          <h3 class="package-name">Casa 2</h3>
-          <div class="package-features">
-            <div class="feature">
-              <svg viewBox="0 0 32 32"><path d="M4 18v8h2v-3h20v3h2v-8a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4z" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="10" cy="15" r="2.5"/></svg>
-              <span>Room</span>
-            </div>
-            <div class="feature">
-              <svg viewBox="0 0 32 32"><path d="M4 24c2.5 0 2.5-3 5-3s2.5 3 5 3 2.5-3 5-3 2.5 3 5 3 2.5-3 5-3v4H4z"/><circle cx="15" cy="10" r="4.5"/></svg>
-              <span>Pool</span>
-            </div>
-            <div class="feature">
-              <svg viewBox="0 0 32 32"><path d="M16 24a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM5.3 13.3c6-6 15.3-6 21.3 0l-2.7 2.7c-4.7-4.7-11.3-4.7-16 0l-2.7-2.7zM9.3 17.3c4-4 9.3-4 13.3 0l-2.7 2.7c-2.7-2.7-5.3-2.7-8 0l-2.7-2.7zM13.3 21.3c2-2 3.3-2 5.3 0l-2.7 2.7-2.7-2.7z"/></svg>
-              <span>Wifi</span>
-            </div>
-          </div>
-          <hr class="package-divider">
-          <div class="package-footer">
-            <span class="package-price">RM 239</span>
-            <div class="package-actions">
-              <a href="accommodation_detail.php?id=2" class="btn view-detail">View Detail</a>
-              <a href="bookingform.php?accommodation=Casa%202" class="btn book-now">Book now</a>
-            </div>
-          </div>
-        </div>
-      </article>
-
-      <!-- Casa 3 -->
-      <article class="package-card">
-        <div class="package-media">
-          <div class="package-badges">
-            <span class="badge">MAX 2 PAX</span>
-            <span class="badge unit">1 Unit Only</span>
-          </div>
-        </div>
-        <div class="package-body">
-          <h3 class="package-name">Casa 3</h3>
-          <div class="package-features">
-            <div class="feature">
-              <svg viewBox="0 0 32 32"><path d="M4 18v8h2v-3h20v3h2v-8a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4z" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="10" cy="15" r="2.5"/></svg>
-              <span>Room Only</span>
-            </div>
-          </div>
-          <hr class="package-divider">
-          <div class="package-footer">
-            <span class="package-price">RM 339</span>
-            <div class="package-actions">
-              <a href="accommodation_detail.php?id=3" class="btn view-detail">View Detail</a>
-              <a href="bookingform.php?accommodation=Casa%203" class="btn book-now">Book now</a>
-            </div>
-          </div>
-        </div>
-      </article>
-
-      <!-- Casa 4 -->
-      <article class="package-card">
-        <div class="package-media">
-          <div class="package-badges">
-            <span class="badge">MAX 6 PAX</span>
-            <span class="badge unit">1 Unit Only</span>
-          </div>
-        </div>
-        <div class="package-body">
-          <h3 class="package-name">Casa 4</h3>
-          <div class="package-features">
-            <div class="feature">
-              <svg viewBox="0 0 32 32"><path d="M4 18v8h2v-3h20v3h2v-8a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4z" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="10" cy="15" r="2.5"/></svg>
-              <span>Room</span>
-            </div>
-            <div class="feature">
-              <svg viewBox="0 0 32 32"><path d="M4 24c2.5 0 2.5-3 5-3s2.5 3 5 3 2.5-3 5-3 2.5 3 5 3 2.5-3 5-3v4H4z"/><circle cx="15" cy="10" r="4.5"/></svg>
-              <span>Pool</span>
-            </div>
-            <div class="feature">
-              <svg viewBox="0 0 32 32"><path d="M16 24a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM5.3 13.3c6-6 15.3-6 21.3 0l-2.7 2.7c-4.7-4.7-11.3-4.7-16 0l-2.7-2.7zM9.3 17.3c4-4 9.3-4 13.3 0l-2.7 2.7c-2.7-2.7-5.3-2.7-8 0l-2.7-2.7zM13.3 21.3c2-2 3.3-2 5.3 0l-2.7 2.7-2.7-2.7z"/></svg>
-              <span>Wifi</span>
-            </div>
-          </div>
-          <hr class="package-divider">
-          <div class="package-footer">
-            <span class="package-price">RM 359</span>
-            <div class="package-actions">
-              <a href="accommodation_detail.php?id=4" class="btn view-detail">View Detail</a>
-              <a href="bookingform.php?accommodation=Casa%204" class="btn book-now">Book now</a>
-            </div>
-          </div>
-        </div>
-      </article>
+      <?php if (!$villas): ?>
+        <p style="font-family:'Raleway',sans-serif;font-weight:600;">No villa packages are available right now. Please check back soon.</p>
+      <?php endif; ?>
 
     </div>
   </section>

@@ -1,4 +1,8 @@
 .DS_Store
 Thumbs.db
 .vscode/
+.idea/
 *.log
+.env
+vendor/
+node_modules/

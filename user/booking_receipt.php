@@ -125,7 +125,7 @@ $backUrl = $currentUser['role'] === 'admin' ? 'admin_dashboard.php' : 'staff_das
               <span>RM <?= number_format((float) $booking['total_amount'], 2) ?></span>
             </div>
             <div class="receipt-row">
-              <span>Deposit (30%)</span>
+              <span>Deposit</span>
               <span>RM <?= number_format((float) $booking['deposit_amount'], 2) ?></span>
             </div>
             <div class="receipt-row balance">

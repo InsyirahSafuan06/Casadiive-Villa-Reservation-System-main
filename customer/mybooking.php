@@ -1,13 +1,62 @@
 <?php
 require_once __DIR__ . '/../includes/db.php';
+require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/helpers.php';
 
 $ref = isset($_GET['ref']) ? trim((string) $_GET['ref']) : '';
 $phone = isset($_GET['phone']) ? trim((string) $_GET['phone']) : '';
+$reviewError = null;
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['form'] ?? '') === 'review') {
+    $rRef = filter_var($_POST['ref'] ?? '', FILTER_VALIDATE_INT);
+    $rPhone = trim((string) ($_POST['phone'] ?? ''));
+    $rating = filter_var($_POST['rating'] ?? '', FILTER_VALIDATE_INT);
+    $comment = trim((string) ($_POST['comment'] ?? ''));
+
+    if (!csrf_verify()) {
+        $reviewError = 'Your session expired. Please try again.';
+    } elseif ($rRef === false || $rPhone === '') {
+        $reviewError = 'Invalid booking reference.';
+    } elseif ($rating === false || $rating < 1 || $rating > 5) {
+        $reviewError = 'Please choose a rating between 1 and 5 stars.';
+    } else {
+        $stmt = $pdo->prepare(
+            "SELECT b.booking_id FROM booking b JOIN customer c ON c.customer_id = b.customer_id
+             WHERE b.booking_id = :ref AND c.phone = :phone AND b.booking_status = 'checked_out'"
+        );
+        $stmt->execute(['ref' => $rRef, 'phone' => $rPhone]);
+        if (!$stmt->fetch()) {
+            $reviewError = 'We could not verify that booking for a review.';
+        } else {
+            try {
+                $stmt = $pdo->prepare(
+                    'INSERT INTO review (booking_id, rating, comment) VALUES (:booking_id, :rating, :comment)'
+                );
+                $stmt->execute([
+                    'booking_id' => $rRef,
+                    'rating' => $rating,
+                    'comment' => $comment !== '' ? $comment : null,
+                ]);
+            } catch (Exception $e) {
+                $reviewError = 'You have already reviewed this booking.';
+            }
+        }
+    }
+
+    if (!$reviewError) {
+        header('Location: mybooking.php?ref=' . $rRef . '&phone=' . urlencode($rPhone));
+        exit;
+    }
+
+    $ref = (string) $rRef;
+    $phone = $rPhone;
+}
+
 $lookupAttempted = $ref !== '' || $phone !== '';
 $lookupError = null;
 $booking = null;
 $items = [];
+$existingReview = null;
 
 if ($lookupAttempted) {
     $refId = filter_var($ref, FILTER_VALIDATE_INT);
@@ -36,6 +85,10 @@ if ($lookupAttempted) {
             );
             $stmt->execute(['id' => $booking['booking_id']]);
             $items = $stmt->fetchAll();
+
+            $stmt = $pdo->prepare('SELECT rating, comment, review_date FROM review WHERE booking_id = :id');
+            $stmt->execute(['id' => $booking['booking_id']]);
+            $existingReview = $stmt->fetch() ?: null;
         }
     }
 }
@@ -123,7 +176,7 @@ include __DIR__ . '/../includes/header.php';
               <span>RM <?= number_format((float) $booking['total_amount'], 2) ?></span>
             </div>
             <div class="receipt-row">
-              <span>Deposit (30%)</span>
+              <span>Deposit</span>
               <span>RM <?= number_format((float) $booking['deposit_amount'], 2) ?></span>
             </div>
             <div class="receipt-row balance">
@@ -138,6 +191,42 @@ include __DIR__ . '/../includes/header.php';
           <a href="mybooking.php" class="receipt-back">Look Up Another Booking</a>
         </div>
       </div>
+
+      <?php if ($booking['booking_status'] === 'checked_out'): ?>
+      <div class="receipt-card review-card">
+        <?php if ($existingReview): ?>
+          <h3>Your Review</h3>
+          <div class="stars" aria-label="<?= (int) $existingReview['rating'] ?> out of 5 stars">
+            <?php for ($i = 1; $i <= 5; $i++): ?>
+              <svg viewBox="0 0 20 19" class="<?= $i <= (int) $existingReview['rating'] ? '' : 'star-empty' ?>"><polygon points="10,0 12.5,7 20,7 14,11.5 16,19 10,14.5 4,19 6,11.5 0,7 7.5,7"/></svg>
+            <?php endfor; ?>
+          </div>
+          <?php if ($existingReview['comment']): ?>
+            <p class="review-comment"><?= nl2br(htmlspecialchars($existingReview['comment'])) ?></p>
+          <?php endif; ?>
+          <p class="review-date">Reviewed on <?= htmlspecialchars(date('d M Y', strtotime($existingReview['review_date']))) ?></p>
+        <?php else: ?>
+          <h3>Leave a Review</h3>
+          <?php if ($reviewError): ?>
+            <p class="lookup-error"><?= htmlspecialchars($reviewError) ?></p>
+          <?php endif; ?>
+          <form method="post" class="review-form">
+            <?= csrf_field() ?>
+            <input type="hidden" name="form" value="review">
+            <input type="hidden" name="ref" value="<?= (int) $booking['booking_id'] ?>">
+            <input type="hidden" name="phone" value="<?= htmlspecialchars($booking['phone']) ?>">
+            <div class="rating-picker" role="radiogroup" aria-label="Rating">
+              <?php for ($i = 5; $i >= 1; $i--): ?>
+                <input type="radio" name="rating" id="rating-<?= $i ?>" value="<?= $i ?>" <?= $i === 5 ? 'checked' : '' ?>>
+                <label for="rating-<?= $i ?>" title="<?= $i ?> stars">&#9733;</label>
+              <?php endfor; ?>
+            </div>
+            <textarea name="comment" rows="3" placeholder="Tell us about your stay (optional)"></textarea>
+            <button type="submit" class="lookup-submit">Submit Review</button>
+          </form>
+        <?php endif; ?>
+      </div>
+      <?php endif; ?>
     </div>
   </section>
 

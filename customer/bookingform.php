@@ -14,7 +14,6 @@ $old = [
     'accommodation_id' => '',
     'special_request' => '',
 ];
-$successBookingId = null;
 
 $accommodations = $pdo->query(
     "SELECT accommodation_id, accommodation_name, accommodation_type, price, price_weekend, capacity
@@ -28,10 +27,12 @@ foreach ($accommodations as $acc) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    // Prefill from the homepage's quick booking bar (check_in/check_out/guests/type).
+    // Prefill from the homepage's quick booking bar or package links.
     $qbCheckIn = trim((string) ($_GET['check_in'] ?? ''));
     $qbCheckOut = trim((string) ($_GET['check_out'] ?? ''));
     $qbGuests = trim((string) ($_GET['guests'] ?? ''));
+    $qbAccommodation = trim((string) ($_GET['accommodation'] ?? ''));
+    $qbType = trim((string) ($_GET['type'] ?? ''));
 
     if (DateTime::createFromFormat('Y-m-d', $qbCheckIn)) {
         $old['check_in'] = $qbCheckIn;
@@ -41,6 +42,24 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     }
     if (filter_var($qbGuests, FILTER_VALIDATE_INT) !== false && (int) $qbGuests >= 1) {
         $old['total_guest'] = $qbGuests;
+    }
+
+    if ($qbAccommodation !== '') {
+        foreach ($accommodations as $acc) {
+            if (strcasecmp($acc['accommodation_name'], $qbAccommodation) === 0) {
+                $old['accommodation_id'] = (string) $acc['accommodation_id'];
+                break;
+            }
+        }
+    }
+
+    if ($old['accommodation_id'] === '' && $qbType !== '') {
+        foreach ($accommodations as $acc) {
+            if (strcasecmp($acc['accommodation_type'], $qbType) === 0) {
+                $old['accommodation_id'] = (string) $acc['accommodation_id'];
+                break;
+            }
+        }
     }
 }
 
@@ -84,6 +103,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors[] = 'Please select a valid accommodation package.';
     } elseif ($totalGuest !== false && $totalGuest > (int) $selectedAccommodation['capacity']) {
         $errors[] = "This package can only host up to {$selectedAccommodation['capacity']} guests.";
+    } elseif ($checkIn && $checkOut) {
+        $stmt = $pdo->prepare(
+            "SELECT 1
+             FROM booking_item bi
+             JOIN booking b ON b.booking_id = bi.booking_id
+             WHERE bi.accommodation_id = :accommodation_id
+               AND b.booking_status != 'cancelled'
+               AND b.check_in < :check_out
+               AND b.check_out > :check_in
+             LIMIT 1"
+        );
+        $stmt->execute([
+            'accommodation_id' => $accommodationId,
+            'check_in' => $checkIn->format('Y-m-d'),
+            'check_out' => $checkOut->format('Y-m-d'),
+        ]);
+        if ($stmt->fetch()) {
+            $errors[] = "{$selectedAccommodation['accommodation_name']} is already booked for part of those dates. Please choose different dates or a different package.";
+        }
     }
 
     if (!$errors) {
@@ -91,7 +129,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $weekendPrice = $selectedAccommodation['price_weekend'] !== null ? (float) $selectedAccommodation['price_weekend'] : null;
         $stay = compute_stay_price($weekdayPrice, $weekendPrice, $checkIn, $checkOut);
         $totalAmount = $stay['total'];
-        $depositAmount = round($totalAmount * 0.30, 2);
+        $depositAmount = 50.00;
 
         try {
             $pdo->beginTransaction();
@@ -138,22 +176,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         if (!$errors) {
-            header('Location: bookingform.php?success=' . $bookingId);
+            header('Location: payment.php?booking_id=' . $bookingId);
             exit;
         }
-    }
-}
-
-if (isset($_GET['success']) && ctype_digit((string) $_GET['success'])) {
-    $stmt = $pdo->prepare(
-        'SELECT b.*, c.full_name, c.phone, c.plate_num
-         FROM booking b JOIN customer c ON c.customer_id = b.customer_id
-         WHERE b.booking_id = :id'
-    );
-    $stmt->execute(['id' => $_GET['success']]);
-    $successBooking = $stmt->fetch();
-    if ($successBooking) {
-        $successBookingId = (int) $successBooking['booking_id'];
     }
 }
 
@@ -171,7 +196,7 @@ include __DIR__ . '/../includes/header.php';
       <span class="step-label">Details</span>
     </div>
     <span class="step-line"></span>
-    <div class="step<?= $successBookingId ? ' is-active' : '' ?>">
+    <div class="step">
       <span class="step-circle">2</span>
       <span class="step-label">Payment</span>
     </div>
@@ -188,22 +213,19 @@ include __DIR__ . '/../includes/header.php';
     <p>Please fill in your details to continue with your reservations.</p>
   </div>
 
-  <?php if ($successBookingId): ?>
-  <section class="booking-section">
-    <div class="container">
-      <div class="summary-card" style="max-width:620px;margin:0 auto;">
-        <h2 class="summary-title">Booking Received</h2>
-        <p style="font-family:'Raleway',sans-serif;font-weight:600;color:#000;margin-bottom:20px;">
-          Thanks, <?= htmlspecialchars($successBooking['full_name']) ?> — your booking reference is
-          <strong>#<?= $successBookingId ?></strong>. It is currently <strong><?= htmlspecialchars($successBooking['booking_status']) ?></strong>
-          pending deposit payment of RM <?= number_format((float) $successBooking['deposit_amount'], 2) ?>.
-        </p>
-        <a href="mybooking.php?ref=<?= $successBookingId ?>&phone=<?= urlencode($successBooking['phone']) ?>" class="proceed-btn" style="max-width:none;margin-bottom:14px;">View / Print Receipt</a>
-        <a href="villa.php" class="proceed-btn" style="max-width:none;background:transparent;color:var(--brown-price);border:1px solid var(--brown-price);">Back to Packages</a>
-      </div>
+  <!-- POLICY NOTICE -->
+  <div class="container">
+    <div class="policy-notice">
+      <h3>Good to know before you book</h3>
+      <ul>
+        <li><strong>Deposit:</strong> RM 50 to confirm your reservation</li>
+        <li><strong>Check-in:</strong> After 3.00 PM</li>
+        <li><strong>Check-out:</strong> Before 12.00 PM</li>
+        <li><strong>Check-in Method:</strong> Self Check-in</li>
+        <li>Please contact the admin one day before check-in to get the lock box code.</li>
+      </ul>
     </div>
-  </section>
-  <?php else: ?>
+  </div>
 
   <!-- BOOKING FORM -->
   <section class="booking-section">
@@ -301,22 +323,23 @@ include __DIR__ . '/../includes/header.php';
               <div class="summary-row"><span>Number of guests</span><span id="s-guests">1</span></div>
               <div class="summary-row"><span>Nights</span><span id="s-nights">1</span></div>
               <div class="summary-row"><span>Rate</span><span id="s-price">RM 0.00</span></div>
-              <div class="summary-row"><span>Deposit (30%)</span><span id="s-deposit">RM 0.00</span></div>
+              <div class="summary-row"><span>Deposit</span><span id="s-deposit">RM 0.00</span></div>
               <div class="summary-row total"><span>Total Price</span><span id="s-total">RM 0.00</span></div>
             </div>
           </aside>
 
         </div>
 
-        <button type="submit" class="proceed-btn">Proceed to Payment</button>
+        <div class="form-actions">
+          <a href="villa.php" class="proceed-btn proceed-btn-outline">Back to Packages</a>
+          <button type="submit" class="proceed-btn">Proceed to Payment</button>
+        </div>
       </form>
     </div>
   </section>
-  <?php endif; ?>
 
 <?php include __DIR__ . '/../includes/footer.php'; ?>
 
-<?php if (!$successBookingId): ?>
 <script>
   const form = document.getElementById('booking-form');
   const accommodationSelect = document.getElementById('accommodation');
@@ -365,7 +388,7 @@ include __DIR__ . '/../includes/header.php';
 
     const stay = computeStay(checkIn, checkOut, weekdayPrice, weekendPrice);
     const totalNights = stay.weekdayNights + stay.weekendNights;
-    const deposit = stay.total * 0.3;
+    const deposit = hasPackage ? 50 : 0;
 
     document.getElementById('s-nights').textContent = totalNights;
 
@@ -392,4 +415,3 @@ include __DIR__ . '/../includes/header.php';
   form.addEventListener('input', updateSummary);
   updateSummary();
 </script>
-<?php endif; ?>

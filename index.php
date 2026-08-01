@@ -1,4 +1,15 @@
 <?php
+require_once __DIR__ . '/includes/db.php';
+
+$reviews = $pdo->query(
+    "SELECT r.rating, r.comment, r.review_date, c.full_name
+     FROM review r
+     JOIN booking b ON b.booking_id = r.booking_id
+     JOIN customer c ON c.customer_id = b.customer_id
+     ORDER BY r.review_date DESC
+     LIMIT 6"
+)->fetchAll();
+
 $base = '';
 $active = 'home';
 $pageTitle = 'Casadive Villa — Spend your Dream Holidays with us';
@@ -113,57 +124,28 @@ include __DIR__ . '/includes/header.php';
   <section class="testimonials">
     <div class="container">
       <h2>What Our Guests Say</h2>
+
+      <?php if ($reviews): ?>
       <div class="testimonial-track">
-
+        <?php foreach ($reviews as $review): ?>
         <article class="testimonial-card">
-          <div class="stars" aria-label="5 out of 5 stars">
-            <svg viewBox="0 0 20 19"><polygon points="10,0 12.5,7 20,7 14,11.5 16,19 10,14.5 4,19 6,11.5 0,7 7.5,7"/></svg>
-            <svg viewBox="0 0 20 19"><polygon points="10,0 12.5,7 20,7 14,11.5 16,19 10,14.5 4,19 6,11.5 0,7 7.5,7"/></svg>
-            <svg viewBox="0 0 20 19"><polygon points="10,0 12.5,7 20,7 14,11.5 16,19 10,14.5 4,19 6,11.5 0,7 7.5,7"/></svg>
-            <svg viewBox="0 0 20 19"><polygon points="10,0 12.5,7 20,7 14,11.5 16,19 10,14.5 4,19 6,11.5 0,7 7.5,7"/></svg>
-            <svg viewBox="0 0 20 19"><polygon points="10,0 12.5,7 20,7 14,11.5 16,19 10,14.5 4,19 6,11.5 0,7 7.5,7"/></svg>
+          <div class="stars" aria-label="<?= (int) $review['rating'] ?> out of 5 stars">
+            <?php for ($i = 1; $i <= 5; $i++): ?>
+              <svg viewBox="0 0 20 19" class="<?= $i <= (int) $review['rating'] ? '' : 'star-empty' ?>"><polygon points="10,0 12.5,7 20,7 14,11.5 16,19 10,14.5 4,19 6,11.5 0,7 7.5,7"/></svg>
+            <?php endfor; ?>
           </div>
-          <p class="testimonial-date">2 Mar. 2023</p>
-          <p class="testimonial-quote">The villa is very clean and comfortable. The beach is just in front. It's a perfect place to relax with family!</p>
+          <p class="testimonial-date"><?= htmlspecialchars(date('j M. Y', strtotime($review['review_date']))) ?></p>
+          <p class="testimonial-quote"><?= htmlspecialchars($review['comment'] ?: 'Great stay!') ?></p>
           <div class="testimonial-person">
             <div class="avatar"></div>
-            <span>Anthony Bruff</span>
+            <span><?= htmlspecialchars($review['full_name']) ?></span>
           </div>
         </article>
-
-        <article class="testimonial-card">
-          <div class="stars" aria-label="5 out of 5 stars">
-            <svg viewBox="0 0 20 19"><polygon points="10,0 12.5,7 20,7 14,11.5 16,19 10,14.5 4,19 6,11.5 0,7 7.5,7"/></svg>
-            <svg viewBox="0 0 20 19"><polygon points="10,0 12.5,7 20,7 14,11.5 16,19 10,14.5 4,19 6,11.5 0,7 7.5,7"/></svg>
-            <svg viewBox="0 0 20 19"><polygon points="10,0 12.5,7 20,7 14,11.5 16,19 10,14.5 4,19 6,11.5 0,7 7.5,7"/></svg>
-            <svg viewBox="0 0 20 19"><polygon points="10,0 12.5,7 20,7 14,11.5 16,19 10,14.5 4,19 6,11.5 0,7 7.5,7"/></svg>
-            <svg viewBox="0 0 20 19"><polygon points="10,0 12.5,7 20,7 14,11.5 16,19 10,14.5 4,19 6,11.5 0,7 7.5,7"/></svg>
-          </div>
-          <p class="testimonial-date">25 Mar. 2023</p>
-          <p class="testimonial-quote">We love the atmosphere here. The facilities are great and the staff are very friendly.</p>
-          <div class="testimonial-person">
-            <div class="avatar"></div>
-            <span>Regina Gella</span>
-          </div>
-        </article>
-
-        <article class="testimonial-card">
-          <div class="stars" aria-label="5 out of 5 stars">
-            <svg viewBox="0 0 20 19"><polygon points="10,0 12.5,7 20,7 14,11.5 16,19 10,14.5 4,19 6,11.5 0,7 7.5,7"/></svg>
-            <svg viewBox="0 0 20 19"><polygon points="10,0 12.5,7 20,7 14,11.5 16,19 10,14.5 4,19 6,11.5 0,7 7.5,7"/></svg>
-            <svg viewBox="0 0 20 19"><polygon points="10,0 12.5,7 20,7 14,11.5 16,19 10,14.5 4,19 6,11.5 0,7 7.5,7"/></svg>
-            <svg viewBox="0 0 20 19"><polygon points="10,0 12.5,7 20,7 14,11.5 16,19 10,14.5 4,19 6,11.5 0,7 7.5,7"/></svg>
-            <svg viewBox="0 0 20 19"><polygon points="10,0 12.5,7 20,7 14,11.5 16,19 10,14.5 4,19 6,11.5 0,7 7.5,7"/></svg>
-          </div>
-          <p class="testimonial-date">5 Apr. 2023</p>
-          <p class="testimonial-quote">Everything was amazing! Will definitely come again. Highly recommended!</p>
-          <div class="testimonial-person">
-            <div class="avatar"></div>
-            <span>Jamiyu Aliyu</span>
-          </div>
-        </article>
-
+        <?php endforeach; ?>
       </div>
+      <?php else: ?>
+      <p class="no-reviews">No reviews yet — be the first to stay with us and share your experience!</p>
+      <?php endif; ?>
     </div>
   </section>
 

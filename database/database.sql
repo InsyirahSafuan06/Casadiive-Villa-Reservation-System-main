@@ -36,9 +36,10 @@ DROP TABLE IF EXISTS `customer`;
 CREATE TABLE `customer` (
   customer_id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   full_name   VARCHAR(100) NOT NULL,
-  phone       VARCHAR(20),
+  phone       VARCHAR(20) NOT NULL,
   email       VARCHAR(150),
-  plate_num   VARCHAR(20)
+  plate_num   VARCHAR(20),
+  INDEX idx_customer_phone (phone)
 ) ENGINE=InnoDB;
 
 -- ------------------------------------------------------------
@@ -52,7 +53,7 @@ CREATE TABLE `accommodation` (
   price              DECIMAL(10,2) NOT NULL COMMENT 'weekday / base rate per night, used for all booking calculations',
   price_weekend      DECIMAL(10,2) NULL COMMENT 'display only — not applied to booking totals yet',
   price_holiday      DECIMAL(10,2) NULL COMMENT 'display only — not applied to booking totals yet',
-  capacity           INT UNSIGNED,
+  capacity           INT UNSIGNED NOT NULL,
   pax_label          VARCHAR(30) NULL COMMENT 'display string e.g. "4-5 PAX", falls back to "Max N guests"',
   features           TEXT NULL COMMENT 'one feature per line, e.g. "Wifi\nAircond\nSea View"',
   description        TEXT,
@@ -104,6 +105,7 @@ CREATE TABLE `payment` (
   payment_id     INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   booking_id     INT UNSIGNED NOT NULL,
   deposit_paid   DECIMAL(10,2) NOT NULL DEFAULT 0,
+  payment_method ENUM('qr','online_banking') NULL,
   payment_date   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   payment_status ENUM('pending','partial','paid','refunded','failed') NOT NULL DEFAULT 'pending',
   receipt        VARCHAR(255),
@@ -151,8 +153,8 @@ SET FOREIGN_KEY_CHECKS = 1;
 -- Passwords are 'Admin@12345' / 'Staff@12345', stored as bcrypt hashes (password_hash() in PHP).
 -- Verify with password_verify($input, $hash) — never store or compare plaintext.
 INSERT INTO `user` (username, password, fullname, email, phone, role, status) VALUES
-('admin', '$2y$10$OaibbvsVtDuztKz/psUHG.iWBKqJh73Szk3rIpqIUMsjTmEcfpcGq', 'System Admin', 'admin@casadivevilla.com', '0123456789', 'admin', 'active'),
-('staff', '$2y$10$aHfBuWmnF/Os07GfYrGEx.yMFNE7hYw6ZOZupADY8wC9x8H4LrjSK', 'Front Desk Staff', 'staff@casadivevilla.com', '0123456780', 'staff', 'active');
+('admin', '$2y$10$rBP.oWw4UJ.BkELLXJy2eOBztVZiuY.DUCtvkifE4cDTAVQi7sGzC', 'System Admin', 'admin@casadivevilla.com', '0123456789', 'admin', 'active'),
+('staff', '$2y$10$yfE.LeII4j/qo7r022Ld6elviifDOMu5.oVupuJUNr.dxn8HAvkHi', 'Front Desk Staff', 'staff@casadivevilla.com', '0123456780', 'staff', 'active');
 
 INSERT INTO `accommodation`
   (accommodation_name, accommodation_type, price, price_weekend, price_holiday, capacity, pax_label, features, description, status)

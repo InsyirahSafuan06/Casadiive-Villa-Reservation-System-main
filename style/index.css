@@ -460,6 +460,17 @@
       fill: var(--star);
   }
 
+  .stars svg.star-empty {
+      opacity: .25;
+  }
+
+  .no-reviews {
+      font-family: 'Raleway', sans-serif;
+      font-weight: 500;
+      font-size: 16px;
+      color: var(--text-soft);
+  }
+
   .testimonial-date {
       font-family: 'Poppins', sans-serif;
       font-weight: 500;

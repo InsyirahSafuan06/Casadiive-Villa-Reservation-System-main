@@ -24,9 +24,9 @@ $showWhatsapp ??= false;
             <li><a href="<?= $base ?>index.php">Home</a></li>
             <li><a href="<?= $base ?>customer/villa.php">Villa</a></li>
             <li><a href="<?= $base ?>customer/campsite.php">Campsite</a></li>
+            <li><a href="<?= $base ?>customer/gallery.php">Gallery</a></li>
             <li><a href="<?= $base ?>customer/mybooking.php">MyBooking</a></li>
             <li><a href="<?= $base ?>customer/contact_us.php">Contact Us</a></li>
-            <li><a href="<?= $base ?>customer/gallery.php">Gallery</a></li>
           </ul>
         </div>
 
