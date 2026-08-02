@@ -1,4 +1,8 @@
 <?php
+/**
+ * Staff dashboard page.
+ * This file helps staff manage bookings, room availability, and payment records.
+ */
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/helpers.php';

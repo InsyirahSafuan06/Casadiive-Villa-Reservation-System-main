@@ -1,4 +1,8 @@
 <?php
+/**
+ * Account management page.
+ * Admins can create, edit, or delete staff and admin accounts from this page.
+ */
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/auth.php';
 require_login(['admin']);

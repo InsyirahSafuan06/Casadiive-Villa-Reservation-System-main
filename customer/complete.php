@@ -1,4 +1,8 @@
 <?php
+/**
+ * Completion page.
+ * This page confirms that a booking has been processed successfully and shows the final details.
+ */
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/helpers.php';
 

@@ -1,4 +1,8 @@
 <?php
+/**
+ * Booking receipt page.
+ * This page shows the booking record in a receipt-style layout for staff or admins.
+ */
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/helpers.php';

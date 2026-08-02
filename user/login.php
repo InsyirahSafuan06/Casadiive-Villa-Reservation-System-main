@@ -1,4 +1,8 @@
 <?php
+/**
+ * Login page for staff and admin users.
+ * This page handles authentication and redirects users to their dashboard after a successful login.
+ */
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/auth.php';
 

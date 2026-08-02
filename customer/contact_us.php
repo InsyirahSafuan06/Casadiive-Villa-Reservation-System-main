@@ -1,4 +1,8 @@
 <?php
+/**
+ * Contact page.
+ * This file shows the company contact details and social links for visitors.
+ */
 $base = '../';
 $active = 'contact';
 $pageTitle = 'Contact Us — Casadive Villa';

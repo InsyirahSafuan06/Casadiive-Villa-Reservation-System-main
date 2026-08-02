@@ -1,6 +1,11 @@
 <?php
+/**
+ * Home page of the Casadive Villa reservation system.
+ * This page shows the main landing page, quick booking form, facilities, and recent guest reviews.
+ */
 require_once __DIR__ . '/includes/db.php';
 
+// Load recent reviews from the database to display on the homepage.
 $reviews = $pdo->query(
     "SELECT r.rating, r.comment, r.review_date, c.full_name
      FROM review r

@@ -1,4 +1,8 @@
 <?php
+/**
+ * My Booking lookup page.
+ * Customers can search for a booking by reference number and phone number to view or print a receipt.
+ */
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/helpers.php';

@@ -1,4 +1,8 @@
 <?php
+/**
+ * Accommodation management page.
+ * Admins can add, update, or remove villa and campsite packages from this page.
+ */
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/auth.php';
 require_login(['admin']);

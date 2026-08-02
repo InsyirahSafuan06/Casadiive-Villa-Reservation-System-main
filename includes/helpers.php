@@ -1,4 +1,8 @@
 <?php
+/**
+ * Helper functions for formatting and pricing.
+ * These small functions make the booking flow easier to manage and display.
+ */
 declare(strict_types=1);
 
 /** Turns a snake_case enum value like 'checked_in' into 'Checked In' for display. */

@@ -1,4 +1,8 @@
 <?php
+/**
+ * Booking form page.
+ * Customers fill in their details here, and the system saves the booking before redirecting to payment.
+ */
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/helpers.php';

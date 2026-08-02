@@ -1,4 +1,8 @@
 <?php
+/**
+ * Payment page.
+ * This file handles the deposit payment step for a booking and confirms the transaction.
+ */
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/helpers.php';

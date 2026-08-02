@@ -1,4 +1,8 @@
 <?php
+/**
+ * Gallery page.
+ * This file displays the visual showcase of the villa and campsite experience.
+ */
 $base = '../';
 $active = 'gallery';
 $pageTitle = 'Gallery — Casadive Villa';

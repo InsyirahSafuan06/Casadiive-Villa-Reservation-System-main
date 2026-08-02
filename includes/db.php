@@ -1,4 +1,8 @@
 <?php
+/**
+ * Database connection file.
+ * This file creates the PDO connection used by most pages in the system.
+ */
 declare(strict_types=1);
 
 $dbHost = 'localhost';

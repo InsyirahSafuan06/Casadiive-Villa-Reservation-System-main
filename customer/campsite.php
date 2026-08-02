@@ -1,4 +1,8 @@
 <?php
+/**
+ * Campsite package listing page.
+ * It shows all available campsite options and links each one to booking or detail pages.
+ */
 require_once __DIR__ . '/../includes/db.php';
 
 $campsites = $pdo->query(

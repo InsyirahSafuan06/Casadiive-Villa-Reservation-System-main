@@ -1,4 +1,8 @@
 <?php
+/**
+ * Shared header layout for the website.
+ * This file builds the top navigation and common page structure used across the project.
+ */
 declare(strict_types=1);
 require_once __DIR__ . '/auth.php';
 

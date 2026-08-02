@@ -1,4 +1,8 @@
 <?php
+/**
+ * Authentication helpers for login, logout, session checks, and CSRF protection.
+ * These functions help keep the website secure and manage the logged-in user state.
+ */
 declare(strict_types=1);
 
 if (session_status() === PHP_SESSION_NONE) {

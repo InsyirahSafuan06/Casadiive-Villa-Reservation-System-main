@@ -1,4 +1,8 @@
 <?php
+/**
+ * Accommodation detail page.
+ * This page displays the full details, features, and rates for a selected villa or campsite package.
+ */
 require_once __DIR__ . '/../includes/db.php';
 
 $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);

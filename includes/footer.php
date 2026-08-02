@@ -1,4 +1,8 @@
 <?php
+/**
+ * Shared footer layout for the website.
+ * This file displays the footer links and contact information used on public pages.
+ */
 declare(strict_types=1);
 
 /**

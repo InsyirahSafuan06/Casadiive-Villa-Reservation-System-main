@@ -1,4 +1,8 @@
 <?php
+/**
+ * Bank authorization page.
+ * This page redirects the user for the selected online banking payment method.
+ */
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/helpers.php';

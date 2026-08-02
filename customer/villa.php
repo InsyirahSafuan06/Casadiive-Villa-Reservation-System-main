@@ -1,4 +1,8 @@
 <?php
+/**
+ * Villa package listing page.
+ * It shows all available villa packages and links them to detailed booking pages.
+ */
 require_once __DIR__ . '/../includes/db.php';
 
 $villas = $pdo->query(
