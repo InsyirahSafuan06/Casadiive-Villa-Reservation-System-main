@@ -50,41 +50,10 @@ if ($booking && !$paid && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors[] = 'Your session expired. Please try again.';
     }
 
-    if (!$errors && $method === 'online_banking') {
-        $bank = trim((string) ($_POST['bank'] ?? ''));
-        header('Location: bank_authorize.php?booking_id=' . $bookingId . '&bank=' . urlencode($bank));
-        exit;
-    }
-
     if (!$errors) {
-        try {
-            $pdo->beginTransaction();
-
-            $stmt = $pdo->prepare(
-                "INSERT INTO payment (booking_id, deposit_paid, payment_method, payment_status)
-                 VALUES (:booking_id, :deposit_paid, :payment_method, 'paid')"
-            );
-            $stmt->execute([
-                'booking_id' => $bookingId,
-                'deposit_paid' => $booking['deposit_amount'],
-                'payment_method' => $method,
-            ]);
-
-            $stmt = $pdo->prepare(
-                "UPDATE booking SET booking_status = 'confirmed' WHERE booking_id = :id AND booking_status = 'pending'"
-            );
-            $stmt->execute(['id' => $bookingId]);
-
-            $pdo->commit();
-        } catch (Exception $e) {
-            $pdo->rollBack();
-            $errors[] = 'Something went wrong while recording your payment. Please try again.';
-        }
-
-        if (!$errors) {
-            header('Location: complete.php?ref=' . $bookingId . '&phone=' . urlencode($booking['phone']));
-            exit;
-        }
+        $bank = $method === 'online_banking' ? trim((string) ($_POST['bank'] ?? '')) : '';
+        header('Location: payment_method.php?booking_id=' . $bookingId . '&method=' . urlencode($method) . '&bank=' . urlencode($bank));
+        exit;
     }
 }
 

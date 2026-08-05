@@ -72,7 +72,8 @@ $showWhatsapp ??= false;
 
   <?php if ($showWhatsapp): ?>
   <!-- WHATSAPP FLOATING CARD -->
-  <a class="whatsapp-card" href="#whatsapp" aria-label="Chat with us on WhatsApp">
+  <!-- href is a placeholder; replace with a real wa.me/<number> link once a WhatsApp business number is available -->
+  <a class="whatsapp-card" href="https://wa.me/60103851892" aria-label="Chat with us on WhatsApp">
     <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
       <circle cx="16" cy="16" r="16" fill="#25D366"/>
       <path d="M16 7a9 9 0 0 0-7.8 13.5L7 25l4.6-1.2A9 9 0 1 0 16 7z" fill="#fff"/>

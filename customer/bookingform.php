@@ -397,12 +397,14 @@ include __DIR__ . '/../includes/header.php';
     document.getElementById('s-nights').textContent = totalNights;
 
     let priceLabel = `RM ${weekdayPrice.toFixed(2)} / night`;
-    if (weekendPrice !== weekdayPrice && stay.weekendNights > 0) {
-      priceLabel = `RM ${weekdayPrice.toFixed(2)} weekday, RM ${weekendPrice.toFixed(2)} weekend`;
+    if (checkIn) {
+      const checkInDay = new Date(checkIn + 'T00:00:00').getDay(); // 0=Sun .. 5=Fri, 6=Sat
+      const checkInRate = (checkInDay === 5 || checkInDay === 6) ? weekendPrice : weekdayPrice;
+      priceLabel = `RM ${checkInRate.toFixed(2)} / night`;
     }
     document.getElementById('s-price').textContent = priceLabel;
     document.getElementById('s-deposit').textContent = `RM ${deposit.toFixed(2)}`;
-    document.getElementById('s-total').textContent = `RM ${stay.total.toFixed(2)}`;
+    document.getElementById('s-total').textContent = `RM ${Math.max(stay.total - deposit, 0).toFixed(2)}`;
   }
 
   const params = new URLSearchParams(window.location.search);
