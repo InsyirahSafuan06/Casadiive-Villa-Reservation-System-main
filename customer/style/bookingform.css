@@ -253,7 +253,12 @@
     height: 82px;
     border-radius: 15px;
     background: linear-gradient(135deg,#e7c99a,#844525);
+    background-size: cover;
+    background-position: center;
     flex-shrink:0;
+  }
+  .summary-thumb.has-image{
+    background-color: transparent;
   }
   .summary-badge{
     position:absolute;

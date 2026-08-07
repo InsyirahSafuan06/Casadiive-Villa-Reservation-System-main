@@ -88,7 +88,6 @@ $loginCssHref = 'style/login.css?v=' . (is_file(__DIR__ . '/style/login.css') ? 
           <div class="login-input-wrap">
             <input id="login-password" name="password" type="password" placeholder="Enter your password" autocomplete="current-password" required>
             <button type="button" class="toggle-password" id="toggle-password" aria-label="Show password" aria-pressed="false">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
             </button>
           </div>
         </div>

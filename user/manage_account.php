@@ -167,8 +167,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 exit;
             }
 
-            // password_hash() digunakan setiap kali kata laluan disimpan — kata laluan
-            // teks biasa itu sendiri tidak pernah disimpan, hanya hash sehala ini.
+            // password_hash() digunakan setiap kali nak simpan password — password asal
+            // (plain text) tak sekali pun disimpan, cuma hash sehala ni je yang masuk DB
             $stmt = $pdo->prepare(
                 'INSERT INTO user (username, password, fullname, email, phone, role, status)
                  VALUES (:username, :password, :fullname, :email, :phone, :role, :status)'

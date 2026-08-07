@@ -25,7 +25,7 @@ $old = [
 
 // pelanggan cuma boleh pilih pakej yang admin dah tandakan "available"
 $accommodations = $pdo->query(
-    "SELECT accommodation_id, accommodation_name, accommodation_type, price, price_weekend, capacity
+    "SELECT accommodation_id, accommodation_name, accommodation_type, price, price_weekend, capacity, image
      FROM accommodation
      WHERE status = 'available'
      ORDER BY accommodation_type, accommodation_id"
@@ -319,6 +319,7 @@ include __DIR__ . '/../includes/header.php';
                       data-price="<?= (float) $acc['price'] ?>"
                       data-price-weekend="<?= $acc['price_weekend'] !== null ? (float) $acc['price_weekend'] : (float) $acc['price'] ?>"
                       data-capacity="<?= (int) $acc['capacity'] ?>"
+                      data-image="<?= htmlspecialchars($acc['image'] ?? '') ?>"
                       <?= $old['accommodation_id'] !== '' && (int) $old['accommodation_id'] === (int) $acc['accommodation_id'] ? 'selected' : '' ?>
                     ><?= htmlspecialchars($acc['accommodation_name']) ?> — RM <?= number_format((float) $acc['price'], 2) ?></option>
                   <?php endforeach; ?>
@@ -336,7 +337,7 @@ include __DIR__ . '/../includes/header.php';
             <h2 class="summary-title">Booking Summary</h2>
 
             <div class="summary-package">
-              <div class="summary-thumb">
+              <div class="summary-thumb" id="summary-thumb">
                 <span class="summary-badge" id="summary-type">Villa</span>
               </div>
               <div>
@@ -409,6 +410,17 @@ include __DIR__ . '/../includes/header.php';
     document.getElementById('summary-type').textContent = hasPackage ? opt.dataset.type : 'Villa';
     document.getElementById('summary-name').textContent = hasPackage ? opt.dataset.name : 'Select a package';
     document.getElementById('summary-capacity').textContent = capacity ? `Max ${capacity} guests` : '—';
+
+    // tunjuk gambar sebenar pakej yang dipilih dekat thumbnail summary tu, kalau admin ada upload gambar
+    const thumb = document.getElementById('summary-thumb');
+    const image = hasPackage ? opt.dataset.image : '';
+    if (image) {
+      thumb.style.backgroundImage = `url('${image}')`;
+      thumb.classList.add('has-image');
+    } else {
+      thumb.style.backgroundImage = '';
+      thumb.classList.remove('has-image');
+    }
 
     document.getElementById('s-name').textContent = document.getElementById('full-name').value || '—';
     document.getElementById('s-phone').textContent = document.getElementById('phone').value || '—';
