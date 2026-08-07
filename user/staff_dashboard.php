@@ -1,11 +1,12 @@
 <?php
 /**
- * Staff dashboard page.
- * This file helps staff manage bookings, room availability, and payment records.
+ * Halaman dashboard staf.
+ * Fail ini membantu staf mengurus tempahan, ketersediaan bilik, dan rekod pembayaran.
  */
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/helpers.php';
+require_once __DIR__ . '/../includes/email_notify.php';
 require_login(['staff', 'admin']);
 
 $user = current_user();
@@ -18,14 +19,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'updat
     $newStatus = $_POST['booking_status'] ?? '';
 
     if (csrf_verify() && $bookingId && in_array($newStatus, $validStatuses, true)) {
+        $current = $pdo->prepare('SELECT booking_status FROM booking WHERE booking_id = :id');
+        $current->execute(['id' => $bookingId]);
+        $previousStatus = $current->fetchColumn();
+
         $stmt = $pdo->prepare('UPDATE booking SET booking_status = :status WHERE booking_id = :id');
         $stmt->execute(['status' => $newStatus, 'id' => $bookingId]);
+
+        if ($previousStatus !== false && $previousStatus !== $newStatus) {
+            send_status_email($pdo, $bookingId, $newStatus);
+        }
     }
 
     header('Location: staff_dashboard.php?updated=1');
     exit;
 }
 
+// Tandakan penginapan sebagai available / unavailable / under maintenance — inilah yang
+// menyembunyikan pakej dari senarai awam villa.php / campsite.php.
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'update_acc_status') {
     $accId = filter_input(INPUT_POST, 'accommodation_id', FILTER_VALIDATE_INT);
     $newAccStatus = $_POST['acc_status'] ?? '';
@@ -39,6 +50,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'updat
     exit;
 }
 
+// Untuk pembayaran yang diterima di luar laman web (contohnya tunai, pindahan bank) — ini hanya
+// tambah rekod pembayaran. Tidak seperti aliran pembayaran online, ia TIDAK secara automatik tukar
+// status tempahan kepada "confirmed"; staf masih perlu kemas kini itu secara berasingan jika perlu.
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'record_payment') {
     $bookingId = filter_input(INPUT_POST, 'booking_id', FILTER_VALIDATE_INT);
     $depositPaid = filter_var($_POST['deposit_paid'] ?? '', FILTER_VALIDATE_FLOAT);
@@ -65,6 +79,7 @@ $updated = isset($_GET['updated']);
 $accUpdated = isset($_GET['accupdated']);
 $paymentRecorded = isset($_GET['paymentrecorded']);
 
+// Nombor ringkasan pantas yang dipaparkan pada jubin statistik di atas dashboard.
 $stats = [
     'total_bookings' => (int) $pdo->query('SELECT COUNT(*) FROM booking')->fetchColumn(),
     'pending_bookings' => (int) $pdo->query("SELECT COUNT(*) FROM booking WHERE booking_status = 'pending'")->fetchColumn(),

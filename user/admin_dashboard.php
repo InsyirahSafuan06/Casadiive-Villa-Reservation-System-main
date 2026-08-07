@@ -1,11 +1,12 @@
 <?php
 /**
- * Admin dashboard page.
- * This file gives administrators a summary of bookings, accounts, and accommodation management.
+ * Halaman dashboard admin.
+ * Fail ini memberikan pentadbir ringkasan tempahan, akaun, dan pengurusan penginapan.
  */
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/helpers.php';
+require_once __DIR__ . '/../includes/email_notify.php';
 require_login(['admin']);
 
 $user = current_user();
@@ -17,8 +18,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'updat
     $newStatus = $_POST['booking_status'] ?? '';
 
     if (csrf_verify() && $bookingId && in_array($newStatus, $validStatuses, true)) {
+        $current = $pdo->prepare('SELECT booking_status FROM booking WHERE booking_id = :id');
+        $current->execute(['id' => $bookingId]);
+        $previousStatus = $current->fetchColumn();
+
         $stmt = $pdo->prepare('UPDATE booking SET booking_status = :status WHERE booking_id = :id');
         $stmt->execute(['status' => $newStatus, 'id' => $bookingId]);
+
+        if ($previousStatus !== false && $previousStatus !== $newStatus) {
+            send_status_email($pdo, $bookingId, $newStatus);
+        }
     }
 
     header('Location: admin_dashboard.php?updated=1');
@@ -32,6 +41,8 @@ $accCreated = isset($_GET['acccreated']);
 $accSaved = isset($_GET['accsaved']);
 $accDeleted = isset($_GET['accdeleted']);
 
+// Nombor ringkasan pantas yang dipaparkan pada jubin statistik di atas dashboard.
+// "Revenue" hanya kira tempahan yang benar-benar bergerak (bukan pending/cancelled).
 $stats = [
     'total_bookings' => (int) $pdo->query('SELECT COUNT(*) FROM booking')->fetchColumn(),
     'pending_bookings' => (int) $pdo->query("SELECT COUNT(*) FROM booking WHERE booking_status = 'pending'")->fetchColumn(),
@@ -39,6 +50,8 @@ $stats = [
     'total_users' => (int) $pdo->query('SELECT COUNT(*) FROM user')->fetchColumn(),
 ];
 
+// Satu baris bagi setiap tempahan, dengan nama penginapan dan status pembayaran terkini digabungkan
+// melalui GROUP_CONCAT / subquery, supaya jadual di bawah tidak perlukan query bagi setiap baris.
 $bookings = $pdo->query(
     "SELECT b.booking_id, c.full_name, c.phone, b.check_in, b.check_out, b.total_guest,
             b.total_amount, b.deposit_amount, b.booking_status,
@@ -57,6 +70,18 @@ $accommodations = $pdo->query(
     'SELECT accommodation_id, accommodation_name, accommodation_type, price, capacity, status
      FROM accommodation ORDER BY accommodation_type, accommodation_id'
 )->fetchAll();
+
+// Penghantaran berjaya terkini bagi setiap tempahan + jenis mesej, supaya lajur Notification di bawah
+// boleh papar "Sent" menggantikan butang hantar sebaik sahaja mesej tersebut sudah dihantar.
+$sentLookup = [];
+foreach ($pdo->query(
+    "SELECT booking_id, notification_type, MAX(sent_date) AS last_sent
+     FROM notification_status
+     WHERE status = 'sent' AND channel = 'whatsapp'
+     GROUP BY booking_id, notification_type"
+) as $row) {
+    $sentLookup[$row['booking_id']][$row['notification_type']] = $row['last_sent'];
+}
 
 $users = $pdo->query(
     'SELECT user_id, username, fullname, email, role, status, created_at FROM user ORDER BY user_id'
@@ -134,10 +159,11 @@ $users = $pdo->query(
 
       <section class="dash-section">
         <h2>Recent Bookings</h2>
+        <p class="notice-info">Before clicking a Notification button below, make sure the browser you're using is logged into WhatsApp Web as the official Casadive Villa number — the message opens pre-filled, but you still need to tap Send yourself.</p>
         <table>
           <thead>
             <tr>
-              <th>#</th>
+              <th>ID</th>
               <th>Guest</th>
               <th>Phone</th>
               <th>Accommodation</th>
@@ -149,15 +175,55 @@ $users = $pdo->query(
               <th>Status</th>
               <th>Payment</th>
               <th>Update</th>
+              <th>Notification</th>
               <th>Receipt</th>
             </tr>
           </thead>
           <tbody>
             <?php if (!$bookings): ?>
-              <tr class="empty-row"><td colspan="13">No bookings yet.</td></tr>
-            <?php else: foreach ($bookings as $b): ?>
-              <tr>
-                <td>#<?= (int) $b['booking_id'] ?></td>
+              <tr class="empty-row"><td colspan="14">No bookings yet.</td></tr>
+            <?php else: foreach ($bookings as $b):
+              // "Due" bermaksud check-in esok — itulah waktu peringatan check-in patut dihantar.
+              $reminderDue = $b['check_in'] === date('Y-m-d', strtotime('+1 day'));
+
+              // Setiap baris dapat TEPAT SATU butang notifikasi, mengikut mesej yang sesuai
+              // dengan statusnya sekarang (atau tiada langsung, contohnya untuk tempahan pending/checked-in).
+              $notifType = null;
+              $notifLabel = null;
+              $notifClass = 'btn-primary';
+            
+              if ($b['booking_status'] === 'confirmed' && $reminderDue) {
+                  $notifType = 'check_in';
+                  $notifLabel = 'Send Check-In Reminder';
+                  $notifClass = 'btn-primary';
+
+              } elseif ($b['booking_status'] === 'pending') {
+                  $notifType = 'pending';
+                  $notifLabel = 'Payment pending';
+                  $notifClass = 'btn-primary';
+                  
+              } elseif ($b['booking_status'] === 'confirmed') {
+                  $notifType = 'booking_confirmation';
+                  $notifLabel = 'Send Booking';
+                  $notifClass = 'btn-primary';
+
+              } elseif ($b['booking_status'] === 'checked_out') {
+                  $notifType = 'check_out';
+                  $notifLabel = 'Send Thank You';
+                  $notifClass = 'btn-primary';
+
+              } elseif ($b['booking_status'] === 'cancelled') {
+                  $notifType = 'cancelled';
+                  $notifLabel = 'Send Cancelled';
+                  $notifClass = 'btn-primary';
+              }
+
+              // Adakah mesej ini sudah dihantar untuk tempahan ini? Jika ya, butang di bawah
+              // papar "Sent" — masih boleh diklik, sekiranya perlu dihantar semula.
+              $alreadySentAt = $notifType ? ($sentLookup[$b['booking_id']][$notifType] ?? null) : null;
+              ?>
+              <tr<?= $reminderDue ? ' class="tr-due"' : '' ?>>
+                <td><?= (int) $b['booking_id'] ?></td>
                 <td><?= htmlspecialchars($b['full_name']) ?></td>
                 <td><?= htmlspecialchars($b['phone']) ?></td>
                 <td><?= htmlspecialchars($b['accommodations'] ?? '—') ?></td>
@@ -167,7 +233,7 @@ $users = $pdo->query(
                 <td><?= number_format((float) $b['total_amount'], 2) ?></td>
                 <td><?= number_format((float) $b['deposit_amount'], 2) ?></td>
                 <td><span class="status-badge status-<?= htmlspecialchars($b['booking_status']) ?>"><?= htmlspecialchars(format_status($b['booking_status'])) ?></span></td>
-                <td><?= $b['latest_payment_status'] ? htmlspecialchars(ucfirst($b['latest_payment_status'])) : '<span style="color:#999;">No record</span>' ?></td>
+                <td><?= $b['latest_payment_status'] ? htmlspecialchars(ucfirst($b['latest_payment_status'])) : '<span class="text-muted">No record</span>' ?></td>
                 <td>
                   <form class="status-form" method="post">
                     <?= csrf_field() ?>
@@ -181,7 +247,18 @@ $users = $pdo->query(
                     <button type="submit">Save</button>
                   </form>
                 </td>
-                <td><a href="booking_receipt.php?id=<?= (int) $b['booking_id'] ?>" class="btn btn-outline" style="padding:6px 14px;font-size:13px;">View</a></td>
+
+                <td>
+                <?php if ($notifType): ?>
+                  <a href="notification.php?booking_id=<?= (int) $b['booking_id'] ?>&type=<?= $notifType ?>" class="btn btn-sm <?= $alreadySentAt ? 'btn-sent' : $notifClass ?>" <?= $alreadySentAt ? 'title="Sent on ' . htmlspecialchars($alreadySentAt) . ' — click to resend"' : '' ?>>
+                    <?= $alreadySentAt ? '&check; Sent' : $notifLabel ?>
+                  </a>
+                <?php else: ?>
+                  <span class="text-muted">-</span>
+                <?php endif; ?>
+                </td>
+
+                <td><a href="booking_receipt.php?id=<?= (int) $b['booking_id'] ?>" class="btn btn-sm btn-outline">View</a></td>
               </tr>
             <?php endforeach; endif; ?>
           </tbody>
@@ -189,9 +266,9 @@ $users = $pdo->query(
       </section>
 
       <section class="dash-section">
-        <h2 style="display:flex;align-items:center;justify-content:space-between;gap:16px;">
+        <h2 class="section-heading">
           Accommodations
-          <a href="manage_accommodation.php" class="btn btn-primary" style="padding:10px 20px;font-size:13px;">+ Add Accommodation</a>
+          <a href="manage_accommodation.php" class="btn btn-md btn-primary">+ Add Accommodation</a>
         </h2>
         <table>
           <thead>
@@ -216,7 +293,7 @@ $users = $pdo->query(
                 <td><span class="status-badge status-<?= htmlspecialchars($a['status']) ?>"><?= htmlspecialchars($a['status']) ?></span></td>
                 <td>
                   <div class="status-form">
-                    <a href="manage_accommodation.php?id=<?= (int) $a['accommodation_id'] ?>" class="btn btn-outline" style="padding:6px 14px;font-size:13px;">Edit</a>
+                    <a href="manage_accommodation.php?id=<?= (int) $a['accommodation_id'] ?>" class="btn btn-sm btn-outline">Edit</a>
                     <form method="post" action="manage_accommodation.php" onsubmit="return confirm('Delete this accommodation? This cannot be undone.');">
                       <?= csrf_field() ?>
                       <input type="hidden" name="action" value="delete">
@@ -232,9 +309,9 @@ $users = $pdo->query(
       </section>
 
       <section class="dash-section">
-        <h2 style="display:flex;align-items:center;justify-content:space-between;gap:16px;">
+        <h2 class="section-heading">
           Staff &amp; Admin Accounts
-          <a href="manage_account.php" class="btn btn-primary" style="padding:10px 20px;font-size:13px;">+ Add Staff Account</a>
+          <a href="manage_account.php" class="btn btn-md btn-primary">+ Add Staff Account</a>
         </h2>
         <table>
           <thead>
@@ -261,7 +338,7 @@ $users = $pdo->query(
                 <td><?= htmlspecialchars($u['created_at']) ?></td>
                 <td>
                   <div class="status-form">
-                    <a href="manage_account.php?id=<?= (int) $u['user_id'] ?>" class="btn btn-outline" style="padding:6px 14px;font-size:13px;">Edit</a>
+                    <a href="manage_account.php?id=<?= (int) $u['user_id'] ?>" class="btn btn-sm btn-outline">Edit</a>
                     <?php if ((int) $u['user_id'] !== (int) $user['user_id']): ?>
                       <form method="post" action="manage_account.php" onsubmit="return confirm('Delete this account? This cannot be undone.');">
                         <?= csrf_field() ?>

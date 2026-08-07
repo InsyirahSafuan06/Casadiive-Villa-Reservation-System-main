@@ -1,14 +1,16 @@
 <?php
 /**
- * Villa package listing page.
- * It shows all available villa packages and links them to detailed booking pages.
+ * Halaman senarai pakej vila.
+ * Halaman ini memaparkan semua pakej vila yang tersedia dan pautkannya ke halaman butiran tempahan.
  */
 require_once __DIR__ . '/../includes/db.php';
 
+// Hanya papar vila yang ditanda tersedia dalam panel admin.
 $villas = $pdo->query(
     "SELECT * FROM accommodation WHERE accommodation_type = 'Villa' AND status = 'available' ORDER BY accommodation_id"
 )->fetchAll();
 
+// Set ikon kecil yang digunakan pada setiap kad pakej di bawah.
 $icons = [
     'room' => '<svg viewBox="0 0 32 32"><path d="M4 18v8h2v-3h20v3h2v-8a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4z" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="10" cy="15" r="2.5"/></svg>',
     'pool' => '<svg viewBox="0 0 32 32"><path d="M4 24c2.5 0 2.5-3 5-3s2.5 3 5 3 2.5-3 5-3 2.5 3 5 3 2.5-3 5-3v4H4z"/><circle cx="15" cy="10" r="4.5"/></svg>',
@@ -23,7 +25,7 @@ include __DIR__ . '/../includes/header.php';
 ?>
 
   <!-- HERO -->
-  <section class="hero" id="top">
+  <section class="hero" id="top" style="background-image:linear-gradient(rgba(124,106,70,.55), rgba(124,106,70,.55)), url('../assets/images/casa2-casa3-day.jpg');background-size:cover;background-position:center;">
     <h1>Villa Packages</h1>
     <p>Enjoy a peaceful stay with private rooms, pool access and a beachfront view.</p>
     <a href="#packages" class="scroll-down" aria-label="Scroll down"><span></span></a>
@@ -34,17 +36,20 @@ include __DIR__ . '/../includes/header.php';
     <div class="container package-grid">
 
       <?php foreach ($villas as $villa):
+        // Teks features/description tiada penanda "ada pool" atau "ada wifi" berasingan dalam
+        // pangkalan data, jadi kita cari sahaja perkataan tersebut untuk tentukan ikon mana nak papar.
         $searchText = strtolower(($villa['features'] ?? '') . ' ' . ($villa['description'] ?? ''));
         $hasPool = strpos($searchText, 'pool') !== false;
         $hasWifi = strpos($searchText, 'wifi') !== false;
         $roomLabel = ($hasPool || $hasWifi) ? 'Room' : 'Room Only';
         $paxLabel = $villa['pax_label'] ?: ('Max ' . (int) $villa['capacity'] . ' guests');
+        // Jika admin sudah muat naik gambar untuk vila ini, guna sebagai latar belakang kad.
         $mediaStyle = $villa['image'] ? ' style="background-image:url(\'' . htmlspecialchars($villa['image']) . '\');background-size:cover;background-position:center;"' : '';
       ?>
       <article class="package-card">
         <div class="package-media"<?= $mediaStyle ?>>
           <div class="package-badges">
-            <span class="badge">MAX <?= (int) $villa['capacity'] ?> PAX</span>
+            <span class="badge"><?= htmlspecialchars(strtoupper($paxLabel)) ?></span>
           </div>
         </div>
         <div class="package-body">

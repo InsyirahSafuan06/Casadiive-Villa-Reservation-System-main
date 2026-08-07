@@ -1,7 +1,7 @@
 <?php
 /**
- * Accommodation management page.
- * Admins can add, update, or remove villa and campsite packages from this page.
+ * Halaman pengurusan penginapan.
+ * Admin boleh tambah, kemas kini, atau buang pakej vila dan khemah dari halaman ini.
  */
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/auth.php';
@@ -35,6 +35,7 @@ $old = [
     'features' => $editing['features'] ?? '',
     'description' => $editing['description'] ?? '',
     'status' => $editing['status'] ?? 'available',
+    'door_code' => $editing['door_code'] ?? '',
 ];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -53,6 +54,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 header('Location: admin_dashboard.php?accdeleted=1');
                 exit;
             } catch (PDOException $e) {
+                // Pangkalan data sendiri menghalang padam ini (foreign key constraint) apabila
+                // masih ada tempahan yang merujuk pakej ini, jadi kita papar mesej yang lebih mesra.
                 $errors[] = 'This package can\'t be deleted because it already has bookings against it. Set its status to "unavailable" instead.';
             }
         }
@@ -67,6 +70,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $old['features'] = trim((string) ($_POST['features'] ?? ''));
         $old['description'] = trim((string) ($_POST['description'] ?? ''));
         $old['status'] = (string) ($_POST['status'] ?? '');
+        $old['door_code'] = trim((string) ($_POST['door_code'] ?? ''));
 
         if ($old['accommodation_name'] === '') {
             $errors[] = 'Package name is required.';
@@ -100,6 +104,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $errors[] = 'Please select a valid status.';
         }
 
+        // Array $params yang sama digunakan semula untuk UPDATE dan INSERT di bawah —
+        // hanya kenyataan SQL (dan sama ada :id diperlukan) yang berbeza.
         if (!$errors) {
             $params = [
                 'name' => $old['accommodation_name'],
@@ -112,6 +118,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'features' => $old['features'] !== '' ? $old['features'] : null,
                 'description' => $old['description'] !== '' ? $old['description'] : null,
                 'status' => $old['status'],
+                'door_code' => $old['door_code'] !== '' ? $old['door_code'] : null,
             ];
 
             if ($editing) {
@@ -120,7 +127,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'UPDATE accommodation SET accommodation_name = :name, accommodation_type = :type,
                      price = :price, price_weekend = :price_weekend, price_holiday = :price_holiday,
                      capacity = :capacity, pax_label = :pax_label, features = :features,
-                     description = :description, status = :status
+                     description = :description, status = :status, door_code = :door_code
                      WHERE accommodation_id = :id'
                 );
                 $stmt->execute($params);
@@ -130,8 +137,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $stmt = $pdo->prepare(
                 'INSERT INTO accommodation
-                 (accommodation_name, accommodation_type, price, price_weekend, price_holiday, capacity, pax_label, features, description, status)
-                 VALUES (:name, :type, :price, :price_weekend, :price_holiday, :capacity, :pax_label, :features, :description, :status)'
+                 (accommodation_name, accommodation_type, price, price_weekend, price_holiday, capacity, pax_label, features, description, status, door_code)
+                 VALUES (:name, :type, :price, :price_weekend, :price_holiday, :capacity, :pax_label, :features, :description, :status, :door_code)'
             );
             $stmt->execute($params);
             header('Location: admin_dashboard.php?acccreated=1');
@@ -234,6 +241,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           <div>
             <label style="display:block;font-weight:600;font-size:14px;color:var(--brown-price);margin-bottom:6px;">PAX Label (optional, e.g. "4-5 PAX")</label>
             <input type="text" name="pax_label" value="<?= htmlspecialchars((string) $old['pax_label']) ?>" placeholder="Falls back to &quot;Max N guests&quot; if left blank" style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:6px;font-family:inherit;">
+          </div>
+
+          <div>
+            <label style="display:block;font-weight:600;font-size:14px;color:var(--brown-price);margin-bottom:6px;">Door Lock Code (optional)</label>
+            <input type="text" name="door_code" value="<?= htmlspecialchars((string) $old['door_code']) ?>" placeholder="e.g. 1745" style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:6px;font-family:inherit;">
+            <p style="font-size:12px;color:#999;margin-top:4px;">Sent to the guest in the check-in reminder message. Leave blank for packages with no door lock (e.g. campsite sites).</p>
           </div>
 
           <div>

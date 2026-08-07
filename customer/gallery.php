@@ -1,7 +1,7 @@
 <?php
 /**
- * Gallery page.
- * This file displays the visual showcase of the villa and campsite experience.
+ * Halaman galeri.
+ * Fail ini memaparkan tunjuk gambar visual bagi pengalaman vila dan khemah.
  */
 $base = '../';
 $active = 'gallery';
@@ -11,7 +11,7 @@ include __DIR__ . '/../includes/header.php';
 ?>
 
   <!-- HERO -->
-  <section class="hero" id="top">
+  <section class="hero" id="top" style="background-image:linear-gradient(rgba(28,28,28,.2), rgba(28,28,28,.2)), url('../assets/images/casa2-casa3-sunset.jpg');background-size:cover;background-position:center;">
     <h1>Gallery</h1>
     <p>Discover the beauty of our rooms, facilities, and stunning beachside views.</p>
     <a href="#gallery-grid" class="scroll-down" aria-label="Scroll down"><span></span></a>
@@ -20,16 +20,16 @@ include __DIR__ . '/../includes/header.php';
   <!-- GALLERY GRID -->
   <section class="gallery" id="gallery-grid">
     <div class="container gallery-grid">
-      <figure class="gallery-item ratio-tall"><span role="img" aria-label="Villa exterior view"></span></figure>
-      <figure class="gallery-item ratio-tall"><span role="img" aria-label="Villa bedroom"></span></figure>
-      <figure class="gallery-item ratio-tall"><span role="img" aria-label="Villa living area"></span></figure>
-      <figure class="gallery-item ratio-tall"><span role="img" aria-label="Campsite by the beach"></span></figure>
-      <figure class="gallery-item ratio-short"><span role="img" aria-label="Swimming pool"></span></figure>
-      <figure class="gallery-item ratio-short"><span role="img" aria-label="Poolside lounge"></span></figure>
-      <figure class="gallery-item ratio-tall"><span role="img" aria-label="Beachfront sunset"></span></figure>
-      <figure class="gallery-item ratio-tall"><span role="img" aria-label="Campsite tents"></span></figure>
-      <figure class="gallery-item ratio-portrait"><span role="img" aria-label="Villa balcony view"></span></figure>
-      <figure class="gallery-item ratio-portrait"><span role="img" aria-label="Beachside walkway"></span></figure>
+      <figure class="gallery-item ratio-tall"><img src="../assets/images/villa-complex-day.jpg" alt="Villa exterior view" loading="lazy"></figure>
+      <figure class="gallery-item ratio-tall"><img src="../assets/images/villa-bedroom-bunk.jpg" alt="Villa bedroom" loading="lazy"></figure>
+      <figure class="gallery-item ratio-tall"><img src="../assets/images/villa-living-room.jpg" alt="Villa living area" loading="lazy"></figure>
+      <figure class="gallery-item ratio-tall"><img src="../assets/images/campsite-tents-pool.jpg" alt="Campsite by the beach" loading="lazy"></figure>
+      <figure class="gallery-item ratio-short"><img src="../assets/images/campsite-tent-pool.jpg" alt="Swimming pool" loading="lazy"></figure>
+      <figure class="gallery-item ratio-short"><img src="../assets/images/beach-lounge-bench.jpg" alt="Poolside lounge" loading="lazy"></figure>
+      <figure class="gallery-item ratio-tall"><img src="../assets/images/wooden-villa-sunset.jpg" alt="Beachfront sunset" loading="lazy"></figure>
+      <figure class="gallery-item ratio-tall"><img src="../assets/images/campsite-tents-pool.jpg" alt="Campsite tents" loading="lazy"></figure>
+      <figure class="gallery-item ratio-portrait"><img src="../assets/images/casa3-balcony-view.jpg" alt="Villa balcony view" loading="lazy"></figure>
+      <figure class="gallery-item ratio-portrait"><img src="../assets/images/wooden-villa-porch-view.jpg" alt="Beachside walkway" loading="lazy"></figure>
     </div>
   </section>
 

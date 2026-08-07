@@ -86,6 +86,13 @@
   .btn:hover{ transform: translateY(-2px); }
   .btn-primary{ background: var(--orange-deep); color:#fff; }
   .btn-outline{ background:transparent; color: var(--brown-price); border: 1px solid var(--brown-price); }
+  .btn-sm{ padding: 6px 14px; font-size: 13px; }
+  .btn-md{ padding: 10px 20px; font-size: 13px; }
+  .btn-sent{ background:#e0f2e9; color:#1e6b34; border:1px solid #bfe6c9; }
+  .btn-sent:hover{ background:#d3ecdd; }
+  .text-muted{ color:#999; }
+  .tr-due{ background:#fff4e5; }
+  .section-heading{ display:flex; align-items:center; justify-content:space-between; gap:16px; }
 
   /* ---------- MAIN ---------- */
   .dash-main{ padding: 40px 0 80px; }
@@ -113,6 +120,17 @@
     font-family:'Raleway', sans-serif;
     font-weight:600;
     margin-bottom: 24px;
+  }
+  .notice-info{
+    background:#fff8e6;
+    border:1px solid #f0ddaa;
+    color:#8a6400;
+    border-radius:8px;
+    padding: 12px 18px;
+    font-family:'Raleway', sans-serif;
+    font-weight:600;
+    font-size: 13px;
+    margin-bottom: 18px;
   }
 
   /* ---------- STAT TILES ---------- */

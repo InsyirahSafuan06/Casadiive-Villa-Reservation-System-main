@@ -1,23 +1,34 @@
 <?php
 /**
- * Shared header layout for the website.
- * This file builds the top navigation and common page structure used across the project.
+ * Susun atur header yang dikongsi untuk laman web.
+ * Fail ini membina navigasi atas dan struktur halaman umum yang digunakan di seluruh projek.
  */
 declare(strict_types=1);
 require_once __DIR__ . '/auth.php';
 
 /**
- * Expected variables from the including page:
- *   $base      string  '' at the project root, '../' one level deep (customer/, user/)
- *   $active    string  one of home|villa|campsite|gallery|contact
- *   $pageTitle string  <title> text
- *   $pageCss   string  stylesheet href, relative to the including page itself
+ * Pembolehubah yang dijangka daripada halaman yang memasukkan fail ini:
+ *   $base      string  '' di root projek, '../' satu tahap ke bawah (customer/, user/)
+ *   $active    string  salah satu daripada home|villa|campsite|gallery|contact
+ *   $pageTitle string  teks <title>
+ *   $pageCss   string  href stylesheet, relatif kepada halaman yang memasukkannya
  */
 $base ??= '';
 $active ??= '';
 $pageTitle ??= 'Casadive Villa';
 $pageCss ??= '';
 $loggedInUser = current_user();
+
+// Cache-busting: tambah masa fail stylesheet diubah suai kali terakhir sebagai query string
+// supaya pelayar terus muat turun versi baru selepas sebarang perubahan CSS, bukan guna
+// salinan cache lama sehingga pengguna kosongkan cache secara manual.
+$pageCssHref = $pageCss;
+if ($pageCss !== '') {
+    $pageCssPath = dirname($_SERVER['SCRIPT_FILENAME']) . '/' . $pageCss;
+    if (is_file($pageCssPath)) {
+        $pageCssHref .= '?v=' . filemtime($pageCssPath);
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -28,7 +39,7 @@ $loggedInUser = current_user();
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600;700&family=Mulish:wght@400;600;700;800&family=Poppins:wght@300;400;500;600;700&family=Raleway:wght@500;600;700&family=Playfair+Display:wght@700;800&family=Inter:wght@500&display=swap" rel="stylesheet">
 <?php if ($pageCss): ?>
-<link rel="stylesheet" href="<?= htmlspecialchars($pageCss) ?>">
+<link rel="stylesheet" href="<?= htmlspecialchars($pageCssHref) ?>">
 <?php endif; ?>
 </head>
 <body>

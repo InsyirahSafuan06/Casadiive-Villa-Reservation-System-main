@@ -1,14 +1,16 @@
 <?php
 /**
- * Success / completion page.
- * Confirms that a booking's deposit has been paid and shows the final details.
- * Replaces complete.php as the end of the payment flow.
+ * Halaman berjaya / selesai.
+ * Sahkan bahawa deposit sesuatu tempahan telah dibayar dan papar butiran akhir.
+ * Ini adalah penghujung aliran pembayaran (payment.php -> payment_method.php -> process_payment.php -> sini).
  */
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/helpers.php';
 
 $methodLabels = ['qr' => 'QR / DuitNow', 'online_banking' => 'FPX Online Banking'];
 
+// Corak carian "nombor rujukan + nombor telefon" yang sama seperti mybooking.php — ini menghalang
+// orang lain daripada melihat pengesahan orang lain hanya dengan meneka ID tempahan dalam URL.
 $bookingId = filter_var($_GET['ref'] ?? $_GET['booking_id'] ?? '', FILTER_VALIDATE_INT);
 $phone = trim((string) ($_GET['phone'] ?? ''));
 $booking = null;

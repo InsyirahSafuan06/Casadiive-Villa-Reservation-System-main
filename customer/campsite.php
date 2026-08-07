@@ -1,14 +1,16 @@
 <?php
 /**
- * Campsite package listing page.
- * It shows all available campsite options and links each one to booking or detail pages.
+ * Halaman senarai pakej khemah.
+ * Halaman ini memaparkan semua pilihan khemah yang tersedia dan pautkan setiap satu ke halaman tempahan atau butiran.
  */
 require_once __DIR__ . '/../includes/db.php';
 
+// Hanya papar pakej khemah yang ditanda tersedia dalam panel admin.
 $campsites = $pdo->query(
     "SELECT * FROM accommodation WHERE accommodation_type = 'Campsite' AND status = 'available' ORDER BY accommodation_id"
 )->fetchAll();
 
+// Set ikon kecil yang digunakan pada setiap kad pakej di bawah.
 $icons = [
     'site' => '<svg viewBox="0 0 32 32"><path d="M6 14a5 5 0 0 1 10 0v2H6z"/><rect x="4" y="16" width="24" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="2"/></svg>',
     'pool' => '<svg viewBox="0 0 32 32"><path d="M4 24c2.5 0 2.5-3 5-3s2.5 3 5 3 2.5-3 5-3 2.5 3 5 3 2.5-3 5-3v4H4z"/><circle cx="15" cy="10" r="4.5"/></svg>',
@@ -23,7 +25,7 @@ include __DIR__ . '/../includes/header.php';
 ?>
 
   <!-- HERO -->
-  <section class="hero" id="top">
+  <section class="hero" id="top" style="background-image:linear-gradient(rgba(124,106,70,.55), rgba(124,106,70,.55)), url('../assets/images/beach-benches.jpg');background-size:cover;background-position:center;">
     <h1>Campsite Packages</h1>
     <p>Experience beach camping with pool and sea view.</p>
     <a href="#packages" class="scroll-down" aria-label="Scroll down"><span></span></a>
@@ -34,10 +36,13 @@ include __DIR__ . '/../includes/header.php';
     <div class="container package-grid">
 
       <?php foreach ($campsites as $campsite):
+        // Tiada penanda "ada pool" / "ada tent" berasingan dalam pangkalan data, jadi kita cari
+        // dalam teks features/description untuk perkataan tersebut bagi tentukan ikon mana nak papar.
         $searchText = strtolower(($campsite['features'] ?? '') . ' ' . ($campsite['description'] ?? ''));
         $hasPool = strpos($searchText, 'pool') !== false;
         $hasTent = strpos($searchText, 'tent') !== false;
         $siteLabel = ($hasPool || $hasTent) ? 'Site' : 'Site Only';
+        // Jika admin sudah muat naik gambar untuk pakej ini, guna sebagai latar belakang kad.
         $mediaStyle = $campsite['image'] ? ' style="background-image:url(\'' . htmlspecialchars($campsite['image']) . '\');background-size:cover;background-position:center;"' : '';
       ?>
       <article class="package-card">

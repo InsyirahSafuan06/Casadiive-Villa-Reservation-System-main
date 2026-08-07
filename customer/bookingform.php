@@ -1,16 +1,22 @@
 <?php
 /**
- * Booking form page.
- * Customers fill in their details here, and the system saves the booking before redirecting to payment.
+ * Halaman borang tempahan.
+ * Pelanggan isikan butiran mereka di sini, dan sistem simpan tempahan sebelum ubah hala ke pembayaran.
  */
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/helpers.php';
 
 $errors = [];
+
+// Simpan apa jua yang pelanggan taip terakhir, supaya borang boleh dipaparkan semula dengan
+// jawapan mereka masih terisi — sama ada selepas ralat pengesahan (diisi semula dari $_POST
+// di bawah) atau apabila tiba dengan nilai pra-isi dari bar tempahan pantas halaman utama
+// (diisi semula dari $_GET di bawah). Nilai lalai di sini meliputi lawatan baru yang kosong.
 $old = [
     'full_name' => '',
     'phone' => '',
+    'email' => '',
     'plate_num' => '',
     'check_in' => '',
     'check_out' => '',
@@ -19,19 +25,21 @@ $old = [
     'special_request' => '',
 ];
 
+// Hanya benarkan pelanggan pilih dari pakej yang ditanda tersedia oleh admin.
 $accommodations = $pdo->query(
     "SELECT accommodation_id, accommodation_name, accommodation_type, price, price_weekend, capacity
      FROM accommodation
      WHERE status = 'available'
      ORDER BY accommodation_type, accommodation_id"
 )->fetchAll();
+// Senarai yang sama, tetapi diindeks mengikut ID supaya kita boleh cari cepat "pakej mana yang mereka pilih" nanti.
 $accommodationsById = [];
 foreach ($accommodations as $acc) {
     $accommodationsById[(int) $acc['accommodation_id']] = $acc;
 }
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    // Prefill from the homepage's quick booking bar or package links.
+    // Pra-isi dari bar tempahan pantas halaman utama atau pautan pakej.
     $qbCheckIn = trim((string) ($_GET['check_in'] ?? ''));
     $qbCheckOut = trim((string) ($_GET['check_out'] ?? ''));
     $qbGuests = trim((string) ($_GET['guests'] ?? ''));
@@ -70,6 +78,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $old['full_name'] = trim((string) ($_POST['full_name'] ?? ''));
     $old['phone'] = trim((string) ($_POST['phone'] ?? ''));
+    $old['email'] = trim((string) ($_POST['email'] ?? ''));
     $old['plate_num'] = trim((string) ($_POST['plate_num'] ?? ''));
     $old['check_in'] = trim((string) ($_POST['check_in'] ?? ''));
     $old['check_out'] = trim((string) ($_POST['check_out'] ?? ''));
@@ -86,6 +95,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     if ($old['phone'] === '') {
         $errors[] = 'Phone number is required.';
+    }
+    if ($old['email'] === '' || !filter_var($old['email'], FILTER_VALIDATE_EMAIL)) {
+        $errors[] = 'A valid email address is required so we can send your booking confirmation and check-in reminder.';
     }
 
     $checkIn = DateTime::createFromFormat('Y-m-d', $old['check_in']) ?: null;
@@ -108,6 +120,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($totalGuest !== false && $totalGuest > (int) $selectedAccommodation['capacity']) {
         $errors[] = "This package can only host up to {$selectedAccommodation['capacity']} guests.";
     } elseif ($checkIn && $checkOut) {
+        // Semakan tempahan berganda: cari mana-mana tempahan lain (yang tidak dibatalkan) pada
+        // penginapan yang sama yang tarikh penginapannya bertindih dengan yang sedang diminta.
         $stmt = $pdo->prepare(
             "SELECT 1
              FROM booking_item bi
@@ -128,22 +142,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
+    // Hanya sentuh pangkalan data selepas semua semakan pengesahan di atas berjaya.
     if (!$errors) {
         $weekdayPrice = (float) $selectedAccommodation['price'];
         $weekendPrice = $selectedAccommodation['price_weekend'] !== null ? (float) $selectedAccommodation['price_weekend'] : null;
         $stay = compute_stay_price($weekdayPrice, $weekendPrice, $checkIn, $checkOut);
         $totalAmount = $stay['total'];
-        $depositAmount = 50.00;
+        $depositAmount = 50.00; // deposit tetap yang diperlukan untuk sahkan sebarang tempahan
 
         try {
+            // customer + booking + booking_item semua perlu disimpan bersama, jadi bungkus dalam
+            // satu transaksi — jika mana-mana insert gagal, rollback dan jangan simpan apa-apa.
             $pdo->beginTransaction();
 
             $stmt = $pdo->prepare(
-                'INSERT INTO customer (full_name, phone, plate_num) VALUES (:full_name, :phone, :plate_num)'
+                'INSERT INTO customer (full_name, phone, email, plate_num) VALUES (:full_name, :phone, :email, :plate_num)'
             );
             $stmt->execute([
                 'full_name' => $old['full_name'],
                 'phone' => $old['phone'],
+                'email' => $old['email'],
                 'plate_num' => $old['plate_num'] !== '' ? $old['plate_num'] : null,
             ]);
             $customerId = (int) $pdo->lastInsertId();
@@ -260,6 +278,11 @@ include __DIR__ . '/../includes/header.php';
             </div>
 
             <div class="form-field">
+              <label for="email">Email Address</label>
+              <input type="email" id="email" name="email" placeholder="Enter your email address" value="<?= htmlspecialchars($old['email']) ?>" required>
+            </div>
+
+            <div class="form-field">
               <label for="plate">Car Plate Number</label>
               <input type="text" id="plate" name="plate_num" placeholder="Enter your car plate number" value="<?= htmlspecialchars($old['plate_num']) ?>">
             </div>
@@ -321,6 +344,7 @@ include __DIR__ . '/../includes/header.php';
             <div class="summary-rows">
               <div class="summary-row"><span>Full Name</span><span id="s-name">—</span></div>
               <div class="summary-row"><span>Phone Number</span><span id="s-phone">—</span></div>
+              <div class="summary-row"><span>Email Address</span><span id="s-email">—</span></div>
               <div class="summary-row"><span>Car Plate Number</span><span id="s-plate">—</span></div>
               <div class="summary-row"><span>Check-in</span><span id="s-checkin">—</span></div>
               <div class="summary-row"><span>Check-out</span><span id="s-checkout">—</span></div>
@@ -348,15 +372,15 @@ include __DIR__ . '/../includes/header.php';
   const form = document.getElementById('booking-form');
   const accommodationSelect = document.getElementById('accommodation');
 
-  // Mirrors compute_stay_price() in includes/helpers.php — Friday & Saturday
-  // nights are priced at the weekend rate, everything else at the weekday rate.
+  // Mencerminkan compute_stay_price() dalam includes/helpers.php — malam Jumaat & Sabtu
+  // dikira pada kadar hujung minggu, selainnya pada kadar hari biasa.
   function computeStay(checkInStr, checkOutStr, weekdayPrice, weekendPrice){
     let weekdayNights = 0, weekendNights = 0;
     if (checkInStr && checkOutStr) {
       const cursor = new Date(checkInStr + 'T00:00:00');
       const end = new Date(checkOutStr + 'T00:00:00');
       while (cursor < end) {
-        const day = cursor.getDay(); // 0=Sun .. 5=Fri, 6=Sat
+        const day = cursor.getDay(); // 0=Ahad .. 5=Jumaat, 6=Sabtu
         (day === 5 || day === 6) ? weekendNights++ : weekdayNights++;
         cursor.setDate(cursor.getDate() + 1);
       }
@@ -382,6 +406,7 @@ include __DIR__ . '/../includes/header.php';
 
     document.getElementById('s-name').textContent = document.getElementById('full-name').value || '—';
     document.getElementById('s-phone').textContent = document.getElementById('phone').value || '—';
+    document.getElementById('s-email').textContent = document.getElementById('email').value || '—';
     document.getElementById('s-plate').textContent = document.getElementById('plate').value || '—';
 
     const checkIn = document.getElementById('check-in').value;
@@ -398,7 +423,7 @@ include __DIR__ . '/../includes/header.php';
 
     let priceLabel = `RM ${weekdayPrice.toFixed(2)} / night`;
     if (checkIn) {
-      const checkInDay = new Date(checkIn + 'T00:00:00').getDay(); // 0=Sun .. 5=Fri, 6=Sat
+      const checkInDay = new Date(checkIn + 'T00:00:00').getDay(); // 0=Ahad .. 5=Jumaat, 6=Sabtu
       const checkInRate = (checkInDay === 5 || checkInDay === 6) ? weekendPrice : weekdayPrice;
       priceLabel = `RM ${checkInRate.toFixed(2)} / night`;
     }

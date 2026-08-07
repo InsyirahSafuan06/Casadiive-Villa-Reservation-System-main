@@ -1,11 +1,11 @@
 <?php
 /**
- * Home page of the Casadive Villa reservation system.
- * This page shows the main landing page, quick booking form, facilities, and recent guest reviews.
+ * Halaman utama sistem tempahan Casadive Villa.
+ * Halaman ini memaparkan laman pendaratan utama, borang tempahan pantas, kemudahan, dan ulasan tetamu terkini.
  */
 require_once __DIR__ . '/includes/db.php';
 
-// Load recent reviews from the database to display on the homepage.
+// Muatkan ulasan terkini dari pangkalan data untuk dipaparkan di halaman utama.
 $reviews = $pdo->query(
     "SELECT r.rating, r.comment, r.review_date, c.full_name
      FROM review r
@@ -23,7 +23,7 @@ include __DIR__ . '/includes/header.php';
 ?>
 
   <!-- HERO -->
-  <section class="hero" id="home">
+  <section class="hero" id="home" style="background-image:linear-gradient(0deg, rgba(0,0,0,.35), rgba(0,0,0,.15)), url('assets/images/beach-villa-bright.jpg');background-size:cover;background-position:center;">
     <div class="container">
       <p class="hero-eyebrow">Casadive Villa</p>
       <h1 class="hero-title">Spend your Dream Holidays with us</h1>
@@ -81,8 +81,8 @@ include __DIR__ . '/includes/header.php';
   <section class="welcome" id="villa">
     <div class="container">
       <div class="welcome-photos" aria-hidden="true">
-        <div class="photo-a"></div>
-        <div class="photo-b"></div>
+        <div class="photo-a" style="background-image:url('assets/images/beach-casa3.jpg');background-size:cover;background-position:center;"></div>
+        <div class="photo-b" style="background-image:url('assets/images/bedroom-modern-fan.jpg');background-size:cover;background-position:center;"></div>
       </div>
       <div class="welcome-copy">
         <p class="welcome-script">Welcome</p>
@@ -134,9 +134,9 @@ include __DIR__ . '/includes/header.php';
       <div class="testimonial-track">
         <?php foreach ($reviews as $review): ?>
         <article class="testimonial-card">
-          <div class="stars" aria-label="<?= (int) $review['rating'] ?> out of 5 stars">
+          <div class="stars" data-rating="<?= (int) $review['rating'] ?>" aria-label="<?= (int) $review['rating'] ?> out of 5 stars">
             <?php for ($i = 1; $i <= 5; $i++): ?>
-              <svg viewBox="0 0 20 19" class="<?= $i <= (int) $review['rating'] ? '' : 'star-empty' ?>"><polygon points="10,0 12.5,7 20,7 14,11.5 16,19 10,14.5 4,19 6,11.5 0,7 7.5,7"/></svg>
+              <span class="star">&#9733;</span>
             <?php endfor; ?>
           </div>
           <p class="testimonial-date"><?= htmlspecialchars(date('j M. Y', strtotime($review['review_date']))) ?></p>
@@ -153,6 +153,19 @@ include __DIR__ . '/includes/header.php';
       <?php endif; ?>
     </div>
   </section>
+
+<script>
+  // Setiap kad ulasan memaparkan 5 bintang penuh dalam PHP; ini hanya memudarkan
+  // bintang selepas rating sebenar ulasan tersebut (contoh: ulasan 3 bintang memudarkan bintang 4 dan 5).
+  document.querySelectorAll('.stars[data-rating]').forEach(function (starsEl) {
+    var rating = parseInt(starsEl.dataset.rating, 10) || 0;
+    starsEl.querySelectorAll('.star').forEach(function (star, index) {
+      if (index >= rating) {
+        star.classList.add('star-empty');
+      }
+    });
+  });
+</script>
 
 <?php
 $showWhatsapp = true;

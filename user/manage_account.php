@@ -1,7 +1,7 @@
 <?php
 /**
- * Account management page.
- * Admins can create, edit, or delete staff and admin accounts from this page.
+ * Halaman pengurusan akaun.
+ * Admin boleh cipta, sunting, atau padam akaun staf dan admin dari halaman ini.
  */
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/auth.php';
@@ -50,6 +50,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif ($targetId === (int) $currentUser['user_id']) {
             $errors[] = 'You cannot delete your own account.';
         } elseif ($target['role'] === 'admin' && $target['status'] === 'active') {
+            // Jaring keselamatan: jangan sekali-kali biarkan sistem berakhir dengan sifar admin aktif,
+            // yang akan mengunci semua orang daripada dashboard ini selama-lamanya.
             $activeAdmins = (int) $pdo->query("SELECT COUNT(*) FROM user WHERE role = 'admin' AND status = 'active'")->fetchColumn();
             if ($activeAdmins <= 1) {
                 $errors[] = 'At least one active admin account must remain.';
@@ -69,9 +71,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $password = (string) ($_POST['password'] ?? '');
 
         if ($isSelfEdit) {
-            // Never trust the client for your own role/status — you can't promote,
-            // demote, or deactivate yourself through this form even if the fields
-            // were tampered with; another admin must do that instead.
+            // Jangan sekali-kali percaya klien untuk role/status diri sendiri — anda tidak boleh
+            // naikkan, turunkan, atau nyahaktifkan akaun sendiri melalui borang ini walaupun
+            // medan-medan diganggu; admin lain mesti buat itu sebaliknya.
             $old['role'] = $editing['role'];
             $old['status'] = $editing['status'];
         } else {
@@ -102,6 +104,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         if (!$errors) {
+            // Username dan emel mesti unik merentasi semua akaun (kecuali akaun ini, semasa menyunting).
             $stmt = $pdo->prepare('SELECT user_id FROM user WHERE (username = :username OR email = :email) AND user_id != :self');
             $stmt->execute([
                 'username' => $old['username'],
@@ -113,6 +116,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
+        // Jaring keselamatan "kekalkan sekurang-kurangnya satu admin aktif" yang sama seperti
+        // tindakan padam di atas, tetapi di sini untuk kes turunkan/nyahaktifkan admin terakhir.
         if (!$errors && $editing && $editing['role'] === 'admin' && $editing['status'] === 'active') {
             $willStillBeActiveAdmin = $old['role'] === 'admin' && $old['status'] === 'active';
             if (!$willStillBeActiveAdmin) {
@@ -125,6 +130,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if (!$errors) {
             if ($editing) {
+                // Hanya sentuh lajur kata laluan jika satu yang baru benar-benar ditaip —
+                // jika tidak, biarkan hash sedia ada tidak diusik.
                 if ($password !== '') {
                     $stmt = $pdo->prepare(
                         'UPDATE user SET username = :username, fullname = :fullname, email = :email, phone = :phone,
@@ -159,6 +166,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 exit;
             }
 
+            // password_hash() digunakan setiap kali kata laluan disimpan — kata laluan
+            // teks biasa itu sendiri tidak pernah disimpan, hanya hash sehala ini.
             $stmt = $pdo->prepare(
                 'INSERT INTO user (username, password, fullname, email, phone, role, status)
                  VALUES (:username, :password, :fullname, :email, :phone, :role, :status)'

@@ -1,7 +1,7 @@
 <?php
 /**
- * My Booking lookup page.
- * Customers can search for a booking by reference number and phone number to view or print a receipt.
+ * Halaman carian MyBooking.
+ * Pelanggan boleh cari tempahan mengikut nombor rujukan dan nombor telefon untuk lihat atau cetak resit.
  */
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/auth.php';
@@ -11,6 +11,8 @@ $ref = isset($_GET['ref']) ? trim((string) $_GET['ref']) : '';
 $phone = isset($_GET['phone']) ? trim((string) $_GET['phone']) : '';
 $reviewError = null;
 
+// Tetamu hanya boleh beri ulasan selepas mereka checked_out, dan hanya sekali bagi setiap tempahan —
+// kedua-duanya dikuatkuasakan dalam query di bawah sebelum INSERT dicuba.
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['form'] ?? '') === 'review') {
     $rRef = filter_var($_POST['ref'] ?? '', FILTER_VALIDATE_INT);
     $rPhone = trim((string) ($_POST['phone'] ?? ''));
@@ -33,6 +35,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['form'] ?? '') === 'review'
             $reviewError = 'We could not verify that booking for a review.';
         } else {
             try {
+                // Jadual `review` ada UNIQUE constraint pada booking_id, jadi ulasan kedua
+                // untuk tempahan yang sama akan gagal di sini dan jatuh ke catch di bawah.
                 $stmt = $pdo->prepare(
                     'INSERT INTO review (booking_id, rating, comment) VALUES (:booking_id, :rating, :comment)'
                 );
@@ -56,6 +60,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['form'] ?? '') === 'review'
     $phone = $rPhone;
 }
 
+// Tempahan dicari mengikut nombor rujukan + nombor telefon yang digunakan untuk tempah — ini berfungsi
+// sebagai "kata laluan" ringkas supaya tetamu tidak boleh lihat tempahan orang lain hanya dengan meneka ID.
 $lookupAttempted = $ref !== '' || $phone !== '';
 $lookupError = null;
 $booking = null;
@@ -103,7 +109,9 @@ if ($booking) {
     $checkIn = new DateTime($booking['check_in']);
     $checkOut = new DateTime($booking['check_out']);
     $nights = max(1, $checkOut->diff($checkIn)->days);
-    $stay = compute_stay_price(1, 1, $checkIn, $checkOut); // only need the night counts here
+    // Menghantar 1/1 sebagai harga di sini adalah satu helah: kita tidak perlukan jumlah dari panggilan ini,
+    // hanya kiraan malam hari biasa/hujung minggu yang dipulangkan, untuk bina pecahan harga di bawah.
+    $stay = compute_stay_price(1, 1, $checkIn, $checkOut);
 }
 
 $base = '../';
@@ -124,6 +132,12 @@ include __DIR__ . '/../includes/header.php';
   <!-- RECEIPT -->
   <section class="receipt-section">
     <div class="container">
+      <?php if ($reviewError && $booking['booking_status'] !== 'checked_out'): ?>
+        <!-- A review was submitted (e.g. via the footer form) for a booking that isn't
+             checked_out yet — the review section below is hidden in that case, so without
+             this the rejection would happen silently and look like the button did nothing. -->
+        <p class="lookup-error" style="max-width:700px;margin:0 auto 24px;"><?= htmlspecialchars($reviewError) ?></p>
+      <?php endif; ?>
       <div class="receipt-card">
         <div class="receipt-head">
           <div>

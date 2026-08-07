@@ -1,7 +1,7 @@
 <?php
 /**
- * Payment page.
- * This file handles the deposit payment step for a booking and confirms the transaction.
+ * Halaman pembayaran.
+ * Fail ini mengendalikan langkah pembayaran deposit bagi satu tempahan dan sahkan transaksi tersebut.
  */
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/auth.php';
@@ -32,6 +32,7 @@ if ($bookingId !== false) {
         $stmt->execute(['id' => $bookingId]);
         $items = $stmt->fetchAll();
 
+        // Elak pelanggan bayar dua kali untuk tempahan yang sama.
         $stmt = $pdo->prepare(
             "SELECT payment_id FROM payment WHERE booking_id = :id AND payment_status = 'paid' LIMIT 1"
         );
@@ -40,6 +41,8 @@ if ($bookingId !== false) {
     }
 }
 
+// Halaman ini hanya benarkan pelanggan PILIH kaedah (QR atau online banking) — pembayaran
+// sebenar direkodkan kemudian, dalam payment_method.php / process_payment.php.
 if ($booking && !$paid && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $method = $_POST['method'] ?? '';
     if (!in_array($method, ['qr', 'online_banking'], true)) {
@@ -99,7 +102,7 @@ include __DIR__ . '/../includes/header.php';
       <?php elseif ($paid): ?>
         <div class="payment-card" style="text-align:center;">
           <p class="payment-error" style="background:#e3f7e8;border-color:#bfe6c9;color:#1e6b34;">This booking has already been paid for.</p>
-          <a href="complete.php?ref=<?= $bookingId ?>&phone=<?= urlencode($booking['phone']) ?>" class="pay-btn" style="max-width:320px;margin:24px auto 0;">View Confirmation</a>
+          <a href="sucess_payment.php?ref=<?= $bookingId ?>&phone=<?= urlencode($booking['phone']) ?>" class="pay-btn" style="max-width:320px;margin:24px auto 0;">View Confirmation</a>
         </div>
 
       <?php else: ?>
@@ -164,6 +167,7 @@ include __DIR__ . '/../includes/header.php';
 
 <?php if ($booking && !$paid): ?>
 <script>
+  // Klik QR atau Online Banking akan sorot pilihan tersebut dan papar panel yang sepadan di bawah.
   const options = document.querySelectorAll('.method-option');
   options.forEach(opt => {
     opt.addEventListener('click', () => {

@@ -58,7 +58,8 @@ CREATE TABLE `accommodation` (
   features           TEXT NULL COMMENT 'one feature per line, e.g. "Wifi\nAircond\nSea View"',
   description        TEXT,
   status             ENUM('available','unavailable','maintenance') NOT NULL DEFAULT 'available',
-  image              VARCHAR(255)
+  image              VARCHAR(255),
+  door_code          VARCHAR(20) COMMENT 'lock box / door code shown to the guest in the check-in reminder'
 ) ENGINE=InnoDB;
 
 -- ------------------------------------------------------------
@@ -134,14 +135,15 @@ DROP TABLE IF EXISTS `notification_status`;
 CREATE TABLE `notification_status` (
   notification_id   INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   booking_id        INT UNSIGNED NOT NULL,
-  user_id           INT UNSIGNED NOT NULL,
+  customer_id       INT UNSIGNED NOT NULL,
   sent_date         DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   status             ENUM('pending','sent','failed') NOT NULL DEFAULT 'pending',
-  notification_type ENUM('booking_confirmation','payment_reminder','cancellation','review_request','general') NOT NULL,
+  notification_type ENUM('booking_confirmation','payment_reminder','pending','check_in','check_out','cancellation','cancelled','review_request','general') NOT NULL,
+  channel           ENUM('whatsapp','email') NOT NULL DEFAULT 'whatsapp',
   CONSTRAINT fk_notification_booking FOREIGN KEY (booking_id)
     REFERENCES booking(booking_id) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT fk_notification_user FOREIGN KEY (user_id)
-    REFERENCES user(user_id) ON DELETE CASCADE ON UPDATE CASCADE
+  CONSTRAINT fk_notification_customer FOREIGN KEY (customer_id)
+    REFERENCES customer(customer_id) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB;
 
 SET FOREIGN_KEY_CHECKS = 1;
@@ -157,21 +159,21 @@ INSERT INTO `user` (username, password, fullname, email, phone, role, status) VA
 ('staff', '$2y$10$yfE.LeII4j/qo7r022Ld6elviifDOMu5.oVupuJUNr.dxn8HAvkHi', 'Front Desk Staff', 'staff@casadivevilla.com', '0123456780', 'staff', 'active');
 
 INSERT INTO `accommodation`
-  (accommodation_name, accommodation_type, price, price_weekend, price_holiday, capacity, pax_label, features, description, status)
+  (accommodation_name, accommodation_type, price, price_weekend, price_holiday, capacity, pax_label, features, description, status, door_code)
 VALUES
 ('Casa 1', 'Villa', 359.00, 389.00, 399.00, 5, '4-5 PAX',
  '1 Queen Bed\n1 Bunk Bed\nBathroom\nAircond\nSea View\nPool View\nKettle\nIron + Iron Board\nWifi',
- 'Spacious and comfortable, perfect for families or groups.', 'available'),
+ 'Spacious and comfortable, perfect for families or groups.', 'available', '1745'),
 ('Casa 2', 'Villa', 239.00, 259.00, 269.00, 3, '2-3 PAX',
  '1 Queen Bed\nBathroom\nAircond\nSea View\nPool View\nKettle\nIron + Iron Board\nWifi',
- 'Perfect for couples or small families looking for relaxing beachfront stay with beautiful sea and pool views.', 'available'),
+ 'Perfect for couples or small families looking for relaxing beachfront stay with beautiful sea and pool views.', 'available', '2836'),
 ('Casa 3', 'Villa', 239.00, 259.00, 269.00, 3, '2-3 PAX',
  '1 Queen Bed\nBathroom\nAircond\nSea View\nPool View\nKettle\nIron + Iron Board\nWifi',
- 'Perfect for couples or small families looking for relaxing beachfront stay with beautiful sea and pool views.', 'available'),
+ 'Perfect for couples or small families looking for relaxing beachfront stay with beautiful sea and pool views.', 'available', '3917'),
 ('Casa 4', 'Villa', 359.00, 389.00, 399.00, 5, '4-5 PAX',
  '2 Sofa Beds\nLiving Room\nBathroom\nAircond\nSea View\nPool View\nKettle\nIron + Iron Board\nWifi\nSmall Kitchen',
- 'Spacious and comfortable, perfect for families or groups.', 'available'),
-('Campsite Package 1', 'Campsite', 50.00,  NULL, NULL, 2, NULL, NULL, 'Site only, 1 unit only.',                          'available'),
-('Campsite Package 2', 'Campsite', 80.00,  NULL, NULL, 4, NULL, NULL, 'Site with pool access and a small tent rental.',   'available'),
-('Campsite Package 3', 'Campsite', 110.00, NULL, NULL, 2, NULL, NULL, 'Site only, max 2 pax, 1 unit only.',               'available'),
-('Campsite Package 4', 'Campsite', 130.00, NULL, NULL, 6, NULL, NULL, 'Site with pool access and a small tent rental, max 6 pax.', 'available');
+ 'Spacious and comfortable, perfect for families or groups.', 'available', '4028'),
+('Campsite Package 1', 'Campsite', 50.00,  NULL, NULL, 2, NULL, NULL, 'Site only, 1 unit only.',                          'available', NULL),
+('Campsite Package 2', 'Campsite', 80.00,  NULL, NULL, 4, NULL, NULL, 'Site with pool access and a small tent rental.',   'available', NULL),
+('Campsite Package 3', 'Campsite', 110.00, NULL, NULL, 2, NULL, NULL, 'Site only, max 2 pax, 1 unit only.',               'available', NULL),
+('Campsite Package 4', 'Campsite', 130.00, NULL, NULL, 6, NULL, NULL, 'Site with pool access and a small tent rental, max 6 pax.', 'available', NULL);

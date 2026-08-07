@@ -1,10 +1,11 @@
 <?php
 /**
- * Accommodation detail page.
- * This page displays the full details, features, and rates for a selected villa or campsite package.
+ * Halaman butiran penginapan.
+ * Halaman ini memaparkan butiran penuh, ciri-ciri, dan kadar bagi pakej vila atau khemah yang dipilih.
  */
 require_once __DIR__ . '/../includes/db.php';
 
+// ?id=123 dalam URL memberitahu kita pakej vila/khemah mana yang perlu dipaparkan.
 $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
 $accommodation = null;
 
@@ -14,6 +15,8 @@ if ($id) {
     $accommodation = $stmt->fetch();
 }
 
+// Ciri-ciri bilik disimpan sebagai satu baris teks bagi setiap ciri (lihat manage_accommodation.php),
+// jadi pecahkan semula menjadi senarai di sini, buang mana-mana baris kosong.
 $features = [];
 if ($accommodation && !empty($accommodation['features'])) {
     $features = array_filter(array_map('trim', explode("\n", $accommodation['features'])));
@@ -38,13 +41,21 @@ include __DIR__ . '/../includes/header.php';
         </div>
 
       <?php else:
+        // Hantar "Back to Packages" / "Browse More" ke halaman senarai yang betul mengikut jenis pakej.
         $backHref = $accommodation['accommodation_type'] === 'Campsite' ? 'campsite.php' : 'villa.php';
+        // Guna label khas admin (contoh: "4-5 PAX") jika ditetapkan, jika tidak bina dari nombor kapasiti.
         $paxLabel = $accommodation['pax_label'] ?: ('Max ' . (int) $accommodation['capacity'] . ' guests');
       ?>
 
         <a href="<?= $backHref ?>" class="detail-back">&larr; Back to <?= htmlspecialchars($accommodation['accommodation_type']) ?> Packages</a>
 
         <div class="detail-card">
+
+          <?php if ($accommodation['image']): ?>
+            <div class="detail-media">
+              <img src="<?= htmlspecialchars($accommodation['image']) ?>" alt="<?= htmlspecialchars($accommodation['accommodation_name']) ?>" loading="lazy">
+            </div>
+          <?php endif; ?>
 
           <div class="detail-head">
             <h1 class="detail-name"><?= htmlspecialchars($accommodation['accommodation_name']) ?></h1>

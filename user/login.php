@@ -1,11 +1,12 @@
 <?php
 /**
- * Login page for staff and admin users.
- * This page handles authentication and redirects users to their dashboard after a successful login.
+ * Halaman log masuk untuk pengguna staf dan admin.
+ * Halaman ini mengendalikan pengesahan dan ubah hala pengguna ke dashboard mereka selepas berjaya log masuk.
  */
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/auth.php';
 
+// Sudah log masuk? Langkau borang dan terus ke dashboard yang betul.
 $existingUser = current_user();
 if ($existingUser) {
     header('Location: ' . ($existingUser['role'] === 'admin' ? 'admin_dashboard.php' : 'staff_dashboard.php'));
@@ -22,6 +23,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!csrf_verify()) {
         $error = 'Your session expired. Please try again.';
     } else {
+        // attempt_login() menyemak username/password berbanding jadual `user`, dan
+        // jika betul, simpan pengguna yang log masuk itu dalam sesi untuk kita.
         $user = $oldUsername !== '' && $password !== '' ? attempt_login($pdo, $oldUsername, $password) : false;
 
         if ($user) {
@@ -29,11 +32,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit;
         }
 
+        // Sengaja dibuat kabur — "invalid username or password" bukannya nyatakan yang mana
+        // salah, supaya halaman ini tidak membantu penyerang meneka username yang benar-benar wujud.
         $error = 'Invalid username or password.';
     }
 }
 
 $base = '../';
+// Cache-busting so browsers pick up CSS edits immediately instead of serving a stale copy.
+$loginCssHref = 'style/login.css?v=' . (is_file(__DIR__ . '/style/login.css') ? filemtime(__DIR__ . '/style/login.css') : time());
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -43,7 +50,7 @@ $base = '../';
 <title>Admin Sign In — Casadive Villa</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600;700&family=Poppins:wght@500;700&family=Raleway:wght@500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style/login.css">
+<link rel="stylesheet" href="<?= htmlspecialchars($loginCssHref) ?>">
 </head>
 <body>
 

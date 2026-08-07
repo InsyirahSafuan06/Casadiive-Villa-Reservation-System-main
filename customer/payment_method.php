@@ -1,8 +1,8 @@
 <?php
 /**
- * Payment confirmation page.
- * Shows the booking and the payment method chosen on payment.php for review
- * before the deposit is actually charged in process_payment.php.
+ * Halaman pengesahan pembayaran.
+ * Paparkan tempahan dan kaedah pembayaran yang dipilih pada payment.php untuk semakan
+ * sebelum deposit benar-benar dicaj dalam process_payment.php.
  */
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/auth.php';
@@ -20,6 +20,8 @@ $errors = [];
 $paid = false;
 $nights = 0;
 
+// Nilai-nilai ini datang dari URL yang dibina oleh payment.php, tetapi sahkan semula di sini juga —
+// jangan sekali-kali percaya nilai hanya kerana ia tiba melalui redirect "Location:".
 if (!in_array($method, ['qr', 'online_banking'], true)) {
     $method = '';
 }
@@ -64,6 +66,8 @@ if ($bookingId !== false) {
     }
 }
 
+// Pelanggan mesti tanda kotak "I confirm" sebelum kita teruskan untuk benar-benar
+// mengecaj deposit — halaman ini tidak pernah sentuh pangkalan data sendiri.
 if ($booking && !$paid && $method !== '' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!csrf_verify()) {
         $errors[] = 'Your session expired. Please try again.';

@@ -1,18 +1,22 @@
 <?php
 /**
- * Authentication helpers for login, logout, session checks, and CSRF protection.
- * These functions help keep the website secure and manage the logged-in user state.
+ * Fungsi bantuan pengesahan untuk log masuk, log keluar, semakan sesi, dan perlindungan CSRF.
+ * Fungsi-fungsi ini membantu memastikan laman web selamat dan menguruskan status pengguna yang log masuk.
  */
-declare(strict_types=1);
+declare(strict_types=1); // Aktifkan typing ketat
 
+// Elak mulakan sesi dua kali
 if (session_status() === PHP_SESSION_NONE) {
+    // Cookie tak boleh dibaca JavaScript & tak dihantar merentasi tapak lain
     session_set_cookie_params(['httponly' => true, 'samesite' => 'Lax']);
+
+    // Mulakan sesi PHP
     session_start();
 }
 
 /**
- * Verify credentials against the `user` table and, on success,
- * store a trimmed-down copy of the row (no password hash) in the session.
+ * Sahkan kelayakan berdasarkan jadual `user`, dan jika berjaya,
+ * simpan salinan ringkas rekod tersebut (tanpa hash kata laluan) dalam sesi.
  */
 function attempt_login(PDO $pdo, string $username, string $password): array|false
 {
@@ -37,8 +41,8 @@ function current_user(): array|false
 }
 
 /**
- * Redirects to the sibling login.php (this is only called from pages inside
- * user/) if there's no session, or the role isn't in $allowedRoles.
+ * Ubah hala ke login.php (fungsi ini hanya dipanggil dari halaman dalam
+ * folder user/) jika tiada sesi, atau peranan pengguna bukan dalam $allowedRoles.
  */
 function require_login(array $allowedRoles = []): void
 {
@@ -76,8 +80,8 @@ function logout(): void
 }
 
 /**
- * CSRF protection for POST forms. csrf_field() prints a hidden input;
- * csrf_verify() checks it and should be called before acting on any POST.
+ * Perlindungan CSRF untuk borang POST. csrf_field() memaparkan input tersembunyi;
+ * csrf_verify() menyemaknya dan mesti dipanggil sebelum memproses sebarang POST.
  */
 function csrf_token(): string
 {

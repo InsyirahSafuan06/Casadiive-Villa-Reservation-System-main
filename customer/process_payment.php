@@ -1,12 +1,13 @@
 <?php
 /**
- * Processing page.
- * Records the deposit payment for a booking, then shows a brief "processing"
- * animation before handing off to sucess_payment.php.
+ * Halaman pemprosesan.
+ * Rekodkan pembayaran deposit bagi satu tempahan, kemudian papar animasi "processing"
+ * yang ringkas sebelum diserahkan ke sucess_payment.php.
  */
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/helpers.php';
+require_once __DIR__ . '/../includes/email_notify.php';
 
 $allowedBanks = ['Bank Islam', 'Maybank', 'CIMB Bank', 'Public Bank', 'RHB Bank', 'Hong Leong Bank'];
 
@@ -48,8 +49,12 @@ if (!$booking) {
     $errors[] = 'Missing payment method. Please choose a payment method again.';
 }
 
+// Di sinilah deposit sebenarnya direkodkan — semua yang sebelum halaman ini
+// (payment.php, payment_method.php) hanya memilih kaedah dan mengesahkan.
 if ($booking && !$paid && !$errors) {
     try {
+        // Masukkan rekod pembayaran dan tukar tempahan ke "confirmed" bersama-sama,
+        // supaya kita tidak sekali-kali berakhir dengan satu disimpan tanpa yang satu lagi.
         $pdo->beginTransaction();
 
         $stmt = $pdo->prepare(
@@ -72,6 +77,12 @@ if ($booking && !$paid && !$errors) {
     } catch (Exception $e) {
         $pdo->rollBack();
         $errors[] = 'Something went wrong while recording your payment. Please try again.';
+    }
+
+    // Emel pengesahan hanya selepas pembayaran selamat disimpan — dan di luar
+    // try/catch di atas, supaya masalah emel tidak sekali-kali kelihatan seperti pembayaran itu sendiri gagal.
+    if ($paid) {
+        send_status_email($pdo, $bookingId, 'confirmed');
     }
 }
 
@@ -175,6 +186,8 @@ include __DIR__ . '/../includes/header.php';
     </section>
 
     <script>
+      // Pembayaran sudah disimpan di server di atas — kelewatan ini hanya kesan visual
+      // "processing..." sebelum menghantar pelanggan ke halaman berjaya.
       setTimeout(function () {
         window.location.href = <?= json_encode($redirectUrl) ?>;
       }, 2200);

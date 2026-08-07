@@ -1,7 +1,7 @@
 <?php
 /**
- * Booking receipt page.
- * This page shows the booking record in a receipt-style layout for staff or admins.
+ * Halaman resit tempahan.
+ * Halaman ini memaparkan rekod tempahan dalam susun atur gaya resit untuk staf atau admin.
  */
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/auth.php';
@@ -42,7 +42,9 @@ $items = $stmt->fetchAll();
 $checkIn = new DateTime($booking['check_in']);
 $checkOut = new DateTime($booking['check_out']);
 $nights = max(1, $checkOut->diff($checkIn)->days);
-$stay = compute_stay_price(1, 1, $checkIn, $checkOut); // only need the night counts here
+// Menghantar 1/1 sebagai harga adalah satu helah: kita hanya mahu kiraan malam hari biasa/hujung
+// minggu yang dipulangkan, untuk bina pecahan harga di bawah — bukan jumlahnya (harga sebenar dari booking_item).
+$stay = compute_stay_price(1, 1, $checkIn, $checkOut);
 
 $backUrl = $currentUser['role'] === 'admin' ? 'admin_dashboard.php' : 'staff_dashboard.php';
 ?>

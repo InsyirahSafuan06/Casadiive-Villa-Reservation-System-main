@@ -1,14 +1,14 @@
 <?php
 /**
- * Shared footer layout for the website.
- * This file displays the footer links and contact information used on public pages.
+ * Susun atur footer yang dikongsi untuk laman web.
+ * Fail ini memaparkan pautan footer dan maklumat hubungan yang digunakan pada halaman awam.
  */
 declare(strict_types=1);
 
 /**
- * Expected variables from the including page:
- *   $base          string  '' at the project root, '../' one level deep
- *   $showWhatsapp  bool    show the floating WhatsApp card (index.php only)
+ * Pembolehubah yang dijangka daripada halaman yang memasukkan fail ini:
+ *   $base          string  '' di root projek, '../' satu tahap ke bawah
+ *   $showWhatsapp  bool    papar kad terapung WhatsApp (index.php sahaja)
  */
 $base ??= '';
 $showWhatsapp ??= false;
@@ -55,12 +55,27 @@ $showWhatsapp ??= false;
         </div>
 
         <div class="footer-col newsletter">
-          <h4>Newsletter</h4>
-          <p>Kindly subscribe to our newsletter to get latest updates on our rooms and campsite.</p>
-          <form class="newsletter-form" onsubmit="return false;">
-            <label for="newsletter-email" style="position:absolute;left:-9999px;">Enter your email</label>
-            <input id="newsletter-email" type="email" placeholder="Enter your email" required>
-            <button type="submit">Subscribe</button>
+          <h4>Write a Review</h4>
+          <p>Already stayed with us? Enter your booking reference and phone number to share your experience.</p>
+          <!-- Reuses the same review handler as the "Leave a Review" form on MyBooking —
+               only bookings marked checked_out can be reviewed, one review per booking. -->
+          <form class="newsletter-form footer-review-form" method="post" action="<?= $base ?>customer/mybooking.php">
+            <?= csrf_field() ?>
+            <input type="hidden" name="form" value="review">
+            <div class="footer-review-fields">
+              <label for="footer-review-ref" style="position:absolute;left:-9999px;">Booking Reference</label>
+              <input id="footer-review-ref" type="text" name="ref" placeholder="Booking Reference" required>
+              <label for="footer-review-phone" style="position:absolute;left:-9999px;">Phone Number</label>
+              <input id="footer-review-phone" type="tel" name="phone" placeholder="Phone Number" required>
+            </div>
+            <div class="footer-review-stars" role="radiogroup" aria-label="Rating">
+              <?php for ($i = 5; $i >= 1; $i--): ?>
+                <input type="radio" name="rating" id="footer-rating-<?= $i ?>" value="<?= $i ?>" <?= $i === 5 ? 'checked' : '' ?>>
+                <label for="footer-rating-<?= $i ?>" title="<?= $i ?> stars">&#9733;</label>
+              <?php endfor; ?>
+            </div>
+            <textarea name="comment" rows="2" placeholder="Tell us about your stay (optional)"></textarea>
+            <button type="submit">Submit Review</button>
           </form>
         </div>
       </div>
@@ -72,7 +87,6 @@ $showWhatsapp ??= false;
 
   <?php if ($showWhatsapp): ?>
   <!-- WHATSAPP FLOATING CARD -->
-  <!-- href is a placeholder; replace with a real wa.me/<number> link once a WhatsApp business number is available -->
   <a class="whatsapp-card" href="https://wa.me/60103851892" aria-label="Chat with us on WhatsApp">
     <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
       <circle cx="16" cy="16" r="16" fill="#25D366"/>

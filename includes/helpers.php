@@ -1,22 +1,22 @@
 <?php
 /**
- * Helper functions for formatting and pricing.
- * These small functions make the booking flow easier to manage and display.
+ * Fungsi bantuan untuk format dan pengiraan harga.
+ * Fungsi-fungsi kecil ini memudahkan pengurusan dan paparan proses tempahan.
  */
 declare(strict_types=1);
 
-/** Turns a snake_case enum value like 'checked_in' into 'Checked In' for display. */
+/** Tukar nilai enum snake_case seperti 'checked_in' kepada 'Checked In' untuk paparan. */
 function format_status(string $status): string
 {
     return ucwords(str_replace('_', ' ', $status));
 }
 
 /**
- * Splits a stay into weekday vs. weekend nights (Friday & Saturday count as
- * weekend) and prices each night accordingly. $weekendPrice falls back to
- * $weekdayPrice when null. Public holiday pricing isn't applied here — that
- * would need a holiday calendar this system doesn't have; price_holiday on
- * `accommodation` is display-only for now.
+ * Bahagikan tempoh penginapan kepada malam hari biasa vs. hujung minggu (Jumaat & Sabtu
+ * dikira sebagai hujung minggu) dan kira harga setiap malam mengikutnya. $weekendPrice
+ * akan guna $weekdayPrice jika null. Harga cuti umum tidak digunakan di sini — itu
+ * memerlukan kalendar cuti yang sistem ini tiada; price_holiday pada jadual
+ * `accommodation` hanya untuk paparan sahaja buat masa ini.
  */
 function compute_stay_price(float $weekdayPrice, ?float $weekendPrice, DateTime $checkIn, DateTime $checkOut): array
 {
@@ -26,7 +26,7 @@ function compute_stay_price(float $weekdayPrice, ?float $weekendPrice, DateTime 
 
     $cursor = clone $checkIn;
     while ($cursor < $checkOut) {
-        $isWeekend = in_array((int) $cursor->format('N'), [5, 6], true); // Friday, Saturday
+        $isWeekend = in_array((int) $cursor->format('N'), [5, 6], true); // Jumaat, Sabtu
         $isWeekend ? $weekendNights++ : $weekdayNights++;
         $cursor->modify('+1 day');
     }
