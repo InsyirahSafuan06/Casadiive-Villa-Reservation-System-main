@@ -20,17 +20,18 @@ function format_status(string $status): string
  */
 function compute_stay_price(float $weekdayPrice, ?float $weekendPrice, DateTime $checkIn, DateTime $checkOut): array
 {
-    $weekendPrice ??= $weekdayPrice;
-    $weekdayNights = 0;
-    $weekendNights = 0;
+    $weekendPrice ??= $weekdayPrice; // kalau tak set harga weekend, guna harga weekday je
+    $weekdayNights = 0; // kira jumlah malam hari biasa
+    $weekendNights = 0; // kira jumlah malam hujung minggu
 
-    $cursor = clone $checkIn;
+    $cursor = clone $checkIn; // kita "jalan" dari tarikh check-in, hari demi hari
     while ($cursor < $checkOut) {
         $isWeekend = in_array((int) $cursor->format('N'), [5, 6], true); // Jumaat, Sabtu
-        $isWeekend ? $weekendNights++ : $weekdayNights++;
-        $cursor->modify('+1 day');
+        $isWeekend ? $weekendNights++ : $weekdayNights++; // tambah kira ikut hari tu weekend ke tak
+        $cursor->modify('+1 day'); // pergi ke hari seterusnya
     }
 
+    // pulangkan berapa malam setiap jenis, dan jumlah harga keseluruhan
     return [
         'weekday_nights' => $weekdayNights,
         'weekend_nights' => $weekendNights,

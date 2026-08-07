@@ -7,7 +7,7 @@ require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/helpers.php';
 
-$bookingId = filter_var($_POST['booking_id'] ?? $_GET['booking_id'] ?? '', FILTER_VALIDATE_INT);
+$bookingId = filter_var($_POST['booking_id'] ?? $_GET['booking_id'] ?? '', FILTER_VALIDATE_INT); // boleh datang dari URL atau borang
 $booking = null;
 $items = [];
 $errors = [];
@@ -32,7 +32,7 @@ if ($bookingId !== false) {
         $stmt->execute(['id' => $bookingId]);
         $items = $stmt->fetchAll();
 
-        // Elak pelanggan bayar dua kali untuk tempahan yang sama.
+        // check dulu — elak pelanggan bayar dua kali untuk tempahan yang sama
         $stmt = $pdo->prepare(
             "SELECT payment_id FROM payment WHERE booking_id = :id AND payment_status = 'paid' LIMIT 1"
         );
@@ -41,8 +41,8 @@ if ($bookingId !== false) {
     }
 }
 
-// Halaman ini hanya benarkan pelanggan PILIH kaedah (QR atau online banking) — pembayaran
-// sebenar direkodkan kemudian, dalam payment_method.php / process_payment.php.
+// page ni cuma untuk pelanggan PILIH kaedah bayaran (QR atau online banking) — rekod
+// pembayaran sebenar jadi kemudian dalam payment_method.php / process_payment.php
 if ($booking && !$paid && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $method = $_POST['method'] ?? '';
     if (!in_array($method, ['qr', 'online_banking'], true)) {
@@ -54,14 +54,15 @@ if ($booking && !$paid && $_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if (!$errors) {
+        // hantar terus ke page seterusnya, bawa sekali kaedah & bank yang dia pilih
         $bank = $method === 'online_banking' ? trim((string) ($_POST['bank'] ?? '')) : '';
         header('Location: payment_method.php?booking_id=' . $bookingId . '&method=' . urlencode($method) . '&bank=' . urlencode($bank));
         exit;
     }
 }
 
-$base = '../';
-$active = '';
+$base = '../'; // page ni dalam folder customer/, naik satu tahap untuk pergi root
+$active = ''; // takde menu navbar yang perlu di-highlight untuk page ni
 $pageTitle = 'Payment — Casadive Villa';
 $pageCss = 'style/payment.css';
 include __DIR__ . '/../includes/header.php';
@@ -167,7 +168,7 @@ include __DIR__ . '/../includes/header.php';
 
 <?php if ($booking && !$paid): ?>
 <script>
-  // Klik QR atau Online Banking akan sorot pilihan tersebut dan papar panel yang sepadan di bawah.
+  // klik QR atau Online Banking akan sorot pilihan tu dan tunjuk panel yang sepadan kat bawah
   const options = document.querySelectorAll('.method-option');
   options.forEach(opt => {
     opt.addEventListener('click', () => {

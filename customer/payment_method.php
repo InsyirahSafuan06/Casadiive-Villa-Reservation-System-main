@@ -20,8 +20,8 @@ $errors = [];
 $paid = false;
 $nights = 0;
 
-// Nilai-nilai ini datang dari URL yang dibina oleh payment.php, tetapi sahkan semula di sini juga —
-// jangan sekali-kali percaya nilai hanya kerana ia tiba melalui redirect "Location:".
+// value-value ni datang dari URL yang payment.php bina, tapi kita check balik sini —
+// jangan sekali percaya value tu betul just sebab dia sampai melalui redirect "Location:"
 if (!in_array($method, ['qr', 'online_banking'], true)) {
     $method = '';
 }
@@ -30,7 +30,7 @@ if ($method === 'online_banking') {
         $bank = '';
     }
 } else {
-    $bank = '';
+    $bank = ''; // QR takyah pilih bank, so kosongkan je
 }
 
 if ($bookingId !== false) {
@@ -61,13 +61,13 @@ if ($bookingId !== false) {
         $checkIn = DateTime::createFromFormat('Y-m-d', (string) $booking['check_in']);
         $checkOut = DateTime::createFromFormat('Y-m-d', (string) $booking['check_out']);
         if ($checkIn && $checkOut) {
-            $nights = (int) $checkIn->diff($checkOut)->days;
+            $nights = (int) $checkIn->diff($checkOut)->days; // untuk papar "X night(s)" kat summary
         }
     }
 }
 
-// Pelanggan mesti tanda kotak "I confirm" sebelum kita teruskan untuk benar-benar
-// mengecaj deposit — halaman ini tidak pernah sentuh pangkalan data sendiri.
+// pelanggan kena tick "I confirm" dulu sebelum kita teruskan cas deposit —
+// page ni sendiri tak sentuh database, cuma redirect ke process_payment.php
 if ($booking && !$paid && $method !== '' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!csrf_verify()) {
         $errors[] = 'Your session expired. Please try again.';
@@ -82,8 +82,8 @@ if ($booking && !$paid && $method !== '' && $_SERVER['REQUEST_METHOD'] === 'POST
     }
 }
 
-$base = '../';
-$active = '';
+$base = '../'; // page ni dalam folder customer/, naik satu tahap untuk pergi root
+$active = ''; // takde menu navbar yang perlu di-highlight untuk page ni
 $pageTitle = 'Payment Confirmation — Casadive Villa';
 $pageCss = 'style/payment_method.css';
 include __DIR__ . '/../includes/header.php';

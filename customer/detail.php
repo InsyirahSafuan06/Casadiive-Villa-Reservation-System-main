@@ -5,25 +5,25 @@
  */
 require_once __DIR__ . '/../includes/db.php';
 
-// ?id=123 dalam URL memberitahu kita pakej vila/khemah mana yang perlu dipaparkan.
+// ?id=123 kat URL tu bagitahu kita pakej vila/khemah mana yang nak papar
 $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
 $accommodation = null;
 
 if ($id) {
     $stmt = $pdo->prepare('SELECT * FROM accommodation WHERE accommodation_id = :id');
     $stmt->execute(['id' => $id]);
-    $accommodation = $stmt->fetch();
+    $accommodation = $stmt->fetch(); // false kalau id tu takde dalam DB
 }
 
-// Ciri-ciri bilik disimpan sebagai satu baris teks bagi setiap ciri (lihat manage_accommodation.php),
-// jadi pecahkan semula menjadi senarai di sini, buang mana-mana baris kosong.
+// features disimpan sebagai satu blok teks, satu baris satu ciri (tengok manage_accommodation.php),
+// so kita split ikut baris baru sini, buang baris yang kosong
 $features = [];
 if ($accommodation && !empty($accommodation['features'])) {
     $features = array_filter(array_map('trim', explode("\n", $accommodation['features'])));
 }
 
-$base = '../';
-$active = $accommodation && $accommodation['accommodation_type'] === 'Campsite' ? 'campsite' : 'villa';
+$base = '../'; // page ni dalam folder customer/, naik satu tahap untuk pergi root
+$active = $accommodation && $accommodation['accommodation_type'] === 'Campsite' ? 'campsite' : 'villa'; // highlight menu betul ikut jenis pakej
 $pageTitle = ($accommodation ? $accommodation['accommodation_name'] : 'Package not found') . ' — Casadive Villa';
 $pageCss = 'style/detail.css';
 include __DIR__ . '/../includes/header.php';
@@ -41,9 +41,9 @@ include __DIR__ . '/../includes/header.php';
         </div>
 
       <?php else:
-        // Hantar "Back to Packages" / "Browse More" ke halaman senarai yang betul mengikut jenis pakej.
+        // butang "Back"/"Browse More" kena pergi ke page senarai yang betul (villa ke campsite)
         $backHref = $accommodation['accommodation_type'] === 'Campsite' ? 'campsite.php' : 'villa.php';
-        // Guna label khas admin (contoh: "4-5 PAX") jika ditetapkan, jika tidak bina dari nombor kapasiti.
+        // guna label custom admin (contoh: "4-5 PAX") kalau ada, kalau tak generate dari nombor kapasiti
         $paxLabel = $accommodation['pax_label'] ?: ('Max ' . (int) $accommodation['capacity'] . ' guests');
       ?>
 
@@ -85,6 +85,7 @@ include __DIR__ . '/../includes/header.php';
               <span class="rates-value">RM <?= number_format((float) $accommodation['price'], 0) ?> /night</span>
             </div>
             <?php if ($accommodation['price_weekend'] !== null): ?>
+            <!-- baris ni papar je kalau admin ada set harga weekend -->
             <div class="rates-row">
               <span class="rates-label">Weekend</span>
               <span class="rates-value">RM <?= number_format((float) $accommodation['price_weekend'], 0) ?> /night</span>
@@ -99,11 +100,13 @@ include __DIR__ . '/../includes/header.php';
           </div>
 
           <?php if ($accommodation['status'] !== 'available'): ?>
+            <!-- kalau status bukan "available" (contoh: maintenance/booked), bagitahu tetamu terus -->
             <p class="detail-unavailable">This package is currently <?= htmlspecialchars($accommodation['status']) ?> and not open for booking right now. Please check back later or browse other packages.</p>
           <?php endif; ?>
 
           <div class="detail-actions">
             <?php if ($accommodation['status'] === 'available'): ?>
+              <!-- butang "Book Now" hilang terus kalau pakej tak available, elak orang booking benda takde -->
               <a href="bookingform.php?accommodation=<?= urlencode($accommodation['accommodation_name']) ?>" class="detail-book">Book Now</a>
             <?php endif; ?>
             <a href="<?= $backHref ?>" class="detail-browse">Browse More</a>

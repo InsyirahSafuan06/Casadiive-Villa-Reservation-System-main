@@ -3,9 +3,9 @@
  * Halaman utama sistem tempahan Casadive Villa.
  * Halaman ini memaparkan laman pendaratan utama, borang tempahan pantas, kemudahan, dan ulasan tetamu terkini.
  */
-require_once __DIR__ . '/includes/db.php';
+require_once __DIR__ . '/includes/db.php'; // sambung ke database dulu, dapat $pdo
 
-// Muatkan ulasan terkini dari pangkalan data untuk dipaparkan di halaman utama.
+// ambil 6 ulasan terbaru je untuk letak kat homepage, susun dari yang paling baru
 $reviews = $pdo->query(
     "SELECT r.rating, r.comment, r.review_date, c.full_name
      FROM review r
@@ -15,11 +15,11 @@ $reviews = $pdo->query(
      LIMIT 6"
 )->fetchAll();
 
-$base = '';
-$active = 'home';
+$base = ''; // kita kat root folder, so path takyah naik satu tahap
+$active = 'home'; // untuk highlight menu "Home" kat navbar
 $pageTitle = 'Casadive Villa — Spend your Dream Holidays with us';
-$pageCss = 'style/index.css';
-include __DIR__ . '/includes/header.php';
+$pageCss = 'style/index.css'; // CSS khas untuk page ni
+include __DIR__ . '/includes/header.php'; // papar navbar + head html
 ?>
 
   <!-- HERO -->
@@ -40,7 +40,7 @@ include __DIR__ . '/includes/header.php';
   <!-- QUICK BOOKING BAR -->
   <div class="booking-wrap">
     <div class="container">
-      <form class="booking-bar" method="get" action="customer/bookingform.php">
+      <form class="booking-bar" method="get" action="customer/villa.php" id="quick-booking-form">
         <div class="booking-field">
           <svg viewBox="0 0 20 23" xmlns="http://www.w3.org/2000/svg"><rect x="1" y="3" width="18" height="19" rx="2" fill="none" stroke="#1C1C1C" stroke-width="1.6"/><line x1="1" y1="9" x2="19" y2="9" stroke="#1C1C1C" stroke-width="1.6"/><line x1="5" y1="1" x2="5" y2="5" stroke="#1C1C1C" stroke-width="1.6"/><line x1="15" y1="1" x2="15" y2="5" stroke="#1C1C1C" stroke-width="1.6"/></svg>
           <span>
@@ -155,18 +155,28 @@ include __DIR__ . '/includes/header.php';
   </section>
 
 <script>
-  // Setiap kad ulasan memaparkan 5 bintang penuh dalam PHP; ini hanya memudarkan
-  // bintang selepas rating sebenar ulasan tersebut (contoh: ulasan 3 bintang memudarkan bintang 4 dan 5).
+  // butang "Check Availability" kena bawa pelanggan ke page Villa ke Campsite,
+  // ikut apa yang dia pilih dekat dropdown Type — tukar action borang sebelum submit
+  var quickBookingForm = document.getElementById('quick-booking-form');
+  var quickBookingType = document.getElementById('qb-type');
+  function updateQuickBookingAction() {
+    quickBookingForm.action = quickBookingType.value === 'Campsite' ? 'customer/campsite.php' : 'customer/villa.php';
+  }
+  quickBookingType.addEventListener('change', updateQuickBookingAction);
+  updateQuickBookingAction(); // set betul-betul dari awal, ikut pilihan default pun
+
+  // PHP dah papar 5 bintang penuh untuk setiap ulasan, JS ni je yang "padamkan" warna
+  // bintang lepas rating sebenar (contoh: rating 3 bintang, so bintang ke-4 & ke-5 jadi pudar)
   document.querySelectorAll('.stars[data-rating]').forEach(function (starsEl) {
-    var rating = parseInt(starsEl.dataset.rating, 10) || 0;
+    var rating = parseInt(starsEl.dataset.rating, 10) || 0; // rating ulasan ni berapa bintang
     starsEl.querySelectorAll('.star').forEach(function (star, index) {
       if (index >= rating) {
-        star.classList.add('star-empty');
+        star.classList.add('star-empty'); // bintang lepas rating, buat pudar
       }
     });
   });
 </script>
 
 <?php
-$showWhatsapp = true;
+$showWhatsapp = true; // homepage je yang ada butang WhatsApp terapung
 include __DIR__ . '/includes/footer.php';

@@ -7,12 +7,10 @@ require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/helpers.php';
 
-$errors = [];
+$errors = []; // simpan semua mesej error kat sini untuk papar balik kat pelanggan
 
-// Simpan apa jua yang pelanggan taip terakhir, supaya borang boleh dipaparkan semula dengan
-// jawapan mereka masih terisi — sama ada selepas ralat pengesahan (diisi semula dari $_POST
-// di bawah) atau apabila tiba dengan nilai pra-isi dari bar tempahan pantas halaman utama
-// (diisi semula dari $_GET di bawah). Nilai lalai di sini meliputi lawatan baru yang kosong.
+// simpan apa yang pelanggan taip, supaya kalau ada error borang tak kosong balik —
+// diisi dari $_POST kalau submit gagal, atau dari $_GET kalau datang dari bar booking pantas homepage
 $old = [
     'full_name' => '',
     'phone' => '',
@@ -25,27 +23,28 @@ $old = [
     'special_request' => '',
 ];
 
-// Hanya benarkan pelanggan pilih dari pakej yang ditanda tersedia oleh admin.
+// pelanggan cuma boleh pilih pakej yang admin dah tandakan "available"
 $accommodations = $pdo->query(
     "SELECT accommodation_id, accommodation_name, accommodation_type, price, price_weekend, capacity
      FROM accommodation
      WHERE status = 'available'
      ORDER BY accommodation_type, accommodation_id"
 )->fetchAll();
-// Senarai yang sama, tetapi diindeks mengikut ID supaya kita boleh cari cepat "pakej mana yang mereka pilih" nanti.
+// senarai sama, tapi diindeks ikut ID supaya senang cari "pakej mana yang dia pilih tu" nanti
 $accommodationsById = [];
 foreach ($accommodations as $acc) {
     $accommodationsById[(int) $acc['accommodation_id']] = $acc;
 }
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    // Pra-isi dari bar tempahan pantas halaman utama atau pautan pakej.
+    // page baru buka (bukan submit) — cuba pra-isi dari bar booking pantas homepage / link pakej
     $qbCheckIn = trim((string) ($_GET['check_in'] ?? ''));
     $qbCheckOut = trim((string) ($_GET['check_out'] ?? ''));
     $qbGuests = trim((string) ($_GET['guests'] ?? ''));
     $qbAccommodation = trim((string) ($_GET['accommodation'] ?? ''));
     $qbType = trim((string) ($_GET['type'] ?? ''));
 
+    // isi cuma kalau format tarikh tu betul, jangan terima sampah dari URL
     if (DateTime::createFromFormat('Y-m-d', $qbCheckIn)) {
         $old['check_in'] = $qbCheckIn;
     }
@@ -56,6 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
         $old['total_guest'] = $qbGuests;
     }
 
+    // padan nama pakej dari URL dengan senarai pakej available, cari yang sama nama je
     if ($qbAccommodation !== '') {
         foreach ($accommodations as $acc) {
             if (strcasecmp($acc['accommodation_name'], $qbAccommodation) === 0) {
@@ -65,6 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
         }
     }
 
+    // kalau tak jumpa nama pakej yang sama, cuba padan ikut jenis je (Villa/Campsite)
     if ($old['accommodation_id'] === '' && $qbType !== '') {
         foreach ($accommodations as $acc) {
             if (strcasecmp($acc['accommodation_type'], $qbType) === 0) {
@@ -76,6 +77,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // pelanggan submit borang — ambil semua data dari $_POST dulu
     $old['full_name'] = trim((string) ($_POST['full_name'] ?? ''));
     $old['phone'] = trim((string) ($_POST['phone'] ?? ''));
     $old['email'] = trim((string) ($_POST['email'] ?? ''));
@@ -90,6 +92,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors[] = 'Your session expired. Please review your details and submit again.';
     }
 
+    // semakan asas — medan wajib takboleh kosong
     if ($old['full_name'] === '') {
         $errors[] = 'Full name is required.';
     }
@@ -100,6 +103,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors[] = 'A valid email address is required so we can send your booking confirmation and check-in reminder.';
     }
 
+    // pastikan tarikh check-in/out betul format dan check-out kena lepas check-in
     $checkIn = DateTime::createFromFormat('Y-m-d', $old['check_in']) ?: null;
     $checkOut = DateTime::createFromFormat('Y-m-d', $old['check_out']) ?: null;
     if (!$checkIn || !$checkOut) {
@@ -120,8 +124,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($totalGuest !== false && $totalGuest > (int) $selectedAccommodation['capacity']) {
         $errors[] = "This package can only host up to {$selectedAccommodation['capacity']} guests.";
     } elseif ($checkIn && $checkOut) {
-        // Semakan tempahan berganda: cari mana-mana tempahan lain (yang tidak dibatalkan) pada
-        // penginapan yang sama yang tarikh penginapannya bertindih dengan yang sedang diminta.
+        // check double-booking: cari tempahan lain (yang tak cancel) untuk unit yang sama
+        // yang tarikhnya bertindih dengan tarikh yang pelanggan minta ni
         $stmt = $pdo->prepare(
             "SELECT 1
              FROM booking_item bi
@@ -142,17 +146,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    // Hanya sentuh pangkalan data selepas semua semakan pengesahan di atas berjaya.
+    // baru sentuh database kalau semua semakan atas tu lepas takde error
     if (!$errors) {
         $weekdayPrice = (float) $selectedAccommodation['price'];
         $weekendPrice = $selectedAccommodation['price_weekend'] !== null ? (float) $selectedAccommodation['price_weekend'] : null;
-        $stay = compute_stay_price($weekdayPrice, $weekendPrice, $checkIn, $checkOut);
+        $stay = compute_stay_price($weekdayPrice, $weekendPrice, $checkIn, $checkOut); // kira jumlah harga ikut malam weekday/weekend
         $totalAmount = $stay['total'];
-        $depositAmount = 50.00; // deposit tetap yang diperlukan untuk sahkan sebarang tempahan
+        $depositAmount = 50.00; // deposit tetap RM50 untuk confirm mana-mana tempahan
 
         try {
-            // customer + booking + booking_item semua perlu disimpan bersama, jadi bungkus dalam
-            // satu transaksi — jika mana-mana insert gagal, rollback dan jangan simpan apa-apa.
+            // customer + booking + booking_item kena simpan sekali gus — bungkus dalam
+            // satu transaction, kalau mana-mana insert gagal, semua rollback (tak simpan separuh-separuh)
             $pdo->beginTransaction();
 
             $stmt = $pdo->prepare(
@@ -164,7 +168,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'email' => $old['email'],
                 'plate_num' => $old['plate_num'] !== '' ? $old['plate_num'] : null,
             ]);
-            $customerId = (int) $pdo->lastInsertId();
+            $customerId = (int) $pdo->lastInsertId(); // id customer baru yang kita baru insert
 
             $stmt = $pdo->prepare(
                 'INSERT INTO booking (customer_id, check_in, check_out, total_guest, deposit_amount, total_amount, booking_status, special_request)
@@ -179,7 +183,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'total_amount' => $totalAmount,
                 'special_request' => $old['special_request'] !== '' ? $old['special_request'] : null,
             ]);
-            $bookingId = (int) $pdo->lastInsertId();
+            $bookingId = (int) $pdo->lastInsertId(); // id booking baru, kita perlukan untuk booking_item & redirect
 
             $stmt = $pdo->prepare(
                 'INSERT INTO booking_item (booking_id, accommodation_id, quantity, price)
@@ -191,21 +195,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'price' => $totalAmount,
             ]);
 
-            $pdo->commit();
+            $pdo->commit(); // semua ok, confirm simpan
         } catch (Exception $e) {
-            $pdo->rollBack();
+            $pdo->rollBack(); // ada masalah, undur balik semua insert tadi
             $errors[] = 'Something went wrong while saving your booking. Please try again.';
         }
 
         if (!$errors) {
+            // booking dah simpan, terus hantar ke page bayar deposit
             header('Location: payment.php?booking_id=' . $bookingId);
             exit;
         }
     }
 }
 
-$base = '../';
-$active = '';
+$base = '../'; // page ni dalam folder customer/, naik satu tahap untuk pergi root
+$active = ''; // takde menu navbar yang perlu di-highlight untuk page ni
 $pageTitle = 'Booking Details — Casadive Villa';
 $pageCss = 'style/bookingform.css';
 include __DIR__ . '/../includes/header.php';
@@ -244,7 +249,6 @@ include __DIR__ . '/../includes/header.php';
         <li><strong>Check-in:</strong> After 3.00 PM</li>
         <li><strong>Check-out:</strong> Before 12.00 PM</li>
         <li><strong>Check-in Method:</strong> Self Check-in</li>
-        <li>Please contact the admin one day before check-in to get the lock box code.</li>
       </ul>
     </div>
   </div>
@@ -372,8 +376,9 @@ include __DIR__ . '/../includes/header.php';
   const form = document.getElementById('booking-form');
   const accommodationSelect = document.getElementById('accommodation');
 
-  // Mencerminkan compute_stay_price() dalam includes/helpers.php — malam Jumaat & Sabtu
-  // dikira pada kadar hujung minggu, selainnya pada kadar hari biasa.
+  // ni sama je logic macam compute_stay_price() dalam includes/helpers.php — kita duplicate
+  // kat sini sebab nak update ringkasan harga secara live dekat browser, tak payah refresh page.
+  // malam Jumaat & Sabtu kena kadar weekend, hari lain kadar biasa
   function computeStay(checkInStr, checkOutStr, weekdayPrice, weekendPrice){
     let weekdayNights = 0, weekendNights = 0;
     if (checkInStr && checkOutStr) {
@@ -385,7 +390,7 @@ include __DIR__ . '/../includes/header.php';
         cursor.setDate(cursor.getDate() + 1);
       }
     }
-    if (weekdayNights + weekendNights === 0) weekdayNights = 1;
+    if (weekdayNights + weekendNights === 0) weekdayNights = 1; // elak divide/display 0 malam sebelum tarikh diisi
     return {
       weekdayNights,
       weekendNights,
@@ -393,6 +398,7 @@ include __DIR__ . '/../includes/header.php';
     };
   }
 
+  // fungsi ni update semua field kat kad "Booking Summary" sebelah kanan, live ikut apa pelanggan taip
   function updateSummary(){
     const opt = accommodationSelect.selectedOptions[0];
     const hasPackage = Boolean(opt && opt.value);
@@ -417,10 +423,11 @@ include __DIR__ . '/../includes/header.php';
 
     const stay = computeStay(checkIn, checkOut, weekdayPrice, weekendPrice);
     const totalNights = stay.weekdayNights + stay.weekendNights;
-    const deposit = hasPackage ? 50 : 0;
+    const deposit = hasPackage ? 50 : 0; // deposit tetap RM50, sama macam kat server side
 
     document.getElementById('s-nights').textContent = totalNights;
 
+    // tunjuk kadar ikut hari check-in (kalau check-in tu jatuh weekend, tunjuk kadar weekend)
     let priceLabel = `RM ${weekdayPrice.toFixed(2)} / night`;
     if (checkIn) {
       const checkInDay = new Date(checkIn + 'T00:00:00').getDay(); // 0=Ahad .. 5=Jumaat, 6=Sabtu
@@ -432,6 +439,7 @@ include __DIR__ . '/../includes/header.php';
     document.getElementById('s-total').textContent = `RM ${Math.max(stay.total - deposit, 0).toFixed(2)}`;
   }
 
+  // kalau datang dari page lain dengan ?accommodation= atau ?type= kat URL, auto-pilihkan pakej tu
   const params = new URLSearchParams(window.location.search);
   const preselectName = params.get('accommodation');
   const preselectType = params.get('type');
@@ -443,6 +451,6 @@ include __DIR__ . '/../includes/header.php';
     if (match) accommodationSelect.value = match.value;
   }
 
-  form.addEventListener('input', updateSummary);
-  updateSummary();
+  form.addEventListener('input', updateSummary); // update live setiap kali pelanggan taip apa-apa
+  updateSummary(); // run sekali time page load, untuk state awal
 </script>

@@ -9,8 +9,8 @@ require_once __DIR__ . '/../includes/helpers.php';
 
 $methodLabels = ['qr' => 'QR / DuitNow', 'online_banking' => 'FPX Online Banking'];
 
-// Corak carian "nombor rujukan + nombor telefon" yang sama seperti mybooking.php — ini menghalang
-// orang lain daripada melihat pengesahan orang lain hanya dengan meneka ID tempahan dalam URL.
+// carian guna "no rujukan + no phone" sama macam mybooking.php — ni elak orang lain
+// tengok booking orang lain just dengan teka-teka ID kat URL
 $bookingId = filter_var($_GET['ref'] ?? $_GET['booking_id'] ?? '', FILTER_VALIDATE_INT);
 $phone = trim((string) ($_GET['phone'] ?? ''));
 $booking = null;
@@ -42,12 +42,12 @@ if ($bookingId !== false && $phone !== '') {
              ORDER BY payment_id DESC LIMIT 1"
         );
         $stmt->execute(['id' => $bookingId]);
-        $payment = $stmt->fetch();
+        $payment = $stmt->fetch(); // ambil rekod payment terbaru untuk booking ni
     }
 }
 
-$base = '../';
-$active = '';
+$base = '../'; // page ni dalam folder customer/, naik satu tahap untuk pergi root
+$active = ''; // takde menu navbar yang perlu di-highlight untuk page ni
 $pageTitle = 'Payment Successful — Casadive Villa';
 $pageCss = 'style/sucess_payment.css';
 include __DIR__ . '/../includes/header.php';
@@ -125,7 +125,6 @@ include __DIR__ . '/../includes/header.php';
               <li><strong>Check-in:</strong> After 3.00 PM</li>
               <li><strong>Check-out:</strong> Before 12.00 PM</li>
               <li><strong>Check-in Method:</strong> Self Check-in</li>
-              <li>Please contact the admin one day before check-in to get the lock box code.</li>
             </ul>
           </div>
 

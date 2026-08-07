@@ -7,12 +7,13 @@ require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/helpers.php';
 require_once __DIR__ . '/../includes/email_notify.php';
-require_login(['admin']);
+require_login(['admin']); // page ni cuma untuk admin, staff biasa tak boleh masuk
 
 $user = current_user();
 $validStatuses = ['pending', 'confirmed', 'checked_in', 'checked_out', 'cancelled'];
 $updated = false;
 
+// admin tukar status booking dari dropdown kat table bawah — proses kat sini
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'update_status') {
     $bookingId = filter_input(INPUT_POST, 'booking_id', FILTER_VALIDATE_INT);
     $newStatus = $_POST['booking_status'] ?? '';
@@ -25,14 +26,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'updat
         $stmt = $pdo->prepare('UPDATE booking SET booking_status = :status WHERE booking_id = :id');
         $stmt->execute(['status' => $newStatus, 'id' => $bookingId]);
 
+        // hantar emel notification cuma kalau status betul-betul berubah
         if ($previousStatus !== false && $previousStatus !== $newStatus) {
             send_status_email($pdo, $bookingId, $newStatus);
         }
     }
 
+    // redirect balik supaya refresh page tak submit form dua kali
     header('Location: admin_dashboard.php?updated=1');
     exit;
 }
+// flag-flag ni untuk papar mesej "berjaya" lepas redirect dari page lain (contoh: lepas save account)
 $updated = isset($_GET['updated']);
 $accountCreated = isset($_GET['created']);
 $accountSaved = isset($_GET['saved']);
@@ -41,8 +45,8 @@ $accCreated = isset($_GET['acccreated']);
 $accSaved = isset($_GET['accsaved']);
 $accDeleted = isset($_GET['accdeleted']);
 
-// Nombor ringkasan pantas yang dipaparkan pada jubin statistik di atas dashboard.
-// "Revenue" hanya kira tempahan yang benar-benar bergerak (bukan pending/cancelled).
+// nombor ringkas untuk tunjuk kat jubin statistik atas dashboard
+// "Revenue" cuma kira booking yang betul-betul confirm/checked-in/checked-out (bukan pending/cancelled)
 $stats = [
     'total_bookings' => (int) $pdo->query('SELECT COUNT(*) FROM booking')->fetchColumn(),
     'pending_bookings' => (int) $pdo->query("SELECT COUNT(*) FROM booking WHERE booking_status = 'pending'")->fetchColumn(),
@@ -50,8 +54,8 @@ $stats = [
     'total_users' => (int) $pdo->query('SELECT COUNT(*) FROM user')->fetchColumn(),
 ];
 
-// Satu baris bagi setiap tempahan, dengan nama penginapan dan status pembayaran terkini digabungkan
-// melalui GROUP_CONCAT / subquery, supaya jadual di bawah tidak perlukan query bagi setiap baris.
+// satu baris untuk setiap booking, nama penginapan + status bayaran terkini kita gabung sekali
+// guna GROUP_CONCAT/subquery, supaya table kat bawah takyah query lagi untuk setiap baris
 $bookings = $pdo->query(
     "SELECT b.booking_id, c.full_name, c.phone, b.check_in, b.check_out, b.total_guest,
             b.total_amount, b.deposit_amount, b.booking_status,
@@ -71,8 +75,8 @@ $accommodations = $pdo->query(
      FROM accommodation ORDER BY accommodation_type, accommodation_id'
 )->fetchAll();
 
-// Penghantaran berjaya terkini bagi setiap tempahan + jenis mesej, supaya lajur Notification di bawah
-// boleh papar "Sent" menggantikan butang hantar sebaik sahaja mesej tersebut sudah dihantar.
+// notification terkini yang berjaya dihantar untuk setiap booking + jenis mesej, supaya
+// column Notification kat bawah boleh papar "Sent" ganti butang, kalau mesej tu dah dihantar
 $sentLookup = [];
 foreach ($pdo->query(
     "SELECT booking_id, notification_type, MAX(sent_date) AS last_sent
@@ -183,11 +187,11 @@ $users = $pdo->query(
             <?php if (!$bookings): ?>
               <tr class="empty-row"><td colspan="14">No bookings yet.</td></tr>
             <?php else: foreach ($bookings as $b):
-              // "Due" bermaksud check-in esok — itulah waktu peringatan check-in patut dihantar.
+              // "Due" maksudnya check-in esok — itu waktu yang sepatutnya reminder dihantar
               $reminderDue = $b['check_in'] === date('Y-m-d', strtotime('+1 day'));
 
-              // Setiap baris dapat TEPAT SATU butang notifikasi, mengikut mesej yang sesuai
-              // dengan statusnya sekarang (atau tiada langsung, contohnya untuk tempahan pending/checked-in).
+              // setiap baris dapat SATU je butang notification, ikut status booking sekarang
+              // (ada status yang takde butang langsung, contoh checked_in)
               $notifType = null;
               $notifLabel = null;
               $notifClass = 'btn-primary';
@@ -218,8 +222,8 @@ $users = $pdo->query(
                   $notifClass = 'btn-primary';
               }
 
-              // Adakah mesej ini sudah dihantar untuk tempahan ini? Jika ya, butang di bawah
-              // papar "Sent" — masih boleh diklik, sekiranya perlu dihantar semula.
+              // dah hantar ke belum mesej ni untuk booking ni? kalau dah, butang tunjuk "Sent" —
+              // tapi tetap boleh klik lagi kalau nak hantar semula
               $alreadySentAt = $notifType ? ($sentLookup[$b['booking_id']][$notifType] ?? null) : null;
               ?>
               <tr<?= $reminderDue ? ' class="tr-due"' : '' ?>>

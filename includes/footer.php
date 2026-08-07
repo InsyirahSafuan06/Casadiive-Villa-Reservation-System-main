@@ -10,8 +10,8 @@ declare(strict_types=1);
  *   $base          string  '' di root projek, '../' satu tahap ke bawah
  *   $showWhatsapp  bool    papar kad terapung WhatsApp (index.php sahaja)
  */
-$base ??= '';
-$showWhatsapp ??= false;
+$base ??= ''; // default kosong kalau page tak set (bermaksud kita kat root folder)
+$showWhatsapp ??= false; // default takyah papar butang WhatsApp terapung tu
 ?>
   <!-- FOOTER -->
   <footer>

@@ -1,34 +1,35 @@
 <?php
 /**
  * Fail sambungan pangkalan data.
- * Fail ini mencipta sambungan PDO yang digunakan oleh kebanyakan halaman dalam sistem ini.
+ * Fail ni yang buat sambungan ke database — semua fail lain dalam sistem ni panggil fail ni
+ * bila diorang nak cakap dengan database.
  */
-declare(strict_types=1);
+declare(strict_types=1); // bagitahu PHP kita nak jenis data yang ketat, tak boleh tukar jenis sesuka hati
 
-// Perniagaan ini berada di Malaysia, jadi semua semakan tarikh "hari ini"/"esok" (contohnya
-// logik peringatan check-in) mesti guna waktu Malaysia, bukan zon waktu lalai pelayan.
+// kedai kita kat Malaysia, so kita set waktu sistem ikut waktu Malaysia —
+// kalau tak set, pengiraan "esok" untuk reminder check-in boleh jadi salah
 date_default_timezone_set('Asia/Kuala_Lumpur');
 
-// Kelayakan pangkalan data lalai XAMPP — tukar ini jika anda deploy
-// ke pelayan sebenar dengan pengguna/kata laluan MySQL yang berbeza.
-$dbHost = 'localhost';
-$dbName = 'casadive_villa_reservation';
-$dbUser = 'root';
-$dbPass = '';
+$dbHost = 'localhost'; // nama hosting database kami ialah localhost (komputer sendiri, guna XAMPP)
+$dbName = 'casadive_villa_reservation'; // nama database yang kita nak sambung
+$dbUser = 'root'; // username untuk masuk database (default XAMPP)
+$dbPass = ''; // password untuk masuk database (default XAMPP takde password pun takpe)
 
 try {
+    // sini kita betul-betul sambung ke database, guna maklumat yang kita set kat atas tadi
     $pdo = new PDO(
         "mysql:host={$dbHost};dbname={$dbName};charset=utf8mb4",
         $dbUser,
         $dbPass,
         [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,           // lontar exception bila ada ralat SQL, bukan gagal senyap
-            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,      // fetch() / fetchAll() pulangkan array bersekutu secara lalai
-            PDO::ATTR_EMULATE_PREPARES => false,                  // guna prepared statement sebenar (lebih selamat dari SQL injection)
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,           // kalau ada error SQL, terus bagitahu kita — jangan senyap-senyap je
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,      // bila kita ambil data, bagi dalam bentuk array biasa, senang nak guna
+            PDO::ATTR_EMULATE_PREPARES => false,                  // guna cara query yang lebih selamat, elak serangan SQL injection
         ]
     );
 } catch (PDOException $e) {
-    // Tiada apa yang boleh dibuat tanpa pangkalan data, jadi hentikan halaman dengan mesej yang jelas.
+    // kalau sambungan database gagal (contohnya XAMPP tak start lagi), kita stop terus
+    // dan bagitahu pengguna dengan mesej yang jelas, daripada biar sistem crash pelik-pelik
     http_response_code(500);
     die('Database connection failed. Make sure MySQL is running and database/database.sql has been imported.');
 }

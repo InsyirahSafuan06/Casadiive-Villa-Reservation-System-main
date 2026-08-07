@@ -5,12 +5,13 @@
  */
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/auth.php';
-require_login(['admin']);
+require_login(['admin']); // cuma admin boleh urus akaun staff/admin
 
 $currentUser = current_user();
 $validRoles = ['admin', 'staff'];
 $validStatuses = ['active', 'inactive', 'suspended'];
 
+// ?id=123 kat URL bermaksud kita nak edit akaun sedia ada, takde id maksudnya create baru
 $editId = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT) ?: null;
 $editing = null;
 if ($editId) {
@@ -18,11 +19,11 @@ if ($editId) {
     $stmt->execute(['id' => $editId]);
     $editing = $stmt->fetch();
     if (!$editing) {
-        header('Location: admin_dashboard.php');
+        header('Location: admin_dashboard.php'); // id tak wujud, balik dashboard je
         exit;
     }
 }
-$isSelfEdit = $editing && (int) $editing['user_id'] === (int) $currentUser['user_id'];
+$isSelfEdit = $editing && (int) $editing['user_id'] === (int) $currentUser['user_id']; // admin edit akaun dia sendiri ke tak
 
 $errors = [];
 $old = [
@@ -50,8 +51,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif ($targetId === (int) $currentUser['user_id']) {
             $errors[] = 'You cannot delete your own account.';
         } elseif ($target['role'] === 'admin' && $target['status'] === 'active') {
-            // Jaring keselamatan: jangan sekali-kali biarkan sistem berakhir dengan sifar admin aktif,
-            // yang akan mengunci semua orang daripada dashboard ini selama-lamanya.
+            // safety net — jangan biar sistem jadi sifar admin aktif, nanti semua orang
+            // terkunci dari dashboard ni selama-lamanya, takde sesiapa boleh masuk balik
             $activeAdmins = (int) $pdo->query("SELECT COUNT(*) FROM user WHERE role = 'admin' AND status = 'active'")->fetchColumn();
             if ($activeAdmins <= 1) {
                 $errors[] = 'At least one active admin account must remain.';
@@ -71,9 +72,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $password = (string) ($_POST['password'] ?? '');
 
         if ($isSelfEdit) {
-            // Jangan sekali-kali percaya klien untuk role/status diri sendiri — anda tidak boleh
-            // naikkan, turunkan, atau nyahaktifkan akaun sendiri melalui borang ini walaupun
-            // medan-medan diganggu; admin lain mesti buat itu sebaliknya.
+            // jangan sekali percaya browser untuk role/status akaun sendiri — walaupun
+            // field-field ni diubah paksa kat browser, kita ignore je, tak boleh naik/turun
+            // atau off-kan akaun sendiri; kena admin lain yang buat
             $old['role'] = $editing['role'];
             $old['status'] = $editing['status'];
         } else {
@@ -104,7 +105,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         if (!$errors) {
-            // Username dan emel mesti unik merentasi semua akaun (kecuali akaun ini, semasa menyunting).
+            // username & email kena unik merentas semua akaun (kecuali akaun ni sendiri, masa edit)
             $stmt = $pdo->prepare('SELECT user_id FROM user WHERE (username = :username OR email = :email) AND user_id != :self');
             $stmt->execute([
                 'username' => $old['username'],
@@ -116,8 +117,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-        // Jaring keselamatan "kekalkan sekurang-kurangnya satu admin aktif" yang sama seperti
-        // tindakan padam di atas, tetapi di sini untuk kes turunkan/nyahaktifkan admin terakhir.
+        // safety net "kekalkan sekurang-kurangnya satu admin aktif" sama macam bahagian delete
+        // atas tadi, tapi ni untuk kes turunkan/off-kan admin terakhir masa edit
         if (!$errors && $editing && $editing['role'] === 'admin' && $editing['status'] === 'active') {
             $willStillBeActiveAdmin = $old['role'] === 'admin' && $old['status'] === 'active';
             if (!$willStillBeActiveAdmin) {
@@ -130,8 +131,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if (!$errors) {
             if ($editing) {
-                // Hanya sentuh lajur kata laluan jika satu yang baru benar-benar ditaip —
-                // jika tidak, biarkan hash sedia ada tidak diusik.
+                // sentuh column password cuma kalau password baru betul-betul ditaip —
+                // kalau kosong, biar hash lama tak berubah
                 if ($password !== '') {
                     $stmt = $pdo->prepare(
                         'UPDATE user SET username = :username, fullname = :fullname, email = :email, phone = :phone,

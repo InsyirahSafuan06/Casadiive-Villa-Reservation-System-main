@@ -13,15 +13,14 @@ require_once __DIR__ . '/auth.php';
  *   $pageTitle string  teks <title>
  *   $pageCss   string  href stylesheet, relatif kepada halaman yang memasukkannya
  */
-$base ??= '';
-$active ??= '';
-$pageTitle ??= 'Casadive Villa';
-$pageCss ??= '';
-$loggedInUser = current_user();
+$base ??= ''; // kalau page tak set $base, default kosong (maksudnya kita kat root folder)
+$active ??= ''; // page mana yang sedang aktif, untuk highlight menu navigasi
+$pageTitle ??= 'Casadive Villa'; // tajuk default kalau page tak bagi tajuk sendiri
+$pageCss ??= ''; // stylesheet khas untuk page ni (kalau ada)
+$loggedInUser = current_user(); // check siapa yang login sekarang (kalau ada)
 
-// Cache-busting: tambah masa fail stylesheet diubah suai kali terakhir sebagai query string
-// supaya pelayar terus muat turun versi baru selepas sebarang perubahan CSS, bukan guna
-// salinan cache lama sehingga pengguna kosongkan cache secara manual.
+// ni untuk elak browser guna CSS lama yang tersimpan (cache). kita tambah "?v=" + masa
+// fail CSS last diubah, supaya bila kita edit CSS, browser terus ambil versi baru
 $pageCssHref = $pageCss;
 if ($pageCss !== '') {
     $pageCssPath = dirname($_SERVER['SCRIPT_FILENAME']) . '/' . $pageCss;

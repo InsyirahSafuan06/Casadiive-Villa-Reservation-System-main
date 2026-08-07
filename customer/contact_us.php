@@ -3,8 +3,8 @@
  * Halaman hubungi kami.
  * Fail ini memaparkan butiran hubungan syarikat dan pautan media sosial untuk pelawat.
  */
-$base = '../';
-$active = 'contact';
+$base = '../'; // page ni dalam folder customer/, naik satu tahap untuk pergi root
+$active = 'contact'; // untuk highlight menu "Contact Us" kat navbar
 $pageTitle = 'Contact Us — Casadive Villa';
 $pageCss = 'style/contact_us.css';
 include __DIR__ . '/../includes/header.php';
@@ -75,6 +75,7 @@ include __DIR__ . '/../includes/header.php';
           referrerpolicy="strict-origin-when-cross-origin"
           title="Casadive Villa location on Google Maps"
         ></iframe>
+        <!-- this button opens Google Maps app/website with our address pre-filled as the destination -->
         <a href="https://www.google.com/maps/dir/?api=1&destination=<?= urlencode('Casadive Villa, PT 195, Kg Baru, Kampung Pulau Sayak, 08500 Kota Kuala Muda, Kedah') ?>" class="directions-btn" target="_blank" rel="noopener">Get Direction</a>
       </div>
 

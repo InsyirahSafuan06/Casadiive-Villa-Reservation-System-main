@@ -6,7 +6,7 @@
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/auth.php';
 
-// Sudah log masuk? Langkau borang dan terus ke dashboard yang betul.
+// dah login ke? kalau ya, takyah tunjuk borang, terus hantar ke dashboard yang betul
 $existingUser = current_user();
 if ($existingUser) {
     header('Location: ' . ($existingUser['role'] === 'admin' ? 'admin_dashboard.php' : 'staff_dashboard.php'));
@@ -23,8 +23,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!csrf_verify()) {
         $error = 'Your session expired. Please try again.';
     } else {
-        // attempt_login() menyemak username/password berbanding jadual `user`, dan
-        // jika betul, simpan pengguna yang log masuk itu dalam sesi untuk kita.
+        // attempt_login() check username/password kat table `user`, kalau betul,
+        // dia terus simpan pengguna tu dalam session untuk kita
         $user = $oldUsername !== '' && $password !== '' ? attempt_login($pdo, $oldUsername, $password) : false;
 
         if ($user) {
@@ -32,14 +32,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit;
         }
 
-        // Sengaja dibuat kabur — "invalid username or password" bukannya nyatakan yang mana
-        // salah, supaya halaman ini tidak membantu penyerang meneka username yang benar-benar wujud.
+        // sengaja buat mesej error kabur — tak cakap "username salah" ke "password salah"
+        // supaya orang jahat tak boleh guna page ni untuk teka username mana yang wujud
         $error = 'Invalid username or password.';
     }
 }
 
-$base = '../';
-// Cache-busting so browsers pick up CSS edits immediately instead of serving a stale copy.
+$base = '../'; // page ni dalam folder user/, naik satu tahap untuk pergi root
+// tambah "?v=" + masa fail last edit, supaya browser tak simpan CSS lama dalam cache
 $loginCssHref = 'style/login.css?v=' . (is_file(__DIR__ . '/style/login.css') ? filemtime(__DIR__ . '/style/login.css') : time());
 ?>
 <!DOCTYPE html>
@@ -101,6 +101,7 @@ $loginCssHref = 'style/login.css?v=' . (is_file(__DIR__ . '/style/login.css') ? 
 <?php include __DIR__ . '/../includes/footer.php'; ?>
 
   <script>
+    // butang mata untuk toggle tunjuk/sorok password bila diklik
     const toggleBtn = document.getElementById('toggle-password');
     const passwordInput = document.getElementById('login-password');
     toggleBtn.addEventListener('click', () => {

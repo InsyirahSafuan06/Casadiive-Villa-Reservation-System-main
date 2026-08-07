@@ -11,8 +11,8 @@ $ref = isset($_GET['ref']) ? trim((string) $_GET['ref']) : '';
 $phone = isset($_GET['phone']) ? trim((string) $_GET['phone']) : '';
 $reviewError = null;
 
-// Tetamu hanya boleh beri ulasan selepas mereka checked_out, dan hanya sekali bagi setiap tempahan —
-// kedua-duanya dikuatkuasakan dalam query di bawah sebelum INSERT dicuba.
+// tetamu cuma boleh bagi review lepas dah checked_out, dan sekali je untuk setiap booking —
+// dua-dua syarat ni kita check dalam query di bawah sebelum cuba INSERT
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['form'] ?? '') === 'review') {
     $rRef = filter_var($_POST['ref'] ?? '', FILTER_VALIDATE_INT);
     $rPhone = trim((string) ($_POST['phone'] ?? ''));
@@ -35,8 +35,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['form'] ?? '') === 'review'
             $reviewError = 'We could not verify that booking for a review.';
         } else {
             try {
-                // Jadual `review` ada UNIQUE constraint pada booking_id, jadi ulasan kedua
-                // untuk tempahan yang sama akan gagal di sini dan jatuh ke catch di bawah.
+                // table `review` ada UNIQUE constraint kat booking_id, so kalau cuba review
+                // kali kedua untuk booking yang sama, insert ni akan gagal dan masuk catch bawah
                 $stmt = $pdo->prepare(
                     'INSERT INTO review (booking_id, rating, comment) VALUES (:booking_id, :rating, :comment)'
                 );
@@ -52,6 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['form'] ?? '') === 'review'
     }
 
     if (!$reviewError) {
+        // redirect balik ke page ni juga supaya refresh tak submit review dua kali
         header('Location: mybooking.php?ref=' . $rRef . '&phone=' . urlencode($rPhone));
         exit;
     }
@@ -60,8 +61,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['form'] ?? '') === 'review'
     $phone = $rPhone;
 }
 
-// Tempahan dicari mengikut nombor rujukan + nombor telefon yang digunakan untuk tempah — ini berfungsi
-// sebagai "kata laluan" ringkas supaya tetamu tidak boleh lihat tempahan orang lain hanya dengan meneka ID.
+// booking dicari guna "no rujukan + no phone" yang digunakan masa booking — ni jadi macam
+// "password" ringkas supaya tetamu tak boleh tengok booking orang lain just dengan teka ID
 $lookupAttempted = $ref !== '' || $phone !== '';
 $lookupError = null;
 $booking = null;
@@ -98,7 +99,7 @@ if ($lookupAttempted) {
 
             $stmt = $pdo->prepare('SELECT rating, comment, review_date FROM review WHERE booking_id = :id');
             $stmt->execute(['id' => $booking['booking_id']]);
-            $existingReview = $stmt->fetch() ?: null;
+            $existingReview = $stmt->fetch() ?: null; // ada review sedia ada ke tak untuk booking ni
         }
     }
 }
@@ -109,13 +110,13 @@ if ($booking) {
     $checkIn = new DateTime($booking['check_in']);
     $checkOut = new DateTime($booking['check_out']);
     $nights = max(1, $checkOut->diff($checkIn)->days);
-    // Menghantar 1/1 sebagai harga di sini adalah satu helah: kita tidak perlukan jumlah dari panggilan ini,
-    // hanya kiraan malam hari biasa/hujung minggu yang dipulangkan, untuk bina pecahan harga di bawah.
+    // trick sikit ni — kita hantar 1/1 sebagai harga sebab kita bukan nak jumlah harga,
+    // kita cuma nak tau berapa malam weekday vs weekend untuk bina pecahan harga kat bawah
     $stay = compute_stay_price(1, 1, $checkIn, $checkOut);
 }
 
-$base = '../';
-$active = 'mybooking';
+$base = '../'; // page ni dalam folder customer/, naik satu tahap untuk pergi root
+$active = 'mybooking'; // untuk highlight menu "MyBooking" kat navbar
 $pageTitle = 'MyBooking — Casadive Villa';
 $pageCss = 'style/mybooking.css';
 include __DIR__ . '/../includes/header.php';
@@ -178,6 +179,7 @@ include __DIR__ . '/../includes/header.php';
           <h3>Price Breakdown</h3>
           <div class="receipt-rows">
             <?php foreach ($items as $item):
+              // tunjuk pecahan weekday/weekend cuma kalau kadar dia memang lain, kalau sama je tunjuk simple
               $weekendRate = $item['nightly_price_weekend'] !== null ? (float) $item['nightly_price_weekend'] : (float) $item['nightly_price'];
               $rateLabel = $stay['weekend_nights'] > 0 && $weekendRate !== (float) $item['nightly_price']
                   ? "{$stay['weekday_nights']} weekday night" . ($stay['weekday_nights'] !== 1 ? 's' : '') . " &times; RM " . number_format((float) $item['nightly_price'], 2)

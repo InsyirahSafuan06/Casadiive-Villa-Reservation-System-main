@@ -18,6 +18,7 @@ $booking = null;
 $errors = [];
 $paid = false;
 
+// check balik lagi sekali kaedah & bank tu sah — sama macam payment_method.php
 if (!in_array($method, ['qr', 'online_banking'], true)) {
     $method = '';
 }
@@ -49,12 +50,12 @@ if (!$booking) {
     $errors[] = 'Missing payment method. Please choose a payment method again.';
 }
 
-// Di sinilah deposit sebenarnya direkodkan — semua yang sebelum halaman ini
-// (payment.php, payment_method.php) hanya memilih kaedah dan mengesahkan.
+// sini baru betul-betul rekod deposit — page sebelum ni (payment.php, payment_method.php)
+// cuma pilih kaedah & confirm je, tak sentuh table payment/booking
 if ($booking && !$paid && !$errors) {
     try {
-        // Masukkan rekod pembayaran dan tukar tempahan ke "confirmed" bersama-sama,
-        // supaya kita tidak sekali-kali berakhir dengan satu disimpan tanpa yang satu lagi.
+        // insert rekod payment + tukar status booking jadi "confirmed" sekali gus dalam
+        // satu transaction, elak jadi satu simpan tapi satu lagi tak simpan
         $pdo->beginTransaction();
 
         $stmt = $pdo->prepare(
@@ -72,15 +73,15 @@ if ($booking && !$paid && !$errors) {
         );
         $stmt->execute(['id' => $bookingId]);
 
-        $pdo->commit();
+        $pdo->commit(); // ok semua berjaya
         $paid = true;
     } catch (Exception $e) {
-        $pdo->rollBack();
+        $pdo->rollBack(); // ada masalah, undur balik
         $errors[] = 'Something went wrong while recording your payment. Please try again.';
     }
 
-    // Emel pengesahan hanya selepas pembayaran selamat disimpan — dan di luar
-    // try/catch di atas, supaya masalah emel tidak sekali-kali kelihatan seperti pembayaran itu sendiri gagal.
+    // hantar emel confirm cuma lepas payment betul-betul dah simpan, dan letak luar
+    // try/catch atas tu supaya kalau emel gagal, tak nampak macam payment yang gagal
     if ($paid) {
         send_status_email($pdo, $bookingId, 'confirmed');
     }
@@ -90,8 +91,8 @@ $redirectUrl = $booking
     ? 'sucess_payment.php?ref=' . $bookingId . '&phone=' . urlencode($booking['phone'])
     : '';
 
-$base = '../';
-$active = '';
+$base = '../'; // page ni dalam folder customer/, naik satu tahap untuk pergi root
+$active = ''; // takde menu navbar yang perlu di-highlight untuk page ni
 $pageTitle = 'Processing Payment — Casadive Villa';
 $pageCss = 'style/process_payment.css';
 include __DIR__ . '/../includes/header.php';
@@ -186,8 +187,8 @@ include __DIR__ . '/../includes/header.php';
     </section>
 
     <script>
-      // Pembayaran sudah disimpan di server di atas — kelewatan ini hanya kesan visual
-      // "processing..." sebelum menghantar pelanggan ke halaman berjaya.
+      // payment dah simpan kat server tadi — delay ni cuma efek visual "processing..."
+      // supaya nampak natural sebelum hantar pelanggan ke page berjaya
       setTimeout(function () {
         window.location.href = <?= json_encode($redirectUrl) ?>;
       }, 2200);

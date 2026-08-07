@@ -7,13 +7,14 @@ require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/helpers.php';
 require_once __DIR__ . '/../includes/email_notify.php';
-require_login(['staff', 'admin']);
+require_login(['staff', 'admin']); // page ni staff dan admin dua-dua boleh masuk
 
 $user = current_user();
 $validStatuses = ['pending', 'confirmed', 'checked_in', 'checked_out', 'cancelled'];
 $validAccStatuses = ['available', 'unavailable', 'maintenance'];
 $validPaymentStatuses = ['pending', 'partial', 'paid', 'refunded', 'failed'];
 
+// staff tukar status booking dari dropdown table
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'update_status') {
     $bookingId = filter_input(INPUT_POST, 'booking_id', FILTER_VALIDATE_INT);
     $newStatus = $_POST['booking_status'] ?? '';
@@ -35,8 +36,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'updat
     exit;
 }
 
-// Tandakan penginapan sebagai available / unavailable / under maintenance — inilah yang
-// menyembunyikan pakej dari senarai awam villa.php / campsite.php.
+// tanda penginapan available / unavailable / under maintenance — ni yang sorokkan
+// pakej dari senarai awam villa.php / campsite.php bila status bukan "available"
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'update_acc_status') {
     $accId = filter_input(INPUT_POST, 'accommodation_id', FILTER_VALIDATE_INT);
     $newAccStatus = $_POST['acc_status'] ?? '';
@@ -50,9 +51,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'updat
     exit;
 }
 
-// Untuk pembayaran yang diterima di luar laman web (contohnya tunai, pindahan bank) — ini hanya
-// tambah rekod pembayaran. Tidak seperti aliran pembayaran online, ia TIDAK secara automatik tukar
-// status tempahan kepada "confirmed"; staf masih perlu kemas kini itu secara berasingan jika perlu.
+// untuk bayaran yang diterima luar website (contoh: tunai, transfer bank) — ni cuma
+// tambah rekod payment. Tak macam aliran bayaran online, ni TAK auto tukar booking
+// jadi "confirmed" — staff kena update status tu sendiri secara berasingan kalau perlu
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'record_payment') {
     $bookingId = filter_input(INPUT_POST, 'booking_id', FILTER_VALIDATE_INT);
     $depositPaid = filter_var($_POST['deposit_paid'] ?? '', FILTER_VALIDATE_FLOAT);
@@ -79,7 +80,7 @@ $updated = isset($_GET['updated']);
 $accUpdated = isset($_GET['accupdated']);
 $paymentRecorded = isset($_GET['paymentrecorded']);
 
-// Nombor ringkasan pantas yang dipaparkan pada jubin statistik di atas dashboard.
+// nombor ringkas untuk jubin statistik atas dashboard
 $stats = [
     'total_bookings' => (int) $pdo->query('SELECT COUNT(*) FROM booking')->fetchColumn(),
     'pending_bookings' => (int) $pdo->query("SELECT COUNT(*) FROM booking WHERE booking_status = 'pending'")->fetchColumn(),

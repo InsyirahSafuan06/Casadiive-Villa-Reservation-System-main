@@ -3,8 +3,8 @@
  * Halaman galeri.
  * Fail ini memaparkan tunjuk gambar visual bagi pengalaman vila dan khemah.
  */
-$base = '../';
-$active = 'gallery';
+$base = '../'; // page ni dalam folder customer/, naik satu tahap untuk pergi root
+$active = 'gallery'; // untuk highlight menu "Gallery" kat navbar
 $pageTitle = 'Gallery — Casadive Villa';
 $pageCss = 'style/gallery.css';
 include __DIR__ . '/../includes/header.php';
