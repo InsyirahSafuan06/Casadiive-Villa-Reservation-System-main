@@ -79,6 +79,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'recor
 $updated = isset($_GET['updated']);
 $accUpdated = isset($_GET['accupdated']);
 $paymentRecorded = isset($_GET['paymentrecorded']);
+$refundBookingId = filter_input(INPUT_GET, 'refund_booking', FILTER_VALIDATE_INT) ?: null; // datang dari butang "Refund" kat dashboard admin
 
 // nombor ringkas untuk jubin statistik atas dashboard
 $stats = [
@@ -208,7 +209,16 @@ $recentPayments = $pdo->query(
                 <td><?= (int) $b['total_guest'] ?></td>
                 <td><?= number_format((float) $b['total_amount'], 2) ?></td>
                 <td><span class="status-badge status-<?= htmlspecialchars($b['booking_status']) ?>"><?= htmlspecialchars(format_status($b['booking_status'])) ?></span></td>
-                <td><?= $b['latest_payment_status'] ? htmlspecialchars(ucfirst($b['latest_payment_status'])) : '<span style="color:#999;">No record</span>' ?></td>
+                <td>
+                  <?php if (payment_needs_refund($b['booking_status'], $b['latest_payment_status'])): ?>
+                    <span class="status-badge status-refund_due">Refund Due</span>
+                    <a href="#record-payment" class="btn btn-outline" style="padding:4px 10px;font-size:12px;margin-left:6px;">Refund</a>
+                  <?php elseif ($b['latest_payment_status']): ?>
+                    <?= htmlspecialchars(ucfirst($b['latest_payment_status'])) ?>
+                  <?php else: ?>
+                    <span style="color:#999;">No record</span>
+                  <?php endif; ?>
+                </td>
                 <td>
                   <form class="status-form" method="post">
                     <?= csrf_field() ?>
@@ -269,8 +279,11 @@ $recentPayments = $pdo->query(
         </table>
       </section>
 
-      <section class="dash-section">
+      <section class="dash-section" id="record-payment">
         <h2>Record a Payment</h2>
+        <?php if ($refundBookingId): ?>
+          <p class="notice-info">Recording a refund for booking #<?= $refundBookingId ?> — set Amount to the deposit refunded and Status to "Refunded".</p>
+        <?php endif; ?>
         <form method="post" style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;margin-bottom:30px;font-family:'Raleway',sans-serif;">
           <?= csrf_field() ?>
           <input type="hidden" name="action" value="record_payment">
@@ -279,7 +292,7 @@ $recentPayments = $pdo->query(
             <select name="booking_id" style="padding:10px 14px;border:1px solid var(--border);border-radius:6px;font-family:inherit;" required>
               <option value="">Select a booking</option>
               <?php foreach ($bookings as $b): ?>
-                <option value="<?= (int) $b['booking_id'] ?>">#<?= (int) $b['booking_id'] ?> — <?= htmlspecialchars($b['full_name']) ?> (RM <?= number_format((float) $b['deposit_amount'], 2) ?> deposit due)</option>
+                <option value="<?= (int) $b['booking_id'] ?>" <?= $refundBookingId === (int) $b['booking_id'] ? 'selected' : '' ?>>#<?= (int) $b['booking_id'] ?> — <?= htmlspecialchars($b['full_name']) ?> (RM <?= number_format((float) $b['deposit_amount'], 2) ?> deposit due)</option>
               <?php endforeach; ?>
             </select>
           </div>
@@ -291,7 +304,7 @@ $recentPayments = $pdo->query(
             <label style="display:block;font-weight:600;font-size:13px;color:var(--brown-price);margin-bottom:6px;">Status</label>
             <select name="payment_status" style="padding:10px 14px;border:1px solid var(--border);border-radius:6px;font-family:inherit;">
               <?php foreach ($validPaymentStatuses as $status): ?>
-                <option value="<?= $status ?>"><?= ucfirst($status) ?></option>
+                <option value="<?= $status ?>" <?= $refundBookingId && $status === 'refunded' ? 'selected' : '' ?>><?= ucfirst($status) ?></option>
               <?php endforeach; ?>
             </select>
           </div>

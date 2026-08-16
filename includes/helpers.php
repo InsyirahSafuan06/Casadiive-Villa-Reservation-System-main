@@ -12,6 +12,17 @@ function format_status(string $status): string
 }
 
 /**
+ * Booking yang dibatalkan tapi deposit dia masih 'paid'/'partial' (belum ditandakan
+ * 'refunded') bermakna staff/admin masih terhutang refund kat tetamu tu. Sistem ni
+ * takde payment gateway automatik, so refund sebenar diuruskan manual (bank transfer/tunai)
+ * — function ni cuma tentukan bila nak papar amaran "Refund Due" kat dashboard.
+ */
+function payment_needs_refund(string $bookingStatus, ?string $paymentStatus): bool
+{
+    return $bookingStatus === 'cancelled' && in_array($paymentStatus, ['paid', 'partial'], true);
+}
+
+/**
  * Bahagikan tempoh penginapan kepada malam hari biasa vs. hujung minggu (Jumaat & Sabtu
  * dikira sebagai hujung minggu) dan kira harga setiap malam mengikutnya. $weekendPrice
  * akan guna $weekdayPrice jika null. Harga cuti umum tidak digunakan di sini — itu
@@ -37,4 +48,105 @@ function compute_stay_price(float $weekdayPrice, ?float $weekendPrice, DateTime 
         'weekend_nights' => $weekendNights,
         'total' => round($weekdayNights * $weekdayPrice + $weekendNights * $weekendPrice, 2),
     ];
+}
+
+/**
+ * "Smart Recommendation" — padankan accommodation yang available dengan keperluan pelanggan
+ * (bilangan tetamu, tarikh, budget, jenis). Ni BUKAN LLM/AI sebenar — cuma scoring rules based
+ * on data DB sebenar, supaya sebab-sebab yang dipaparkan (reasons) memang tepat dan tak
+ * mengarang nombor. $criteria: guests(int, required), type(?string 'Villa'|'Campsite'),
+ * check_in(?string), check_out(?string), budget(?float, RM/malam).
+ *
+ * @return array<int, array{accommodation: array, score: float, within_budget: bool, reasons: string[]}>
+ */
+function recommend_accommodations(PDO $pdo, array $criteria): array
+{
+    $guests = (int) $criteria['guests'];
+    $type = $criteria['type'] ?? null;
+    $budget = $criteria['budget'] ?? null;
+    $checkIn = $criteria['check_in'] ?? null;
+    $checkOut = $criteria['check_out'] ?? null;
+
+    // tarikh cuma digunakan untuk filter availability kalau DUA-DUA sah dan check_out lepas check_in —
+    // kalau tak, kita skip terus filter tarikh (customer mungkin belum tau tarikh lagi)
+    $useDates = $checkIn && $checkOut && $checkOut > $checkIn;
+
+    $sql = 'SELECT * FROM accommodation a WHERE a.status = :status AND a.capacity >= :guests';
+    $params = ['status' => 'available', 'guests' => $guests];
+
+    if ($type) {
+        $sql .= ' AND a.accommodation_type = :type';
+        $params['type'] = $type;
+    }
+
+    if ($useDates) {
+        // logik sama macam overlap-check dalam bookingform.php — cuma cancelled je yang
+        // "clear" tarikh tu, status lain (termasuk pending) tetap dikira sebagai occupied
+        $sql .= ' AND NOT EXISTS (
+            SELECT 1 FROM booking_item bi
+            JOIN booking b ON b.booking_id = bi.booking_id
+            WHERE bi.accommodation_id = a.accommodation_id
+              AND b.booking_status != :cancelled
+              AND b.check_in < :check_out AND b.check_out > :check_in
+        )';
+        $params['cancelled'] = 'cancelled';
+        $params['check_in'] = $checkIn;
+        $params['check_out'] = $checkOut;
+    }
+
+    $sql .= ' ORDER BY a.accommodation_id';
+
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($params);
+    $candidates = $stmt->fetchAll();
+
+    $results = [];
+    foreach ($candidates as $row) {
+        $capacity = (int) $row['capacity'];
+        $price = (float) $row['price'];
+
+        // scoring: berapa padan capacity dengan bilangan tetamu (dekat dengan 1 = paling padan,
+        // sebab kita dah filter capacity >= guests kat SQL atas, so max value dia memang 1)
+        $capacityScore = $capacity > 0 ? $guests / $capacity : 0;
+
+        $withinBudget = $budget === null || $price <= (float) $budget;
+        if ($budget !== null) {
+            $priceScore = $price <= (float) $budget
+                ? 1.0
+                : max(0.0, 1 - ($price - (float) $budget) / (float) $budget);
+            $score = 0.6 * $capacityScore + 0.4 * $priceScore;
+        } else {
+            $score = $capacityScore;
+        }
+
+        $reasons = ["Fits {$guests} guest" . ($guests !== 1 ? 's' : '') . " (capacity {$capacity})"];
+        if ($budget !== null) {
+            $reasons[] = $withinBudget
+                ? 'Within your RM ' . number_format((float) $budget, 2) . '/night budget'
+                : 'RM ' . number_format($price - (float) $budget, 2) . ' above your budget';
+        }
+        if ($useDates) {
+            $reasons[] = "Available for {$checkIn} to {$checkOut}";
+        }
+
+        $results[] = [
+            'accommodation' => $row,
+            'score' => $score,
+            'within_budget' => $withinBudget,
+            'reasons' => $reasons,
+        ];
+    }
+
+    // urutkan: dalam budget dulu, lepas tu score tertinggi, lepas tu harga termurah
+    usort($results, function ($a, $b) {
+        if ($a['within_budget'] !== $b['within_budget']) {
+            return $a['within_budget'] ? -1 : 1;
+        }
+        if ($a['score'] !== $b['score']) {
+            return $a['score'] > $b['score'] ? -1 : 1;
+        }
+        return (float) $a['accommodation']['price'] <=> (float) $b['accommodation']['price'];
+    });
+
+    return array_slice($results, 0, 6);
 }

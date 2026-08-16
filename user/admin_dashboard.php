@@ -36,6 +36,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'updat
     header('Location: admin_dashboard.php?updated=1');
     exit;
 }
+// admin je yang boleh padam review (page ni dah require_login(['admin']) kat atas, so takde
+// laluan lain customer/staff boleh sampai sini) — buang gambar dari cakera sekali kalau ada,
+// elak fail terbiar tanpa rekod DB
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'delete_review') {
+    $reviewId = filter_input(INPUT_POST, 'review_id', FILTER_VALIDATE_INT);
+
+    if (csrf_verify() && $reviewId) {
+        $stmt = $pdo->prepare('SELECT image_path FROM review WHERE review_id = :id');
+        $stmt->execute(['id' => $reviewId]);
+        $imagePath = $stmt->fetchColumn();
+
+        $stmt = $pdo->prepare('DELETE FROM review WHERE review_id = :id');
+        $stmt->execute(['id' => $reviewId]);
+
+        if ($imagePath) {
+            $fullPath = __DIR__ . '/../' . $imagePath;
+            if (is_file($fullPath)) {
+                unlink($fullPath);
+            }
+        }
+    }
+
+    header('Location: admin_dashboard.php?reviewdeleted=1');
+    exit;
+}
+
 // flag-flag ni untuk papar mesej "berjaya" lepas redirect dari page lain (contoh: lepas save account)
 $updated = isset($_GET['updated']);
 $accountCreated = isset($_GET['created']);
@@ -44,6 +70,7 @@ $accountDeleted = isset($_GET['deleted']);
 $accCreated = isset($_GET['acccreated']);
 $accSaved = isset($_GET['accsaved']);
 $accDeleted = isset($_GET['accdeleted']);
+$reviewDeleted = isset($_GET['reviewdeleted']);
 
 // nombor ringkas untuk tunjuk kat jubin statistik atas dashboard
 // "Revenue" cuma kira booking yang betul-betul confirm/checked-in/checked-out (bukan pending/cancelled)
@@ -89,6 +116,14 @@ foreach ($pdo->query(
 
 $users = $pdo->query(
     'SELECT user_id, username, fullname, email, role, status, created_at FROM user ORDER BY user_id'
+)->fetchAll();
+
+$reviews = $pdo->query(
+    "SELECT r.review_id, r.booking_id, r.rating, r.comment, r.image_path, r.review_date, c.full_name
+     FROM review r
+     JOIN booking b ON b.booking_id = r.booking_id
+     JOIN customer c ON c.customer_id = b.customer_id
+     ORDER BY r.review_date DESC"
 )->fetchAll();
 ?>
 <!DOCTYPE html>
@@ -140,6 +175,9 @@ $users = $pdo->query(
       <?php endif; ?>
       <?php if ($accDeleted): ?>
         <p class="flash">Accommodation deleted.</p>
+      <?php endif; ?>
+      <?php if ($reviewDeleted): ?>
+        <p class="flash">Review deleted.</p>
       <?php endif; ?>
 
       <div class="stat-grid">
@@ -237,7 +275,16 @@ $users = $pdo->query(
                 <td><?= number_format((float) $b['total_amount'], 2) ?></td>
                 <td><?= number_format((float) $b['deposit_amount'], 2) ?></td>
                 <td><span class="status-badge status-<?= htmlspecialchars($b['booking_status']) ?>"><?= htmlspecialchars(format_status($b['booking_status'])) ?></span></td>
-                <td><?= $b['latest_payment_status'] ? htmlspecialchars(ucfirst($b['latest_payment_status'])) : '<span class="text-muted">No record</span>' ?></td>
+                <td>
+                  <?php if (payment_needs_refund($b['booking_status'], $b['latest_payment_status'])): ?>
+                    <span class="status-badge status-refund_due">Refund Due</span>
+                    <a href="staff_dashboard.php?refund_booking=<?= (int) $b['booking_id'] ?>#record-payment" class="btn btn-sm btn-outline" style="margin-left:6px;">Refund</a>
+                  <?php elseif ($b['latest_payment_status']): ?>
+                    <?= htmlspecialchars(ucfirst($b['latest_payment_status'])) ?>
+                  <?php else: ?>
+                    <span class="text-muted">No record</span>
+                  <?php endif; ?>
+                </td>
                 <td>
                   <form class="status-form" method="post">
                     <?= csrf_field() ?>
@@ -308,6 +355,55 @@ $users = $pdo->query(
                 </td>
               </tr>
             <?php endforeach; ?>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="dash-section">
+        <h2 class="section-heading">Guest Reviews</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Guest</th>
+              <th>Booking</th>
+              <th>Rating</th>
+              <th>Comment</th>
+              <th>Photo</th>
+              <th>Date</th>
+              <th>Manage</th>
+            </tr>
+          </thead>
+          <tbody>
+            <?php if (!$reviews): ?>
+              <tr class="empty-row"><td colspan="8">No reviews yet.</td></tr>
+            <?php else: foreach ($reviews as $r): ?>
+              <tr>
+                <td>#<?= (int) $r['review_id'] ?></td>
+                <td><?= htmlspecialchars($r['full_name']) ?></td>
+                <td>#<?= (int) $r['booking_id'] ?></td>
+                <td><?= (int) $r['rating'] ?> &#9733;</td>
+                <td><?= htmlspecialchars($r['comment'] ?: '—') ?></td>
+                <td>
+                  <?php if ($r['image_path']): ?>
+                    <a href="../<?= htmlspecialchars($r['image_path']) ?>" target="_blank" rel="noopener">
+                      <img src="../<?= htmlspecialchars($r['image_path']) ?>" alt="Review photo" style="width:56px;height:56px;object-fit:cover;border-radius:6px;">
+                    </a>
+                  <?php else: ?>
+                    <span class="text-muted">-</span>
+                  <?php endif; ?>
+                </td>
+                <td><?= htmlspecialchars(date('d M Y', strtotime($r['review_date']))) ?></td>
+                <td>
+                  <form method="post" onsubmit="return confirm('Delete this review? This cannot be undone.');">
+                    <?= csrf_field() ?>
+                    <input type="hidden" name="action" value="delete_review">
+                    <input type="hidden" name="review_id" value="<?= (int) $r['review_id'] ?>">
+                    <button type="submit">Delete</button>
+                  </form>
+                </td>
+              </tr>
+            <?php endforeach; endif; ?>
           </tbody>
         </table>
       </section>

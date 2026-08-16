@@ -230,6 +230,7 @@
   .status-partial{ background:#fde3c7; color:#8a4f00; }
   .status-refunded{ background:#e0e8ff; color:#2a3a9a; }
   .status-failed{ background:#fbdada; color:#8f2020; }
+  .status-refund_due{ background:#fbdada; color:#8f2020; font-weight:700; }
 
   .status-form{ display:flex; gap:8px; align-items:center; }
   .status-form select{

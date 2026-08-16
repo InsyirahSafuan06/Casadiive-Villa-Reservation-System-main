@@ -58,8 +58,10 @@ $showWhatsapp ??= false; // default takyah papar butang WhatsApp terapung tu
           <h4>Write a Review</h4>
           <p>Already stayed with us? Enter your booking reference and phone number to share your experience.</p>
           <!-- Reuses the same review handler as the "Leave a Review" form on MyBooking —
-               only bookings marked checked_out can be reviewed, one review per booking. -->
-          <form class="newsletter-form footer-review-form" method="post" action="<?= $base ?>customer/mybooking.php">
+               only bookings marked checked_out can be reviewed, one review per booking.
+               review_image/image_category/image_confidence are read by the SAME PHP handler
+               (customer/mybooking.php) that already handles them for the full review form. -->
+          <form class="newsletter-form footer-review-form" method="post" action="<?= $base ?>customer/mybooking.php" enctype="multipart/form-data" id="footer-review-form">
             <?= csrf_field() ?>
             <input type="hidden" name="form" value="review">
             <div class="footer-review-fields">
@@ -75,10 +77,241 @@ $showWhatsapp ??= false; // default takyah papar butang WhatsApp terapung tu
               <?php endfor; ?>
             </div>
             <textarea name="comment" rows="2" placeholder="Tell us about your stay (optional)"></textarea>
+
+            <div class="footer-photo-controls">
+              <button type="button" class="footer-photo-btn" id="footer-upload-btn">Upload Image</button>
+              <button type="button" class="footer-photo-btn" id="footer-camera-btn">Open Camera</button>
+            </div>
+            <input type="file" id="footer-file-input" name="review_image" accept="image/*" hidden>
+            <input type="hidden" id="footer-image-category" name="image_category">
+            <input type="hidden" id="footer-image-confidence" name="image_confidence">
+            <img id="footer-image-preview" class="footer-image-preview" hidden alt="Selected room photo preview">
+            <p id="footer-verify-status" class="footer-verify-status" hidden></p>
+
             <button type="submit">Submit Review</button>
           </form>
         </div>
       </div>
+
+      <!-- CAMERA MODAL (footer review widget — own IDs/classes, independent of MyBooking's
+           full review form, since both can appear on the same page). -->
+      <div class="footer-camera-modal" id="footer-camera-modal">
+        <div class="footer-camera-modal-inner">
+          <video id="footer-camera-video" autoplay playsinline muted></video>
+          <canvas id="footer-camera-canvas" hidden></canvas>
+          <div class="footer-camera-modal-actions">
+            <button type="button" class="footer-photo-btn" id="footer-camera-capture-btn">Capture</button>
+            <button type="button" class="footer-photo-btn footer-photo-btn-outline" id="footer-camera-cancel-btn">Cancel</button>
+          </div>
+        </div>
+      </div>
+
+      <style>
+        .footer-photo-controls{ display:flex; gap:8px; flex-wrap:wrap; margin-top:2px; }
+        .footer-photo-btn{
+          background: transparent;
+          color:#fff;
+          border: 1px solid rgba(255,255,255,.5);
+          border-radius: 2.5px;
+          padding: 8px 14px;
+          font-family:'Raleway', sans-serif;
+          font-weight:600;
+          font-size: 12px;
+          cursor:pointer;
+        }
+        .footer-photo-btn:hover{ background: rgba(255,255,255,.15); }
+        .footer-photo-btn-outline{ border-color:#999; color:#ccc; }
+        .footer-image-preview{ max-width: 140px; max-height: 140px; object-fit:cover; border-radius:8px; display:block; }
+        .footer-verify-status{
+          font-family:'Raleway', sans-serif;
+          font-weight:600;
+          font-size: 12px;
+          padding: 8px 12px;
+          border-radius: 6px;
+          display:inline-block;
+        }
+        .footer-verify-status.processing{ background:#fff3cd; color:#8a6400; }
+        .footer-verify-status.success{ background:#d9f2df; color:#1e6b34; }
+        .footer-verify-status.reject{ background:#fdecea; color:#9a3226; }
+        .footer-verify-status.uncertain{ background:#fde3c7; color:#8a4f00; }
+        .footer-camera-modal{
+          position: fixed; inset: 0; background: rgba(0,0,0,.7); z-index: 200;
+          align-items:center; justify-content:center; padding: 20px;
+          display:none;
+        }
+        /* same [hidden]-vs-CSS-display gotcha as .chatbot-panel — toggle this class instead */
+        .footer-camera-modal.is-open{ display:flex; }
+        .footer-camera-modal-inner{ background:#fff; border-radius: 14px; padding: 20px; max-width: 480px; width:100%; }
+        .footer-camera-modal video{ width:100%; border-radius: 10px; background:#000; display:block; margin-bottom: 16px; }
+        .footer-camera-modal-actions{ display:flex; gap: 10px; justify-content:center; }
+      </style>
+
+      <script>
+      (function () {
+        var form = document.getElementById('footer-review-form');
+        if (!form) return;
+
+        // Sama teknik macam review form penuh kat MyBooking — TensorFlow.js + COCO-SSD, jalan
+        // dalam browser, percuma, dimuatkan cuma bila customer klik Upload/Camera. "bed"
+        // dikesan = terima; "person" dominan = tolak (selfie); kenderaan/makanan = tolak;
+        // selain itu = "uncertain", bukan tolak/terima yang mengarut sebab model ni tak ada
+        // kelas khusus untuk bilik air/pool/logo/tangkapan skrin dll.
+        var uploadBtn = document.getElementById('footer-upload-btn');
+        var cameraBtn = document.getElementById('footer-camera-btn');
+        var fileInput = document.getElementById('footer-file-input');
+        var preview = document.getElementById('footer-image-preview');
+        var statusEl = document.getElementById('footer-verify-status');
+        var categoryField = document.getElementById('footer-image-category');
+        var confidenceField = document.getElementById('footer-image-confidence');
+
+        var cameraModal = document.getElementById('footer-camera-modal');
+        var cameraVideo = document.getElementById('footer-camera-video');
+        var cameraCanvas = document.getElementById('footer-camera-canvas');
+        var captureBtn = document.getElementById('footer-camera-capture-btn');
+        var cancelBtn = document.getElementById('footer-camera-cancel-btn');
+
+        var CONFIDENCE_THRESHOLD = 0.5;
+        var cocoModel = null;
+        var modelLoading = null;
+        var cameraStream = null;
+
+        var VEHICLE_CLASSES = ['car', 'motorcycle', 'bus', 'truck', 'bicycle', 'train', 'airplane', 'boat'];
+        var FOOD_CLASSES = ['banana', 'apple', 'sandwich', 'orange', 'broccoli', 'carrot', 'hot dog', 'pizza', 'donut', 'cake', 'bowl'];
+
+        function setStatus(text, kind) {
+          statusEl.hidden = false;
+          statusEl.textContent = text;
+          statusEl.className = 'footer-verify-status ' + (kind || '');
+        }
+
+        function loadScript(src) {
+          return new Promise(function (resolve, reject) {
+            var s = document.createElement('script');
+            s.src = src;
+            s.onload = resolve;
+            s.onerror = reject;
+            document.head.appendChild(s);
+          });
+        }
+
+        function loadModel() {
+          if (cocoModel) return Promise.resolve(cocoModel);
+          if (modelLoading) return modelLoading;
+
+          setStatus('Loading AI model…', 'processing');
+          modelLoading = loadScript('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4/dist/tf.min.js')
+            .then(function () { return loadScript('https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2/dist/coco-ssd.min.js'); })
+            .then(function () { return window.cocoSsd.load(); })
+            .then(function (model) { cocoModel = model; return model; });
+          return modelLoading;
+        }
+
+        function classify(imgEl) {
+          return loadModel().then(function (model) {
+            setStatus('AI is checking your image…', 'processing');
+            return model.detect(imgEl);
+          }).then(function (predictions) {
+            var best = null;
+            predictions.forEach(function (p) {
+              if (p.score >= CONFIDENCE_THRESHOLD && (!best || p.score > best.score)) best = p;
+            });
+
+            if (!best) {
+              return { is_valid: false, category: 'uncertain', confidence: predictions[0] ? predictions[0].score : 0 };
+            }
+            if (best.class === 'bed') {
+              return { is_valid: true, category: 'bedroom', confidence: best.score };
+            }
+            if (best.class === 'person') {
+              return { is_valid: false, category: 'selfie', confidence: best.score };
+            }
+            if (VEHICLE_CLASSES.indexOf(best.class) !== -1) {
+              return { is_valid: false, category: 'vehicle', confidence: best.score };
+            }
+            if (FOOD_CLASSES.indexOf(best.class) !== -1) {
+              return { is_valid: false, category: 'food', confidence: best.score };
+            }
+            return { is_valid: false, category: 'uncertain', confidence: best.score };
+          });
+        }
+
+        function assignFile(file) {
+          var dt = new DataTransfer();
+          dt.items.add(file);
+          fileInput.files = dt.files;
+        }
+
+        function clearFile() {
+          fileInput.value = '';
+          categoryField.value = '';
+          confidenceField.value = '';
+        }
+
+        function handleFile(file) {
+          clearFile();
+          var url = URL.createObjectURL(file);
+          var img = new Image();
+          img.onload = function () {
+            preview.src = url;
+            preview.hidden = false;
+            classify(img).then(function (result) {
+              if (result.is_valid) {
+                setStatus('✓ Image verified. Your room photo is suitable for this review.', 'success');
+                categoryField.value = result.category;
+                confidenceField.value = result.confidence.toFixed(3);
+                assignFile(file);
+              } else if (result.category === 'uncertain') {
+                setStatus('Please upload a clearer photo showing the villa room.', 'uncertain');
+              } else {
+                setStatus('✕ Image rejected. Please upload a clear photo of the villa room only.', 'reject');
+              }
+            }).catch(function () {
+              setStatus('Could not load the AI model right now — please try again, or submit your review without a photo.', 'reject');
+            });
+          };
+          img.src = url;
+        }
+
+        uploadBtn.addEventListener('click', function () { fileInput.click(); });
+
+        fileInput.addEventListener('change', function () {
+          if (fileInput.files && fileInput.files[0]) handleFile(fileInput.files[0]);
+        });
+
+        function stopCamera() {
+          if (cameraStream) {
+            cameraStream.getTracks().forEach(function (t) { t.stop(); });
+            cameraStream = null;
+          }
+          cameraModal.classList.remove('is-open');
+        }
+
+        cameraBtn.addEventListener('click', function () {
+          setStatus('Requesting camera access…', 'processing');
+          navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } }).then(function (stream) {
+            cameraStream = stream;
+            cameraVideo.srcObject = stream;
+            cameraModal.classList.add('is-open');
+            statusEl.hidden = true;
+          }).catch(function () {
+            setStatus('Camera access was denied or unavailable. Please use Upload Image instead.', 'reject');
+          });
+        });
+
+        cancelBtn.addEventListener('click', stopCamera);
+
+        captureBtn.addEventListener('click', function () {
+          cameraCanvas.width = cameraVideo.videoWidth;
+          cameraCanvas.height = cameraVideo.videoHeight;
+          cameraCanvas.getContext('2d').drawImage(cameraVideo, 0, 0);
+          cameraCanvas.toBlob(function (blob) {
+            var file = new File([blob], 'camera-capture.jpg', { type: 'image/jpeg' });
+            stopCamera();
+            handleFile(file);
+          }, 'image/jpeg', 0.9);
+        });
+      })();
+      </script>
 
       <hr class="footer-divider">
       <p class="footer-bottom">&copy; 2026 Casadive Villa. All rights reserved.</p>

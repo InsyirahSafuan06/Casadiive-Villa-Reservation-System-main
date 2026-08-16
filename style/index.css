@@ -676,6 +676,209 @@
       opacity: .9;
   }
 
+  /* ---------- AI ASSISTANT CHATBOT ---------- */
+  .chatbot-launcher {
+      position: fixed;
+      right: 28px;
+      bottom: 108px;
+      z-index: 96;
+      background: var(--orange);
+      color: #fff;
+      border-radius: 100px;
+      padding: 14px 20px 14px 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 16px 34px rgba(0, 0, 0, .28);
+  }
+
+  .chatbot-launcher svg {
+      width: 22px;
+      height: 22px;
+      flex-shrink: 0;
+  }
+
+  .chatbot-launcher span {
+      font-family: 'Raleway', sans-serif;
+      font-weight: 700;
+      font-size: 14px;
+      white-space: nowrap;
+  }
+
+  .chatbot-panel {
+      position: fixed;
+      right: 28px;
+      bottom: 172px;
+      z-index: 97;
+      width: 340px;
+      max-width: calc(100vw - 40px);
+      max-height: min(520px, calc(100vh - 220px));
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, .28);
+      flex-direction: column;
+      overflow: hidden;
+      display: none;
+  }
+
+  /* .chatbot-panel sets its own `display`, so the [hidden] attribute alone won't hide it
+     (author CSS beats the UA stylesheet's `[hidden]{display:none}`) — toggle this class instead. */
+  .chatbot-panel.is-open {
+      display: flex;
+  }
+
+  .chatbot-header {
+      background: var(--brown);
+      color: #fff;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-family: 'Raleway', sans-serif;
+      font-weight: 700;
+      font-size: 15px;
+      flex-shrink: 0;
+  }
+
+  .chatbot-close {
+      color: #fff;
+      font-size: 22px;
+      line-height: 1;
+      opacity: .8;
+  }
+
+  .chatbot-close:hover {
+      opacity: 1;
+  }
+
+  .chatbot-log {
+      flex: 1;
+      overflow-y: auto;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-height: 160px;
+  }
+
+  .chat-bubble {
+      font-family: 'Raleway', sans-serif;
+      font-weight: 500;
+      font-size: 13.5px;
+      line-height: 1.5;
+      padding: 10px 14px;
+      border-radius: 12px;
+      max-width: 85%;
+  }
+
+  .chat-bubble.bot {
+      background: var(--sand-light);
+      color: #1c1c1c;
+      align-self: flex-start;
+      border-bottom-left-radius: 2px;
+  }
+
+  .chat-bubble.user {
+      background: var(--orange);
+      color: #fff;
+      align-self: flex-end;
+      border-bottom-right-radius: 2px;
+  }
+
+  .chat-bubble .chip {
+      display: inline-flex;
+      margin-top: 4px;
+  }
+
+  .chat-bubble.typing {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 14px 16px;
+  }
+
+  .chat-bubble.typing span {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--brown);
+      opacity: .4;
+      animation: chatTypingDot 1.2s infinite ease-in-out;
+  }
+
+  .chat-bubble.typing span:nth-child(2) {
+      animation-delay: .2s;
+  }
+
+  .chat-bubble.typing span:nth-child(3) {
+      animation-delay: .4s;
+  }
+
+  @keyframes chatTypingDot {
+      0%, 60%, 100% { opacity: .4; transform: translateY(0); }
+      30% { opacity: 1; transform: translateY(-3px); }
+  }
+
+  .chatbot-quickreplies {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 0 18px 14px;
+      flex-shrink: 0;
+  }
+
+  .chip {
+      background: #fff;
+      color: var(--brown);
+      border: 1px solid var(--brown);
+      border-radius: 100px;
+      padding: 7px 14px;
+      font-family: 'Raleway', sans-serif;
+      font-weight: 600;
+      font-size: 12px;
+      white-space: nowrap;
+  }
+
+  .chip:hover {
+      background: var(--brown);
+      color: #fff;
+  }
+
+  .chatbot-input-row {
+      display: flex;
+      gap: 8px;
+      padding: 14px 18px;
+      border-top: 1px solid #eee;
+      flex-shrink: 0;
+  }
+
+  .chatbot-input-row input {
+      flex: 1;
+      border: 1px solid #ddd;
+      border-radius: 100px;
+      padding: 10px 16px;
+      font-family: 'Raleway', sans-serif;
+      font-size: 13px;
+  }
+
+  .chatbot-input-row input:focus {
+      outline: 2px solid var(--orange);
+  }
+
+  .chatbot-input-row button {
+      background: var(--orange);
+      color: #fff;
+      border-radius: 100px;
+      padding: 10px 20px;
+      font-family: 'Raleway', sans-serif;
+      font-weight: 700;
+      font-size: 13px;
+  }
+
+  .chatbot-input-row button:hover {
+      filter: brightness(1.05);
+  }
+
   /* ---------- RESPONSIVE ---------- */
   @media (max-width: 1100px) {
       .footer-grid {
@@ -744,6 +947,17 @@
           left: 20px;
           right: 20px;
           max-width: none;
+      }
+
+      .chatbot-launcher span {
+          display: none;
+      }
+
+      .chatbot-panel {
+          right: 20px;
+          left: 20px;
+          width: auto;
+          bottom: 92px;
       }
   }
 

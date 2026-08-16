@@ -9,7 +9,7 @@ require_once __DIR__ . '/auth.php';
 /**
  * Pembolehubah yang dijangka daripada halaman yang memasukkan fail ini:
  *   $base      string  '' di root projek, '../' satu tahap ke bawah (customer/, user/)
- *   $active    string  salah satu daripada home|villa|campsite|gallery|contact
+ *   $active    string  salah satu daripada home|villa|campsite|gallery|mybooking|contact
  *   $pageTitle string  teks <title>
  *   $pageCss   string  href stylesheet, relatif kepada halaman yang memasukkannya
  */
