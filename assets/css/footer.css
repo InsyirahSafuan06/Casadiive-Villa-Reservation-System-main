@@ -1,0 +1,123 @@
+/* ==========================================================================
+   WIDGET GAMBAR & KAMERA FOOTER (KOD YANG BETUL)
+   ========================================================================== */
+
+/* 1. Pengawal Elemen Tersembunyi (Sifat Utama) */
+[hidden],
+.footer-image-preview[hidden],
+.footer-verify-status[hidden] {
+  display: none !important;
+}
+
+/* 2. Butang Kawalan Memilih Media */
+.footer-photo-controls { 
+  display: flex; 
+  gap: 8px; 
+  flex-wrap: wrap; 
+  margin-top: 2px; 
+  margin-bottom: 10px;
+}
+
+.footer-photo-btn {
+  background: transparent;
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, .5);
+  border-radius: 2.5px;
+  padding: 8px 14px;
+  font-family: 'Raleway', sans-serif;
+  font-weight: 600;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.footer-photo-btn:hover { 
+  background: rgba(255, 255, 255, .15); 
+}
+
+.footer-photo-btn-outline { 
+  border-color: #999; 
+  color: #ccc; 
+}
+
+/* 3. Pratonton Imej (Hanya aktif apabila hidden digugurkan oleh JS) */
+.footer-image-preview {
+  max-width: 140px;
+  max-height: 140px;
+  object-fit: cover;
+  border-radius: 8px;
+  display: block;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+#footer-remove-btn { margin-bottom: 10px; }
+
+/* 4. Status Pengesahan AI (Warna Status) */
+.footer-verify-status {
+  font-family: 'Raleway', sans-serif;
+  font-weight: 600;
+  font-size: 12px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  display: inline-block;
+  margin-bottom: 12px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.footer-verify-status.processing { background: #fff3cd; color: #8a6400; }
+.footer-verify-status.success    { background: #d9f2df; color: #1e6b34; }
+.footer-verify-status.reject     { background: #fdecea; color: #9a3226; }
+.footer-verify-status.uncertain  { background: #fde3c7; color: #8a4f00; }
+
+/* 5. Kotak Modal Kamera Terapung */
+.footer-camera-modal {
+  position: fixed; 
+  inset: 0; 
+  background: rgba(0, 0, 0, .8); 
+  z-index: 9999; /* Dipastikan paling atas supaya tidak ditindih elemen lain */
+  align-items: center; 
+  justify-content: center; 
+  padding: 20px;
+  display: none;
+}
+
+.footer-camera-modal.is-open { 
+  display: flex; 
+}
+
+.footer-camera-modal-inner { 
+  background: #fff; 
+  border-radius: 14px; 
+  padding: 20px; 
+  max-width: 480px; 
+  width: 100%; 
+  box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+}
+
+.footer-camera-modal video { 
+  width: 100%; 
+  border-radius: 10px; 
+  background: #000; 
+  display: block; 
+  margin-bottom: 16px; 
+}
+
+.footer-camera-modal-actions { 
+  display: flex; 
+  gap: 10px; 
+  justify-content: center; 
+}
+
+/* Reka bentuk butang di dalam kotak kamera modal supaya teks berwarna gelap */
+.footer-camera-modal-inner .footer-photo-btn {
+  color: #333;
+  border-color: #ccc;
+}
+.footer-camera-modal-inner .footer-photo-btn#footer-camera-capture-btn {
+  background: #ff8400;
+  color: #fff;
+  border-color: #ff8400;
+}

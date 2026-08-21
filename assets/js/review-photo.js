@@ -1,0 +1,180 @@
+/**
+ * Review photo upload/camera widget — shared by the full review form (customer/mybooking.php)
+ * and the compact footer widget (includes/footer.php), which each call
+ * initReviewPhotoWidget() with their own element IDs.
+ */
+function initReviewPhotoWidget(ids) {
+  var form = document.getElementById(ids.form);
+  if (!form) return;
+
+  var uploadBtn = document.getElementById(ids.uploadBtn);
+  var cameraBtn = document.getElementById(ids.cameraBtn);
+  var removeBtn = document.getElementById(ids.removeBtn);
+  var fileInput = document.getElementById(ids.fileInput);
+  var preview = document.getElementById(ids.preview);
+  var statusEl = document.getElementById(ids.status);
+  var categoryField = document.getElementById(ids.category);
+  var confidenceField = document.getElementById(ids.confidence);
+  var statusClass = ids.statusClass;
+
+  var cameraModal = document.getElementById(ids.cameraModal);
+  var cameraVideo = document.getElementById(ids.cameraVideo);
+  var cameraCanvas = document.getElementById(ids.cameraCanvas);
+  var captureBtn = document.getElementById(ids.captureBtn);
+  var cancelBtn = document.getElementById(ids.cancelBtn);
+
+  var CONFIDENCE_THRESHOLD = 0.5;
+  var cocoModel = null;
+  var modelLoading = null;
+  var cameraStream = null;
+
+  var VEHICLE_CLASSES = ['car', 'motorcycle', 'bus', 'truck', 'bicycle', 'train', 'airplane', 'boat'];
+  var FOOD_CLASSES = ['banana', 'apple', 'sandwich', 'orange', 'broccoli', 'carrot', 'hot dog', 'pizza', 'donut', 'cake', 'bowl'];
+
+  function setStatus(text, kind) {
+    statusEl.hidden = false;
+    statusEl.textContent = text;
+    statusEl.className = statusClass + ' ' + (kind || '');
+  }
+
+  function loadScript(src) {
+    return new Promise(function (resolve, reject) {
+      var s = document.createElement('script');
+      s.src = src;
+      s.onload = resolve;
+      s.onerror = reject;
+      document.head.appendChild(s);
+    });
+  }
+
+  function loadModel() {
+    if (cocoModel) return Promise.resolve(cocoModel);
+    if (modelLoading) return modelLoading;
+
+    setStatus('Loading AI model…', 'processing');
+    modelLoading = loadScript('https://jsdelivr.net')
+      .then(function () { return loadScript('https://jsdelivr.net'); })
+      .then(function () { return window.cocoSsd.load(); })
+      .then(function (model) { cocoModel = model; return model; });
+    return modelLoading;
+  }
+
+  function classify(imgEl) {
+    return loadModel().then(function (model) {
+      setStatus('AI is checking your image…', 'processing');
+      return model.detect(imgEl);
+    }).then(function (predictions) {
+      var best = null;
+      predictions.forEach(function (p) {
+        if (p.score >= CONFIDENCE_THRESHOLD && (!best || p.score > best.score)) best = p;
+      });
+
+      if (!best) {
+        return { is_valid: false, category: 'uncertain', confidence: predictions[0] ? predictions[0].score : 0 };
+      }
+      if (best.class === 'bed') {
+        return { is_valid: true, category: 'bedroom', confidence: best.score };
+      }
+      if (best.class === 'person') {
+        return { is_valid: false, category: 'selfie', confidence: best.score };
+      }
+      if (VEHICLE_CLASSES.indexOf(best.class) !== -1) {
+        return { is_valid: false, category: 'vehicle', confidence: best.score };
+      }
+      if (FOOD_CLASSES.indexOf(best.class) !== -1) {
+        return { is_valid: false, category: 'food', confidence: best.score };
+      }
+      return { is_valid: false, category: 'uncertain', confidence: best.score };
+    });
+  }
+
+  function assignFile(file) {
+    var dt = new DataTransfer();
+    dt.items.add(file);
+    fileInput.files = dt.files;
+  }
+
+  function clearFile() {
+    fileInput.value = '';
+    categoryField.value = '';
+    confidenceField.value = '';
+    preview.hidden = true; // Sembunyikan jika fail dibersihkan
+    preview.src = '';
+    if (removeBtn) removeBtn.hidden = true;
+  }
+
+  function handleFile(file) {
+    clearFile();
+    var url = URL.createObjectURL(file);
+    var img = new Image();
+    img.onload = function () {
+      classify(img).then(function (result) {
+        if (result.is_valid) {
+          setStatus('✓ Image verified. Your room photo is suitable for this review.', 'success');
+          
+          // PENTING: Hanya set src dan papar gambar jika disahkan tulen oleh AI
+          preview.src = url;
+          preview.hidden = false;
+          if (removeBtn) removeBtn.hidden = false;
+
+          categoryField.value = result.category;
+          confidenceField.value = result.confidence.toFixed(3);
+          assignFile(file);
+        } else if (result.category === 'uncertain') {
+          setStatus('Please upload a clearer photo showing the villa room.', 'uncertain');
+        } else {
+          setStatus('✕ Image rejected. Please upload a clear photo of the villa room only.', 'reject');
+        }
+      }).catch(function () {
+        setStatus('Could not load the AI model right now — please try again, or submit your review without a photo.', 'reject');
+      });
+    };
+    img.src = url;
+  }
+
+  uploadBtn.addEventListener('click', function () { fileInput.click(); });
+
+  fileInput.addEventListener('change', function () {
+    if (fileInput.files && fileInput.files[0]) handleFile(fileInput.files[0]);
+  });
+
+  if (removeBtn) {
+    removeBtn.addEventListener('click', function () {
+      clearFile();
+      statusEl.hidden = true;
+    });
+  }
+
+  function stopCamera() {
+    if (cameraStream) {
+      cameraStream.getTracks().forEach(function (t) { t.stop(); });
+      cameraStream = null;
+    }
+    cameraModal.classList.remove('is-open');
+  }
+
+  cameraBtn.addEventListener('click', function () {
+    setStatus('Requesting camera access…', 'processing');
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } }).then(function (stream) {
+      cameraStream = stream;
+      cameraVideo.srcObject = stream;
+      cameraModal.classList.add('is-open');
+      statusEl.hidden = true;
+    }).catch(function () {
+      setStatus('Camera access was denied or unavailable. Please use Upload Image instead.', 'reject');
+    });
+  });
+
+  cancelBtn.addEventListener('click', stopCamera);
+
+  captureBtn.addEventListener('click', function () {
+    cameraCanvas.width = cameraVideo.videoWidth;
+    cameraCanvas.height = cameraVideo.videoHeight;
+    cameraCanvas.getContext('2d').drawImage(cameraVideo, 0, 0);
+    cameraCanvas.toBlob(function (blob) {
+      var file = new File([blob], 'camera-capture.jpg', { type: 'image/jpeg' });
+      stopCamera();
+      handleFile(file);
+    }, 'image/jpeg', 0.9);
+  });
+}

@@ -322,6 +322,8 @@
     display:block;
   }
 
+  #review-remove-btn{ margin-bottom: 10px; }
+
   .review-verify-status{
     font-family:'Raleway', sans-serif;
     font-weight:600;

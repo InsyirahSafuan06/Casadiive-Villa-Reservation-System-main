@@ -13,31 +13,40 @@ and accommodation management.
 
 ```
 .
-├── index.php                  Home page (with a functional quick booking bar)
+├── index.php                  Home page (quick booking bar + AI Assistant chatbot) — logic only
+├── views/
+│   └── index.view.php          HTML template for index.php
 ├── style/
 │   └── index.css
+├── assets/
+│   ├── images/                 Static site imagery
+│   ├── js/                     index.js, chatbot.js, review-photo.js (see "Views & JS" below)
+│   └── uploads/reviews/        Guest review photos that passed client-side AI verification (created at runtime)
 ├── includes/                   Shared PHP (not web-facing content)
 │   ├── db.php                  PDO connection to MySQL
 │   ├── auth.php                Session + CSRF helpers: attempt_login(), current_user(), require_login(), csrf_field()/csrf_verify()
-│   ├── helpers.php             format_status() — 'checked_in' -> 'Checked In'
+│   ├── helpers.php             format_status(), payment_needs_refund(), compute_stay_price(), recommend_accommodations()
+│   ├── email_notify.php / mailer.php  Status-change emails (no Composer/PHPMailer dependency)
 │   ├── header.php              Shared <head> + navbar for public pages
-│   └── footer.php              Shared footer (+ WhatsApp card on index.php)
-├── customer/                    Public-facing pages
-│   ├── villa.php
-│   ├── campsite.php
-│   ├── contact_us.php
-│   ├── gallery.php
+│   └── footer.php              Shared footer (+ WhatsApp card + review widget)
+├── customer/                    Public-facing pages — logic files only, views/ holds their templates
+│   ├── villa.php / campsite.php / gallery.php / contact_us.php / detail.php
 │   ├── bookingform.php          Booking form -> inserts customer/booking/booking_item
-│   ├── mybooking.php            Reference + phone lookup -> printable receipt
+│   ├── mybooking.php            Reference + phone lookup -> receipt, self-serve cancel, reviews
+│   ├── payment.php / payment_method.php / process_payment.php / sucess_payment.php
+│   ├── chatbot_recommend.php / chatbot_booking_status.php  JSON endpoints for the AI Assistant (no view — pure API)
+│   ├── views/                   One `<name>.view.php` per logic file above
 │   └── style/                    CSS for the pages above
-├── user/                        Admin/staff-facing pages
+├── user/                        Admin/staff-facing pages — logic files only, views/ holds their templates
 │   ├── login.php                 Real session-based auth against the `user` table
 │   ├── logout.php
-│   ├── admin_dashboard.php       role=admin only: bookings, accommodations, accounts
+│   ├── admin_dashboard.php       role=admin only: bookings, accommodations, reviews, accounts
 │   ├── manage_account.php        role=admin only: create/edit/delete staff & admin accounts
 │   ├── manage_accommodation.php  role=admin only: create/edit/delete Villa & Campsite packages
 │   ├── staff_dashboard.php       role=staff or admin: bookings, accommodation status, payments
 │   ├── booking_receipt.php       role=admin or staff: view/print any booking's receipt
+│   ├── notification.php          Builds a wa.me link, no view (redirect only)
+│   ├── views/                   One `<name>.view.php` per logic file above
 │   └── style/
 │       ├── login.css
 │       ├── dashboard.css
@@ -48,8 +57,21 @@ and accommodation management.
 └── README.md
 ```
 
+**Logic/view split**: every page that renders HTML is split into a logic file (data-fetching,
+POST handling, redirects — always resolves or `exit`s before any output) and a
+`views/<name>.view.php` template (pure HTML/echo). The logic file ends with
+`require __DIR__ . '/views/<name>.view.php';` in place of the markup. Pages with no HTML at all
+(the two `chatbot_*.php` JSON endpoints, `logout.php`, `notification.php`) have no view file.
+HTML `href`/`src` attributes inside a view file are unaffected by this split — they resolve
+against the request URL (still the original, unchanged filename), not the view file's location
+on disk; only PHP-side `include`/`require` paths needed an extra `../` to reach `includes/`.
+
 Every top-level folder (root, `customer/`, `user/`) keeps its own `style/`
-subfolder — no shared/cross-folder stylesheets.
+subfolder — no shared/cross-folder stylesheets. JavaScript follows the same idea:
+`assets/js/index.js` and `assets/js/chatbot.js` are index.php-specific, while
+`assets/js/review-photo.js` is shared (via an `initReviewPhotoWidget(ids)` call with different
+element IDs) between the full review form on `mybooking.php` and the compact widget in
+`footer.php`.
 
 All internal links are relative — `index.php` sits at the site root, and
 pages under `customer/` and `user/` link back to it with `../`.
