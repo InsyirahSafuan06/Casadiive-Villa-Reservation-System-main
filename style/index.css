@@ -489,6 +489,69 @@
       flex-grow: 1;
   }
 
+  .testimonial-photo {
+      width: 100%;
+      height: 160px;
+      object-fit: cover;
+      border-radius: 8px;
+      cursor: pointer;
+  }
+
+  /* click a testimonial photo to enlarge it here — no new tab, closing just returns to the homepage */
+  .photo-lightbox {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .85);
+      z-index: 500;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      display: none;
+  }
+
+  /* same [hidden]-vs-CSS-display gotcha as .chatbot-panel / .footer-camera-modal — toggle this class instead */
+  .photo-lightbox.is-open {
+      display: flex;
+  }
+
+  .photo-lightbox img {
+      max-width: 100%;
+      max-height: 80vh;
+      border-radius: 10px;
+      object-fit: contain;
+  }
+
+  .photo-lightbox-back {
+      margin-top: 18px;
+      background: #fff;
+      color: #1C1C1C;
+      border: none;
+      border-radius: 999px;
+      padding: 12px 28px;
+      font-family: 'Raleway', sans-serif;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+  }
+
+  .photo-lightbox-back:hover {
+      background: var(--brown-price, #6A3A19);
+      color: #fff;
+  }
+
+  .photo-lightbox-close {
+      position: absolute;
+      top: 20px;
+      right: 24px;
+      background: transparent;
+      border: none;
+      color: #fff;
+      font-size: 36px;
+      line-height: 1;
+      cursor: pointer;
+  }
+
   .testimonial-person {
       display: flex;
       align-items: center;
@@ -503,11 +566,25 @@
       flex-shrink: 0;
   }
 
-  .testimonial-person span {
+  .testimonial-person-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+  }
+
+  .testimonial-person-name {
       font-family: 'Poppins', sans-serif;
       font-weight: 500;
       font-size: 13px;
       color: var(--text-soft);
+  }
+
+  .testimonial-person-location {
+      font-family: 'Poppins', sans-serif;
+      font-weight: 400;
+      font-size: 12px;
+      color: var(--text-soft);
+      opacity: .7;
   }
 
   /* ---------- FOOTER ---------- */

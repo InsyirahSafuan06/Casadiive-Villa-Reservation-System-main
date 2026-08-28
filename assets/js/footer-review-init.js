@@ -15,5 +15,10 @@ initReviewPhotoWidget({
   cameraVideo: 'footer-camera-video',
   cameraCanvas: 'footer-camera-canvas',
   captureBtn: 'footer-camera-capture-btn',
-  cancelBtn: 'footer-camera-cancel-btn'
+  cancelBtn: 'footer-camera-cancel-btn',
+  lightbox: 'footer-lightbox',
+  lightboxImg: 'footer-lightbox-img',
+  lightboxClose: 'footer-lightbox-close',
+  lightboxBack: 'footer-lightbox-back',
+  homeUrl: FOOTER_REVIEW_HOME_URL
 });

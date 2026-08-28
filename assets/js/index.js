@@ -18,3 +18,36 @@ document.querySelectorAll('.stars[data-rating]').forEach(function (starsEl) {
     }
   });
 });
+
+// klik gambar testimonial untuk besarkan dalam lightbox terus atas homepage —
+// tutup je lightbox untuk balik tengok homepage semula, tak payah buka tab baru
+var photoLightbox = document.getElementById('photo-lightbox');
+var photoLightboxImg = document.getElementById('photo-lightbox-img');
+var photoLightboxClose = document.getElementById('photo-lightbox-close');
+var photoLightboxBack = document.getElementById('photo-lightbox-back');
+
+function openPhotoLightbox(src, alt) {
+  photoLightboxImg.src = src;
+  photoLightboxImg.alt = alt;
+  photoLightbox.classList.add('is-open');
+}
+
+function closePhotoLightbox() {
+  photoLightbox.classList.remove('is-open');
+  photoLightboxImg.src = '';
+}
+
+document.querySelectorAll('.testimonial-photo').forEach(function (img) {
+  img.addEventListener('click', function () {
+    openPhotoLightbox(img.src, img.alt);
+  });
+});
+
+photoLightboxClose.addEventListener('click', closePhotoLightbox);
+photoLightboxBack.addEventListener('click', closePhotoLightbox);
+photoLightbox.addEventListener('click', function (e) {
+  if (e.target === photoLightbox) closePhotoLightbox(); // klik background pun tutup
+});
+document.addEventListener('keydown', function (e) {
+  if (e.key === 'Escape') closePhotoLightbox();
+});

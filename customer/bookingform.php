@@ -16,6 +16,7 @@ $old = [
     'phone' => '',
     'email' => '',
     'plate_num' => '',
+    'location' => '',
     'check_in' => '',
     'check_out' => '',
     'total_guest' => '1',
@@ -82,6 +83,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $old['phone'] = trim((string) ($_POST['phone'] ?? ''));
     $old['email'] = trim((string) ($_POST['email'] ?? ''));
     $old['plate_num'] = trim((string) ($_POST['plate_num'] ?? ''));
+    $old['location'] = trim((string) ($_POST['location'] ?? ''));
     $old['check_in'] = trim((string) ($_POST['check_in'] ?? ''));
     $old['check_out'] = trim((string) ($_POST['check_out'] ?? ''));
     $old['total_guest'] = trim((string) ($_POST['total_guest'] ?? '1'));
@@ -160,13 +162,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $pdo->beginTransaction();
 
             $stmt = $pdo->prepare(
-                'INSERT INTO customer (full_name, phone, email, plate_num) VALUES (:full_name, :phone, :email, :plate_num)'
+                'INSERT INTO customer (full_name, phone, email, plate_num, location) VALUES (:full_name, :phone, :email, :plate_num, :location)'
             );
             $stmt->execute([
                 'full_name' => $old['full_name'],
                 'phone' => $old['phone'],
                 'email' => $old['email'],
                 'plate_num' => $old['plate_num'] !== '' ? $old['plate_num'] : null,
+                'location' => $old['location'] !== '' ? $old['location'] : null,
             ]);
             $customerId = (int) $pdo->lastInsertId(); // id customer baru yang kita baru insert
 

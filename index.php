@@ -7,7 +7,7 @@ require_once __DIR__ . '/includes/db.php'; // sambung ke database dulu, dapat $p
 
 // ambil 6 ulasan terbaru je untuk letak kat homepage, susun dari yang paling baru
 $reviews = $pdo->query(
-    "SELECT r.rating, r.comment, r.review_date, c.full_name
+    "SELECT r.rating, r.comment, r.image_path, r.review_date, c.full_name, c.location
      FROM review r
      JOIN booking b ON b.booking_id = r.booking_id
      JOIN customer c ON c.customer_id = b.customer_id

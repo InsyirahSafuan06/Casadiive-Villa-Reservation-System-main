@@ -176,6 +176,13 @@
             </div>
           </div>
 
+          <!-- PREVIEW LIGHTBOX (klik preview untuk besarkan, dari upload ATAU camera capture) -->
+          <div class="photo-lightbox" id="review-lightbox">
+            <button type="button" class="photo-lightbox-close" id="review-lightbox-close" aria-label="Close">&times;</button>
+            <img id="review-lightbox-img" src="" alt="Room photo, enlarged">
+            <button type="button" class="photo-lightbox-back" id="review-lightbox-back">Back to Homepage</button>
+          </div>
+
           <script src="../assets/js/review-photo.js"></script>
           <script>
             initReviewPhotoWidget({
@@ -193,7 +200,12 @@
               cameraVideo: 'camera-video',
               cameraCanvas: 'camera-canvas',
               captureBtn: 'camera-capture-btn',
-              cancelBtn: 'camera-cancel-btn'
+              cancelBtn: 'camera-cancel-btn',
+              lightbox: 'review-lightbox',
+              lightboxImg: 'review-lightbox-img',
+              lightboxClose: 'review-lightbox-close',
+              lightboxBack: 'review-lightbox-back',
+              homeUrl: '<?= htmlspecialchars($base) ?>index.php'
             });
           </script>
         <?php endif; ?>

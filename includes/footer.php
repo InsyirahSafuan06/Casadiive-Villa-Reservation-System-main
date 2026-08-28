@@ -117,6 +117,13 @@ if (is_file($footerCssPath)) {
         </div>
       </div>
 
+      <!-- PREVIEW LIGHTBOX (klik preview untuk besarkan, dari upload ATAU camera capture) -->
+      <div class="photo-lightbox" id="footer-lightbox">
+        <button type="button" class="photo-lightbox-close" id="footer-lightbox-close" aria-label="Close">&times;</button>
+        <img id="footer-lightbox-img" src="" alt="Room photo, enlarged">
+        <button type="button" class="photo-lightbox-back" id="footer-lightbox-back">Back to Homepage</button>
+      </div>
+
       <hr class="footer-divider">
       <p class="footer-bottom">&copy; <?= date('Y') ?> Casadive Villa. All rights reserved.</p>
     </div>
@@ -141,6 +148,11 @@ if (is_file($footerCssPath)) {
   <!-- ASSETS & SCRIPT INJECTIONS -->
   <link rel="stylesheet" href="<?= htmlspecialchars($base . $footerCssHref) ?>">
   <script src="<?= htmlspecialchars($base) ?>assets/js/review-photo.js"></script>
+  <script>
+    // fail .js luar takleh proses <?php ?>, so jambatan kecil ni perlu kekal inline
+    // (sama teknik macam CHATBOT_DATA dalam views/index.view.php)
+    var FOOTER_REVIEW_HOME_URL = <?= json_encode($base . 'index.php') ?>;
+  </script>
   <script src="<?= htmlspecialchars($base) ?>assets/js/footer-review-init.js"></script>
 
 </body>

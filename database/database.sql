@@ -39,6 +39,7 @@ CREATE TABLE `customer` (
   phone       VARCHAR(20) NOT NULL,
   email       VARCHAR(150),
   plate_num   VARCHAR(20),
+  location    VARCHAR(100) NULL COMMENT 'optional — customer city/country, shown under their name in testimonials',
   INDEX idx_customer_phone (phone)
 ) ENGINE=InnoDB;
 

@@ -75,6 +75,11 @@
               <input type="text" id="plate" name="plate_num" placeholder="Enter your car plate number" value="<?= htmlspecialchars($old['plate_num']) ?>">
             </div>
 
+            <div class="form-field">
+              <label for="location">Location (optional)</label>
+              <input type="text" id="location" name="location" placeholder="e.g. Kuala Lumpur, Malaysia" value="<?= htmlspecialchars($old['location']) ?>">
+            </div>
+
             <div class="form-row">
               <div class="form-field">
                 <label for="check-in">Check-in</label>

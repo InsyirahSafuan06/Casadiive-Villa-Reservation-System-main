@@ -119,9 +119,17 @@
           </div>
           <p class="testimonial-date"><?= htmlspecialchars(date('j M. Y', strtotime($review['review_date']))) ?></p>
           <p class="testimonial-quote"><?= htmlspecialchars($review['comment'] ?: 'Great stay!') ?></p>
+          <?php if ($review['image_path']): ?>
+            <img class="testimonial-photo" src="<?= htmlspecialchars($review['image_path']) ?>" alt="Room photo shared by <?= htmlspecialchars($review['full_name']) ?>">
+          <?php endif; ?>
           <div class="testimonial-person">
             <div class="avatar"></div>
-            <span><?= htmlspecialchars($review['full_name']) ?></span>
+            <div class="testimonial-person-info">
+              <span class="testimonial-person-name"><?= htmlspecialchars($review['full_name']) ?></span>
+              <?php if ($review['location']): ?>
+                <span class="testimonial-person-location"><?= htmlspecialchars($review['location']) ?></span>
+              <?php endif; ?>
+            </div>
           </div>
         </article>
         <?php endforeach; ?>
@@ -131,6 +139,13 @@
       <?php endif; ?>
     </div>
   </section>
+
+  <!-- TESTIMONIAL PHOTO LIGHTBOX -->
+  <div class="photo-lightbox" id="photo-lightbox">
+    <button type="button" class="photo-lightbox-close" id="photo-lightbox-close" aria-label="Close">&times;</button>
+    <img id="photo-lightbox-img" src="" alt="Room photo, enlarged">
+    <button type="button" class="photo-lightbox-back" id="photo-lightbox-back">Back to Homepage</button>
+  </div>
 
   <!-- AI ASSISTANT (scripted, rule-based — answers pulled from real accommodation data) -->
   <div class="chatbot-widget">

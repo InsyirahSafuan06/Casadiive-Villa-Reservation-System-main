@@ -23,6 +23,13 @@ function initReviewPhotoWidget(ids) {
   var captureBtn = document.getElementById(ids.captureBtn);
   var cancelBtn = document.getElementById(ids.cancelBtn);
 
+  // lightbox untuk besarkan preview (dari upload ATAU camera capture — dua-dua guna preview yang sama)
+  var lightbox = document.getElementById(ids.lightbox);
+  var lightboxImg = document.getElementById(ids.lightboxImg);
+  var lightboxClose = document.getElementById(ids.lightboxClose);
+  var lightboxBack = document.getElementById(ids.lightboxBack);
+  var homeUrl = ids.homeUrl;
+
   var CONFIDENCE_THRESHOLD = 0.5;
   var cocoModel = null;
   var modelLoading = null;
@@ -142,6 +149,26 @@ function initReviewPhotoWidget(ids) {
     removeBtn.addEventListener('click', function () {
       clearFile();
       statusEl.hidden = true;
+    });
+  }
+
+  if (lightbox && lightboxImg) {
+    preview.addEventListener('click', function () {
+      lightboxImg.src = preview.src;
+      lightbox.classList.add('is-open');
+    });
+    if (lightboxClose) {
+      lightboxClose.addEventListener('click', function () {
+        lightbox.classList.remove('is-open');
+      });
+    }
+    if (lightboxBack && homeUrl) {
+      lightboxBack.addEventListener('click', function () {
+        window.location.href = homeUrl; // customer tinggalkan page ni terus ke homepage
+      });
+    }
+    lightbox.addEventListener('click', function (e) {
+      if (e.target === lightbox) lightbox.classList.remove('is-open'); // klik background just tutup je
     });
   }
 
