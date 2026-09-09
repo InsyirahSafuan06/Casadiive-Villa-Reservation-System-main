@@ -114,7 +114,7 @@
           <button type="button" class="receipt-print" onclick="window.print()">Print Receipt</button>
           <a href="mybooking.php" class="receipt-back">Look Up Another Booking</a>
           <?php if (in_array($booking['booking_status'], ['pending', 'confirmed'], true)): ?>
-            <form method="post" onsubmit="return confirm('Are you sure you want to cancel this booking?');" style="display:inline;">
+            <form method="post" onsubmit="return confirm('Are you sure you want to cancel this booking?');">
               <?= csrf_field() ?>
               <input type="hidden" name="form" value="cancel">
               <input type="hidden" name="ref" value="<?= (int) $booking['booking_id'] ?>">

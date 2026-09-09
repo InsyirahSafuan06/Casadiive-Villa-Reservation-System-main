@@ -150,8 +150,7 @@
   <!-- AI ASSISTANT (scripted, rule-based — answers pulled from real accommodation data) -->
   <div class="chatbot-widget">
     <button type="button" class="chatbot-launcher" id="chatbot-launcher" aria-label="Open AI Assistant" aria-expanded="false">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v12H7l-3 3V4z" fill="none" stroke="#fff" stroke-width="1.8" stroke-linejoin="round"/><circle cx="9" cy="10" r="1" fill="#fff"/><circle cx="12" cy="10" r="1" fill="#fff"/><circle cx="15" cy="10" r="1" fill="#fff"/></svg>
-      <span>Casadive Villa Assistant</span>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="4" width="14" height="10" rx="3" fill="#fff"/><path d="M5 14 L5 17.5 L8.5 14 Z" fill="#fff"/><rect x="8" y="9" width="14" height="9" rx="3" fill="#fff"/><path d="M18 18 L18 21.5 L14 18 Z" fill="#fff"/></svg>
     </button>
 
     <div class="chatbot-panel" id="chatbot-panel">

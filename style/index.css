@@ -759,27 +759,21 @@
       right: 28px;
       bottom: 108px;
       z-index: 96;
+      width: 56px;
+      height: 56px;
       background: var(--orange);
       color: #fff;
-      border-radius: 100px;
-      padding: 14px 20px 14px 14px;
+      border-radius: 50%;
       display: flex;
       align-items: center;
-      gap: 10px;
+      justify-content: center;
       box-shadow: 0 16px 34px rgba(0, 0, 0, .28);
   }
 
   .chatbot-launcher svg {
-      width: 22px;
-      height: 22px;
+      width: 24px;
+      height: 24px;
       flex-shrink: 0;
-  }
-
-  .chatbot-launcher span {
-      font-family: 'Raleway', sans-serif;
-      font-weight: 700;
-      font-size: 14px;
-      white-space: nowrap;
   }
 
   .chatbot-panel {
@@ -1024,10 +1018,6 @@
           left: 20px;
           right: 20px;
           max-width: none;
-      }
-
-      .chatbot-launcher span {
-          display: none;
       }
 
       .chatbot-panel {

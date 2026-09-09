@@ -8,25 +8,20 @@ require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/helpers.php';
 
-$allowedBanks = ['Bank Islam', 'Maybank', 'CIMB Bank', 'Public Bank', 'RHB Bank', 'Hong Leong Bank'];
-$methodLabels = ['online_banking' => 'FPX Online Banking', 'toyyibpay' => 'FPX'];
+$methodLabels = ['toyyibpay' => 'Online Banking'];
 
 $bookingId = filter_var($_POST['booking_id'] ?? $_GET['booking_id'] ?? '', FILTER_VALIDATE_INT);
 $method = $_POST['method'] ?? $_GET['method'] ?? '';
-$bank = trim((string) ($_POST['bank'] ?? $_GET['bank'] ?? ''));
 $booking = null;
 $items = [];
 $errors = [];
 $paid = false;
 $nights = 0;
 
-// value-value ni datang dari URL yang payment.php bina, tapi kita check balik sini —
+// value ni datang dari URL yang payment.php bina, tapi kita check balik sini —
 // jangan sekali percaya value tu betul just sebab dia sampai melalui redirect "Location:"
-if (!in_array($method, ['online_banking', 'toyyibpay'], true)) {
+if (!in_array($method, ['toyyibpay'], true)) {
     $method = '';
-}
-if ($method === 'online_banking' && !in_array($bank, $allowedBanks, true)) {
-    $bank = '';
 }
 
 if ($bookingId !== false) {
@@ -73,13 +68,9 @@ if ($booking && !$paid && $method !== '' && $_SERVER['REQUEST_METHOD'] === 'POST
     }
 
     if (!$errors) {
-        if ($method === 'toyyibpay') {
-            // ToyyibPay sendiri yang layan page bayaran & pengesahan — kita cuma cipta bil
-            // sebenar dan redirect ke sana, bukan lalu process_payment.php (yang untuk simulasi je)
-            header('Location: toyyibpay_pay.php?ref=' . urlencode(format_booking_ref($bookingId)) . '&phone=' . urlencode($booking['phone']));
-        } else {
-            header('Location: process_payment.php?booking_id=' . $bookingId . '&method=' . urlencode($method) . '&bank=' . urlencode($bank));
-        }
+        // ToyyibPay sendiri yang layan page bayaran & pengesahan — kita cuma cipta bil
+        // sebenar dan redirect ke sana
+        header('Location: toyyibpay_pay.php?ref=' . urlencode(format_booking_ref($bookingId)) . '&phone=' . urlencode($booking['phone']));
         exit;
     }
 }

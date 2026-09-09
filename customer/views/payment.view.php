@@ -61,30 +61,12 @@
 
           <div class="method-options">
             <label class="method-option is-selected">
-              <input type="radio" name="method" value="online_banking" checked>
+              <input type="radio" name="method" value="toyyibpay" checked>
               <span>Online Banking</span>
             </label>
-            <label class="method-option">
-              <input type="radio" name="method" value="toyyibpay">
-              <span>FPX</span>
-            </label>
           </div>
 
-          <div class="method-panel" id="panel-online_banking">
-            <label for="bank" class="bank-label">Select your bank</label>
-            <div class="bank-select-wrap">
-              <select id="bank" name="bank">
-                <option>Bank Islam</option>
-                <option>Maybank</option>
-                <option>CIMB Bank</option>
-                <option>Public Bank</option>
-                <option>RHB Bank</option>
-                <option>Hong Leong Bank</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="method-panel" id="panel-toyyibpay" hidden>
+          <div class="method-panel" id="panel-toyyibpay">
             <p class="method-hint">You'll be redirected to ToyyibPay to securely complete your payment via FPX online banking.</p>
           </div>
 

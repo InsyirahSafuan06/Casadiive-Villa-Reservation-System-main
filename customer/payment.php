@@ -45,7 +45,7 @@ if ($bookingId !== false) {
 // pembayaran sebenar jadi kemudian dalam payment_method.php / process_payment.php
 if ($booking && !$paid && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $method = $_POST['method'] ?? '';
-    if (!in_array($method, ['online_banking', 'toyyibpay'], true)) {
+    if (!in_array($method, ['toyyibpay'], true)) {
         $errors[] = 'Please choose a payment method.';
     }
 
@@ -54,9 +54,8 @@ if ($booking && !$paid && $_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if (!$errors) {
-        // hantar terus ke page seterusnya, bawa sekali kaedah & bank yang dia pilih
-        $bank = $method === 'online_banking' ? trim((string) ($_POST['bank'] ?? '')) : '';
-        header('Location: payment_method.php?booking_id=' . $bookingId . '&method=' . urlencode($method) . '&bank=' . urlencode($bank));
+        // hantar terus ke page seterusnya, bawa sekali kaedah yang dia pilih
+        header('Location: payment_method.php?booking_id=' . $bookingId . '&method=' . urlencode($method));
         exit;
     }
 }

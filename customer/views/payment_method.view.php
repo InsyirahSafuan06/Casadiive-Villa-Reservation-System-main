@@ -58,7 +58,6 @@
           <?= csrf_field() ?>
           <input type="hidden" name="booking_id" value="<?= $bookingId ?>">
           <input type="hidden" name="method" value="<?= htmlspecialchars($method) ?>">
-          <input type="hidden" name="bank" value="<?= htmlspecialchars($bank) ?>">
 
           <div class="booking-summary">
             <h2 class="summary-heading">Booking Summary</h2>
@@ -87,12 +86,6 @@
               <span class="summary-label">Customer Name</span>
               <span class="summary-value"><?= htmlspecialchars($booking['full_name']) ?></span>
             </div>
-            <?php if ($method === 'online_banking'): ?>
-            <div class="summary-row">
-              <span class="summary-label">Bank</span>
-              <span class="summary-value"><?= htmlspecialchars($bank ?: 'Not selected') ?></span>
-            </div>
-            <?php endif; ?>
             <div class="summary-row">
               <span class="summary-label">Payment Method</span>
               <span class="summary-value"><?= htmlspecialchars($methodLabels[$method]) ?></span>
