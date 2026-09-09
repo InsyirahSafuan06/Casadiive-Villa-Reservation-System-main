@@ -7,11 +7,11 @@
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/helpers.php';
 
-$methodLabels = ['qr' => 'QR / DuitNow', 'online_banking' => 'FPX Online Banking'];
+$methodLabels = ['qr' => 'QR / DuitNow', 'online_banking' => 'FPX Online Banking', 'toyyibpay' => 'ToyyibPay'];
 
 // carian guna "no rujukan + no phone" sama macam mybooking.php — ni elak orang lain
 // tengok booking orang lain just dengan teka-teka ID kat URL
-$bookingId = filter_var($_GET['ref'] ?? $_GET['booking_id'] ?? '', FILTER_VALIDATE_INT);
+$bookingId = parse_booking_ref((string) ($_GET['ref'] ?? $_GET['booking_id'] ?? ''));
 $phone = trim((string) ($_GET['phone'] ?? ''));
 $booking = null;
 $items = [];

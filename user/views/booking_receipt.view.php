@@ -29,7 +29,7 @@
         <div class="receipt-head">
           <div>
             <p class="brand">Casadive Villa</p>
-            <p class="receipt-ref">Booking Reference #<?= (int) $booking['booking_id'] ?> &middot; Booked on <?= htmlspecialchars(date('d M Y', strtotime($booking['booking_date']))) ?></p>
+            <p class="receipt-ref">Booking Reference <?= htmlspecialchars(format_booking_ref((int) $booking['booking_id'])) ?> &middot; Booked on <?= htmlspecialchars(date('d M Y', strtotime($booking['booking_date']))) ?></p>
           </div>
           <span class="status-badge status-<?= htmlspecialchars($booking['booking_status']) ?>"><?= htmlspecialchars(format_status($booking['booking_status'])) ?></span>
         </div>
@@ -76,17 +76,21 @@
                 <span>RM <?= number_format((float) $item['price'], 2) ?></span>
               </div>
             <?php endforeach; ?>
+            <div class="receipt-row">
+              <span>Booking Deposit</span>
+              <span>RM <?= number_format((float) $booking['deposit_amount'], 2) ?></span>
+            </div>
             <div class="receipt-row total">
               <span>Total Price</span>
-              <span>RM <?= number_format((float) $booking['total_amount'], 2) ?></span>
+              <span>RM <?= number_format(booking_grand_total($booking), 2) ?></span>
             </div>
             <div class="receipt-row">
-              <span>Deposit</span>
-              <span>RM <?= number_format((float) $booking['deposit_amount'], 2) ?></span>
+              <span>Amount Paid</span>
+              <span>RM <?= number_format($amountPaid, 2) ?></span>
             </div>
             <div class="receipt-row balance">
               <span>Balance Due</span>
-              <span>RM <?= number_format((float) $booking['total_amount'] - (float) $booking['deposit_amount'], 2) ?></span>
+              <span>RM <?= number_format(booking_grand_total($booking) - $amountPaid, 2) ?></span>
             </div>
           </div>
         </div>

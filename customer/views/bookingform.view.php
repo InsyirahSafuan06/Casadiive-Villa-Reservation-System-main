@@ -29,7 +29,7 @@
     <div class="policy-notice">
       <h3>Good to know before you book</h3>
       <ul>
-        <li><strong>Deposit:</strong> RM 50 to confirm your reservation</li>
+        <li><strong>Deposit:</strong> RM 1 to confirm your reservation</li>
         <li><strong>Check-in:</strong> After 3.00 PM</li>
         <li><strong>Check-out:</strong> Before 12.00 PM</li>
         <li><strong>Check-in Method:</strong> Self Check-in</li>
@@ -224,7 +224,7 @@
 
     const stay = computeStay(checkIn, checkOut, weekdayPrice, weekendPrice);
     const totalNights = stay.weekdayNights + stay.weekendNights;
-    const deposit = hasPackage ? 50 : 0; // deposit tetap RM50, sama macam kat server side
+    const deposit = hasPackage ? 1 : 0; // deposit tetap RM1, sama macam kat server side
 
     document.getElementById('s-nights').textContent = totalNights;
 
@@ -237,7 +237,7 @@
     }
     document.getElementById('s-price').textContent = priceLabel;
     document.getElementById('s-deposit').textContent = `RM ${deposit.toFixed(2)}`;
-    document.getElementById('s-total').textContent = `RM ${Math.max(stay.total - deposit, 0).toFixed(2)}`;
+    document.getElementById('s-total').textContent = `RM ${(stay.total + deposit).toFixed(2)}`;
   }
 
   // kalau datang dari page lain dengan ?accommodation= atau ?type= kat URL, auto-pilihkan pakej tu

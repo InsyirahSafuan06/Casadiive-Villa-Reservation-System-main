@@ -49,9 +49,10 @@
             <svg viewBox="0 0 20 20"><path d="M4 10.5l3.5 3.5L16 5.5" fill="none" stroke="#F5F5F5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </div>
 
+          <?php $amountPaid = (float) ($payment['deposit_paid'] ?? booking_grand_total($booking)); ?>
           <p class="success-lead">
-            Thank you, <strong><?= htmlspecialchars($booking['full_name']) ?></strong> — your deposit has been
-            received and booking <strong>#<?= (int) $booking['booking_id'] ?></strong> is now
+            Thank you, <strong><?= htmlspecialchars($booking['full_name']) ?></strong> — your payment has been
+            received and booking <strong><?= htmlspecialchars(format_booking_ref((int) $booking['booking_id'])) ?></strong> is now
             <strong><?= htmlspecialchars(format_status($booking['booking_status'])) ?></strong>.
           </p>
 
@@ -60,10 +61,10 @@
             <div><dt>Check-out</dt><dd><?= htmlspecialchars($booking['check_out']) ?></dd></div>
             <div><dt>Accommodation</dt><dd><?= htmlspecialchars(implode(', ', array_column($items, 'accommodation_name')) ?: '—') ?></dd></div>
             <div><dt>Payment Method</dt><dd><?= $payment ? htmlspecialchars($methodLabels[$payment['payment_method']] ?? $payment['payment_method']) : '—' ?></dd></div>
-            <div><dt>Deposit Paid</dt><dd>RM <?= number_format((float) $booking['deposit_amount'], 2) ?></dd></div>
-            <div><dt>Total Amount</dt><dd>RM <?= number_format((float) $booking['total_amount'], 2) ?></dd></div>
-            <div><dt>Balance Due</dt><dd>RM <?= number_format((float) $booking['total_amount'] - (float) $booking['deposit_amount'], 2) ?></dd></div>
-            <div><dt>Booking ID</dt><dd>#<?= (int) $booking['booking_id'] ?></dd></div>
+            <div><dt>Amount Paid</dt><dd>RM <?= number_format($amountPaid, 2) ?></dd></div>
+            <div><dt>Total Amount</dt><dd>RM <?= number_format(booking_grand_total($booking), 2) ?></dd></div>
+            <div><dt>Balance Due</dt><dd>RM <?= number_format(booking_grand_total($booking) - $amountPaid, 2) ?></dd></div>
+            <div><dt>Booking ID</dt><dd><?= htmlspecialchars(format_booking_ref((int) $booking['booking_id'])) ?></dd></div>
           </dl>
 
           <div class="policy-notice">

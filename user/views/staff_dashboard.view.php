@@ -80,7 +80,7 @@
               <tr class="empty-row"><td colspan="13">No bookings yet.</td></tr>
             <?php else: foreach ($bookings as $b): ?>
               <tr>
-                <td>#<?= (int) $b['booking_id'] ?></td>
+                <td><?= htmlspecialchars(format_booking_ref((int) $b['booking_id'])) ?></td>
                 <td><?= htmlspecialchars($b['full_name']) ?></td>
                 <td><?= htmlspecialchars($b['phone']) ?></td>
                 <td><?= htmlspecialchars($b['plate_num'] ?? '—') ?></td>
@@ -163,7 +163,7 @@
       <section class="dash-section" id="record-payment">
         <h2>Record a Payment</h2>
         <?php if ($refundBookingId): ?>
-          <p class="notice-info">Recording a refund for booking #<?= $refundBookingId ?> — set Amount to the deposit refunded and Status to "Refunded".</p>
+          <p class="notice-info">Recording a refund for booking <?= htmlspecialchars(format_booking_ref((int) $refundBookingId)) ?> — set Amount to the deposit refunded and Status to "Refunded".</p>
         <?php endif; ?>
         <form method="post" style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;margin-bottom:30px;font-family:'Raleway',sans-serif;">
           <?= csrf_field() ?>
@@ -173,7 +173,7 @@
             <select name="booking_id" style="padding:10px 14px;border:1px solid var(--border);border-radius:6px;font-family:inherit;" required>
               <option value="">Select a booking</option>
               <?php foreach ($bookings as $b): ?>
-                <option value="<?= (int) $b['booking_id'] ?>" <?= $refundBookingId === (int) $b['booking_id'] ? 'selected' : '' ?>>#<?= (int) $b['booking_id'] ?> — <?= htmlspecialchars($b['full_name']) ?> (RM <?= number_format((float) $b['deposit_amount'], 2) ?> deposit due)</option>
+                <option value="<?= (int) $b['booking_id'] ?>" <?= $refundBookingId === (int) $b['booking_id'] ? 'selected' : '' ?>><?= htmlspecialchars(format_booking_ref((int) $b['booking_id'])) ?> — <?= htmlspecialchars($b['full_name']) ?> (RM <?= number_format((float) $b['deposit_amount'], 2) ?> deposit due)</option>
               <?php endforeach; ?>
             </select>
           </div>
@@ -215,7 +215,7 @@
             <?php else: foreach ($recentPayments as $p): ?>
               <tr>
                 <td>#<?= (int) $p['payment_id'] ?></td>
-                <td>#<?= (int) $p['booking_id'] ?></td>
+                <td><?= htmlspecialchars(format_booking_ref((int) $p['booking_id'])) ?></td>
                 <td><?= htmlspecialchars($p['full_name']) ?></td>
                 <td><?= number_format((float) $p['deposit_paid'], 2) ?></td>
                 <td><?= htmlspecialchars($p['payment_date']) ?></td>

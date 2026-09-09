@@ -81,7 +81,7 @@
             </div>
             <div class="summary-row">
               <span class="summary-label">Booking ID</span>
-              <span class="summary-value">#<?= $bookingId ?></span>
+              <span class="summary-value"><?= htmlspecialchars(format_booking_ref((int) $bookingId)) ?></span>
             </div>
             <div class="summary-row">
               <span class="summary-label">Customer Name</span>
@@ -99,7 +99,7 @@
             </div>
             <div class="summary-row summary-total">
               <span class="summary-label">Amount to Pay</span>
-              <span class="summary-value">RM <?= number_format((float) $booking['deposit_amount'], 2) ?></span>
+              <span class="summary-value">RM <?= number_format(booking_grand_total($booking), 2) ?></span>
             </div>
           </div>
 

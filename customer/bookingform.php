@@ -154,7 +154,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $weekendPrice = $selectedAccommodation['price_weekend'] !== null ? (float) $selectedAccommodation['price_weekend'] : null;
         $stay = compute_stay_price($weekdayPrice, $weekendPrice, $checkIn, $checkOut); // kira jumlah harga ikut malam weekday/weekend
         $totalAmount = $stay['total'];
-        $depositAmount = 50.00; // deposit tetap RM50 untuk confirm mana-mana tempahan
+        $depositAmount = 1.00; // deposit tetap RM1 untuk confirm mana-mana tempahan
 
         try {
             // customer + booking + booking_item kena simpan sekali gus — bungkus dalam

@@ -10,6 +10,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/mailer.php';
+require_once __DIR__ . '/helpers.php';
 
 // status ni je yang kita rasa berbaloi hantar emel kat tetamu — 'pending' tak masuk
 // sebab tu status awal booking, bukan perubahan status
@@ -47,7 +48,7 @@ function send_checkin_reminder_email(PDO $pdo, int $bookingId): bool
             return false;
         }
 
-        $subject = 'Check-In Reminder — Casadive Villa (#' . (int) $booking['booking_id'] . ')';
+        $subject = 'Check-In Reminder — Casadive Villa (' . format_booking_ref((int) $booking['booking_id']) . ')';
         $html = email_render_checkin_reminder($booking, email_fetch_door_code_text($pdo, $bookingId)); // ambil kod pintu sekali
 
         $sent = send_email($booking['email'], $booking['full_name'], $subject, $html);
@@ -138,36 +139,36 @@ function email_render_view(string $viewFile, array $vars = []): string
 function email_build_status_message(array $booking, string $status): array
 {
     $bookingId = (int) $booking['booking_id'];
+    $bookingRef = format_booking_ref($bookingId);
     $name = htmlspecialchars($booking['full_name']);
     $checkin = htmlspecialchars(date('d F Y', strtotime($booking['check_in'])));
     $checkout = htmlspecialchars(date('d F Y', strtotime($booking['check_out'])));
-    $deposit = number_format((float) $booking['deposit_amount'], 2);
     $total = number_format((float) $booking['total_amount'], 2);
 
     switch ($status) {
-        case 'confirmed': // emel bila admin confirm booking — tunjuk butiran check-in/out & bayaran
-            $subject = "Booking Confirmed — Casadive Villa (#{$bookingId})";
-            $body = email_render_view('email_status_confirmed.view.php', compact('name', 'checkin', 'checkout', 'deposit', 'total'));
+        case 'confirmed': // emel bila pembayaran penuh online berjaya — tunjuk butiran check-in/out & bayaran
+            $subject = "Booking Confirmed — Casadive Villa ({$bookingRef})";
+            $body = email_render_view('email_status_confirmed.view.php', compact('name', 'checkin', 'checkout', 'total'));
             return ['booking_confirmation', $subject, email_render_layout('Booking Confirmed', $body)];
 
         case 'checked_in': // emel ringkas je bila tetamu dah check-in
-            $subject = "Welcome to Casadive Villa (#{$bookingId})";
+            $subject = "Welcome to Casadive Villa ({$bookingRef})";
             $body = email_render_view('email_status_checked_in.view.php', compact('name'));
             return ['general', $subject, email_render_layout('Welcome!', $body)];
 
         case 'checked_out': // emel ucapan terima kasih lepas tetamu check-out
-            $subject = "Thank You for Staying with Us — Casadive Villa (#{$bookingId})";
+            $subject = "Thank You for Staying with Us — Casadive Villa ({$bookingRef})";
             $body = email_render_view('email_status_checked_out.view.php', compact('name', 'checkin', 'checkout'));
             return ['check_out', $subject, email_render_layout('Thank You', $body)];
 
         case 'cancelled': // emel bila booking dibatalkan (admin ke pelanggan yang batalkan)
-            $subject = "Booking Cancelled — Casadive Villa (#{$bookingId})";
-            $body = email_render_view('email_status_cancelled.view.php', compact('name', 'bookingId', 'checkin'));
+            $subject = "Booking Cancelled — Casadive Villa ({$bookingRef})";
+            $body = email_render_view('email_status_cancelled.view.php', compact('name', 'bookingRef', 'checkin'));
             return ['cancellation', $subject, email_render_layout('Booking Cancelled', $body)];
 
         default: // status lain-lain (tak sepatutnya jadi sebab dah ditapis kat EMAIL_NOTIFIABLE_STATUSES) — fallback je
             $body = email_render_view('email_status_default.view.php', compact('name'));
-            return ['general', "Casadive Villa — Booking #{$bookingId}", email_render_layout('Booking Update', $body)];
+            return ['general', "Casadive Villa — Booking {$bookingRef}", email_render_layout('Booking Update', $body)];
     }
 }
 

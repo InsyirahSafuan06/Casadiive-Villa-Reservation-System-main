@@ -148,9 +148,10 @@ $booking = null;
 $items = [];
 $existingReview = null;
 $latestPaymentStatus = null;
+$amountPaid = 0.0;
 
 if ($lookupAttempted) {
-    $refId = filter_var($ref, FILTER_VALIDATE_INT);
+    $refId = parse_booking_ref($ref);
 
     if ($refId === false || $phone === '') {
         $lookupError = 'Please enter a valid booking reference and the phone number used to book.';
@@ -184,6 +185,10 @@ if ($lookupAttempted) {
             $stmt = $pdo->prepare('SELECT payment_status FROM payment WHERE booking_id = :id ORDER BY payment_id DESC LIMIT 1');
             $stmt->execute(['id' => $booking['booking_id']]);
             $latestPaymentStatus = $stmt->fetchColumn() ?: null; // untuk papar status refund kalau booking dah cancel
+
+            $stmt = $pdo->prepare("SELECT deposit_paid FROM payment WHERE booking_id = :id AND payment_status = 'paid' ORDER BY payment_id DESC LIMIT 1");
+            $stmt->execute(['id' => $booking['booking_id']]);
+            $amountPaid = (float) ($stmt->fetchColumn() ?: 0); // amaun sebenar yang dah dibayar (bayaran penuh, bukan just deposit)
         }
     }
 }

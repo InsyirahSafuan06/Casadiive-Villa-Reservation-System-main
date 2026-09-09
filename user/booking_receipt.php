@@ -39,6 +39,10 @@ $stmt = $pdo->prepare(
 $stmt->execute(['id' => $bookingId]);
 $items = $stmt->fetchAll();
 
+$stmt = $pdo->prepare("SELECT deposit_paid FROM payment WHERE booking_id = :id AND payment_status = 'paid' ORDER BY payment_id DESC LIMIT 1");
+$stmt->execute(['id' => $bookingId]);
+$amountPaid = (float) ($stmt->fetchColumn() ?: 0);
+
 $checkIn = new DateTime($booking['check_in']);
 $checkOut = new DateTime($booking['check_out']);
 $nights = max(1, $checkOut->diff($checkIn)->days);

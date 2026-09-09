@@ -107,7 +107,7 @@ CREATE TABLE `payment` (
   payment_id     INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   booking_id     INT UNSIGNED NOT NULL,
   deposit_paid   DECIMAL(10,2) NOT NULL DEFAULT 0,
-  payment_method ENUM('qr','online_banking') NULL,
+  payment_method ENUM('qr','online_banking','toyyibpay') NULL,
   payment_date   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   payment_status ENUM('pending','partial','paid','refunded','failed') NOT NULL DEFAULT 'pending',
   receipt        VARCHAR(255),
@@ -166,19 +166,19 @@ INSERT INTO `user` (username, password, fullname, email, phone, role, status) VA
 INSERT INTO `accommodation`
   (accommodation_name, accommodation_type, price, price_weekend, price_holiday, capacity, pax_label, features, description, status, door_code)
 VALUES
-('Casa 1', 'Villa', 359.00, 389.00, 399.00, 5, '4-5 PAX',
+('Casa 1', 'Villa', 1.00, 1.00, 1.00, 5, '4-5 PAX',
  '1 Queen Bed\n1 Bunk Bed\nBathroom\nAircond\nSea View\nPool View\nKettle\nIron + Iron Board\nWifi',
  'Spacious and comfortable, perfect for families or groups.', 'available', '1745'),
-('Casa 2', 'Villa', 239.00, 259.00, 269.00, 3, '2-3 PAX',
+('Casa 2', 'Villa', 1.00, 1.00, 1.00, 3, '2-3 PAX',
  '1 Queen Bed\nBathroom\nAircond\nSea View\nPool View\nKettle\nIron + Iron Board\nWifi',
  'Perfect for couples or small families looking for relaxing beachfront stay with beautiful sea and pool views.', 'available', '2836'),
-('Casa 3', 'Villa', 239.00, 259.00, 269.00, 3, '2-3 PAX',
+('Casa 3', 'Villa', 1.00, 1.00, 1.00, 3, '2-3 PAX',
  '1 Queen Bed\nBathroom\nAircond\nSea View\nPool View\nKettle\nIron + Iron Board\nWifi',
  'Perfect for couples or small families looking for relaxing beachfront stay with beautiful sea and pool views.', 'available', '3917'),
-('Casa 4', 'Villa', 359.00, 389.00, 399.00, 5, '4-5 PAX',
+('Casa 4', 'Villa', 1.00, 1.00, 1.00, 5, '4-5 PAX',
  '2 Sofa Beds\nLiving Room\nBathroom\nAircond\nSea View\nPool View\nKettle\nIron + Iron Board\nWifi\nSmall Kitchen',
  'Spacious and comfortable, perfect for families or groups.', 'available', '4028'),
-('Campsite Package 1', 'Campsite', 50.00,  NULL, NULL, 2, NULL, NULL, 'Site only, 1 unit only.',                          'available', NULL),
-('Campsite Package 2', 'Campsite', 80.00,  NULL, NULL, 4, NULL, NULL, 'Site with pool access and a small tent rental.',   'available', NULL),
-('Campsite Package 3', 'Campsite', 110.00, NULL, NULL, 2, NULL, NULL, 'Site only, max 2 pax, 1 unit only.',               'available', NULL),
-('Campsite Package 4', 'Campsite', 130.00, NULL, NULL, 6, NULL, NULL, 'Site with pool access and a small tent rental, max 6 pax.', 'available', NULL);
+('Campsite Package 1', 'Campsite', 1.00, NULL, NULL, 2, NULL, NULL, 'Site only, 1 unit only.',                          'available', NULL),
+('Campsite Package 2', 'Campsite', 1.00, NULL, NULL, 4, NULL, NULL, 'Site with pool access and a small tent rental.',   'available', NULL),
+('Campsite Package 3', 'Campsite', 1.00, NULL, NULL, 2, NULL, NULL, 'Site only, max 2 pax, 1 unit only.',               'available', NULL),
+('Campsite Package 4', 'Campsite', 1.00, NULL, NULL, 6, NULL, NULL, 'Site with pool access and a small tent rental, max 6 pax.', 'available', NULL);

@@ -19,10 +19,10 @@ $errors = [];
 $paid = false;
 
 // check balik lagi sekali kaedah & bank tu sah — sama macam payment_method.php
-if (!in_array($method, ['qr', 'online_banking'], true)) {
+if (!in_array($method, ['online_banking'], true)) {
     $method = '';
 }
-if ($method !== 'online_banking' || !in_array($bank, $allowedBanks, true)) {
+if (!in_array($bank, $allowedBanks, true)) {
     $bank = '';
 }
 
@@ -54,29 +54,8 @@ if (!$booking) {
 // cuma pilih kaedah & confirm je, tak sentuh table payment/booking
 if ($booking && !$paid && !$errors) {
     try {
-        // insert rekod payment + tukar status booking jadi "confirmed" sekali gus dalam
-        // satu transaction, elak jadi satu simpan tapi satu lagi tak simpan
-        $pdo->beginTransaction();
-
-        $stmt = $pdo->prepare(
-            "INSERT INTO payment (booking_id, deposit_paid, payment_method, payment_status)
-             VALUES (:booking_id, :deposit_paid, :payment_method, 'paid')"
-        );
-        $stmt->execute([
-            'booking_id' => $bookingId,
-            'deposit_paid' => $booking['deposit_amount'],
-            'payment_method' => $method,
-        ]);
-
-        $stmt = $pdo->prepare(
-            "UPDATE booking SET booking_status = 'confirmed' WHERE booking_id = :id AND booking_status = 'pending'"
-        );
-        $stmt->execute(['id' => $bookingId]);
-
-        $pdo->commit(); // ok semua berjaya
-        $paid = true;
-    } catch (Exception $e) {
-        $pdo->rollBack(); // ada masalah, undur balik
+        $paid = record_booking_payment($pdo, $bookingId, booking_grand_total($booking), $method);
+    } catch (Throwable $e) {
         $errors[] = 'Something went wrong while recording your payment. Please try again.';
     }
 

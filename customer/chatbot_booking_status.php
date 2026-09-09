@@ -45,14 +45,19 @@ $stmt = $pdo->prepare('SELECT payment_status FROM payment WHERE booking_id = :id
 $stmt->execute(['id' => $booking['booking_id']]);
 $paymentStatus = $stmt->fetchColumn() ?: null;
 
+$stmt = $pdo->prepare("SELECT deposit_paid FROM payment WHERE booking_id = :id AND payment_status = 'paid' ORDER BY payment_id DESC LIMIT 1");
+$stmt->execute(['id' => $booking['booking_id']]);
+$amountPaid = (float) ($stmt->fetchColumn() ?: 0);
+
 echo json_encode([
     'found' => true,
     'booking_id' => (int) $booking['booking_id'],
+    'booking_ref' => format_booking_ref((int) $booking['booking_id']),
     'status' => format_status($booking['booking_status']),
     'check_in' => $booking['check_in'],
     'check_out' => $booking['check_out'],
     'total_guest' => (int) $booking['total_guest'],
     'accommodations' => $accommodations,
     'payment_status' => $paymentStatus ? format_status($paymentStatus) : null,
-    'balance_due' => round((float) $booking['total_amount'] - (float) $booking['deposit_amount'], 2),
+    'balance_due' => round(booking_grand_total($booking) - $amountPaid, 2),
 ]);

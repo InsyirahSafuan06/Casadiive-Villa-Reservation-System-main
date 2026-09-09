@@ -222,23 +222,7 @@
     padding: 30px;
     margin-bottom: 34px;
   }
-  .qr-box{
-    width: 220px;
-    height: 220px;
-    margin: 0 auto 20px;
-    border: 2px dashed var(--brown-price);
-    border-radius: 12px;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    text-align:center;
-    padding: 20px;
-    font-family:'Raleway', sans-serif;
-    font-weight:600;
-    font-size: 14px;
-    color: var(--brown-price);
-  }
-  .qr-hint{
+  .method-hint{
     text-align:center;
     font-family:'Raleway', sans-serif;
     font-weight:500;

@@ -20,7 +20,7 @@
 
   <div class="container page-title">
     <h1>Payment</h1>
-    <p>Choose how you'd like to pay your deposit to confirm the booking.</p>
+    <p>Choose how you'd like to pay to confirm the booking.</p>
   </div>
 
   <section class="payment-section">
@@ -55,27 +55,22 @@
           <h2 class="payment-title">Payment Method</h2>
 
           <div class="amount-due">
-            <span>Deposit Due — Booking #<?= $bookingId ?></span>
-            <span>RM <?= number_format((float) $booking['deposit_amount'], 2) ?></span>
+            <span>Amount Due — Booking <?= htmlspecialchars(format_booking_ref((int) $bookingId)) ?></span>
+            <span>RM <?= number_format(booking_grand_total($booking), 2) ?></span>
           </div>
 
           <div class="method-options">
             <label class="method-option is-selected">
-              <input type="radio" name="method" value="qr" checked>
-              <span>QR</span>
-            </label>
-            <label class="method-option">
-              <input type="radio" name="method" value="online_banking">
+              <input type="radio" name="method" value="online_banking" checked>
               <span>Online Banking</span>
             </label>
+            <label class="method-option">
+              <input type="radio" name="method" value="toyyibpay">
+              <span>FPX</span>
+            </label>
           </div>
 
-          <div class="method-panel" id="panel-qr">
-            <div class="qr-box">Scan with your banking app</div>
-            <p class="qr-hint">Scan the DuitNow QR to pay RM <?= number_format((float) $booking['deposit_amount'], 2) ?> directly from your bank or e-wallet app.</p>
-          </div>
-
-          <div class="method-panel" id="panel-online_banking" hidden>
+          <div class="method-panel" id="panel-online_banking">
             <label for="bank" class="bank-label">Select your bank</label>
             <div class="bank-select-wrap">
               <select id="bank" name="bank">
@@ -89,7 +84,12 @@
             </div>
           </div>
 
+          <div class="method-panel" id="panel-toyyibpay" hidden>
+            <p class="method-hint">You'll be redirected to ToyyibPay to securely complete your payment via FPX online banking.</p>
+          </div>
+
           <button type="submit" class="pay-btn">Pay</button>
+          <a href="mybooking.php?ref=<?= $bookingId ?>&phone=<?= urlencode($booking['phone']) ?>" class="pay-btn pay-btn-outline" style="margin-top:14px;">Back to Booking</a>
         </form>
 
       <?php endif; ?>
@@ -100,7 +100,7 @@
 
 <?php if ($booking && !$paid): ?>
 <script>
-  // klik QR atau Online Banking akan sorot pilihan tu dan tunjuk panel yang sepadan kat bawah
+  // klik pilihan kaedah pembayaran akan sorot pilihan tu dan tunjuk panel yang sepadan kat bawah
   const options = document.querySelectorAll('.method-option');
   options.forEach(opt => {
     opt.addEventListener('click', () => {

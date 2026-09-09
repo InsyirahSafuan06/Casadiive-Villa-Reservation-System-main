@@ -137,7 +137,7 @@
               $alreadySentAt = $notifType ? ($sentLookup[$b['booking_id']][$notifType] ?? null) : null;
               ?>
               <tr<?= $reminderDue ? ' class="tr-due"' : '' ?>>
-                <td><?= (int) $b['booking_id'] ?></td>
+                <td><?= htmlspecialchars(format_booking_ref((int) $b['booking_id'])) ?></td>
                 <td><?= htmlspecialchars($b['full_name']) ?></td>
                 <td><?= htmlspecialchars($b['phone']) ?></td>
                 <td><?= htmlspecialchars($b['accommodations'] ?? '—') ?></td>
@@ -253,7 +253,7 @@
               <tr>
                 <td>#<?= (int) $r['review_id'] ?></td>
                 <td><?= htmlspecialchars($r['full_name']) ?></td>
-                <td>#<?= (int) $r['booking_id'] ?></td>
+                <td><?= htmlspecialchars(format_booking_ref((int) $r['booking_id'])) ?></td>
                 <td><?= (int) $r['rating'] ?> &#9733;</td>
                 <td><?= htmlspecialchars($r['comment'] ?: '—') ?></td>
                 <td>

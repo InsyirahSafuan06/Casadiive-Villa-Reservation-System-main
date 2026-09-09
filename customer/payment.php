@@ -41,11 +41,11 @@ if ($bookingId !== false) {
     }
 }
 
-// page ni cuma untuk pelanggan PILIH kaedah bayaran (QR atau online banking) — rekod
+// page ni cuma untuk pelanggan PILIH kaedah bayaran (online banking) — rekod
 // pembayaran sebenar jadi kemudian dalam payment_method.php / process_payment.php
 if ($booking && !$paid && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $method = $_POST['method'] ?? '';
-    if (!in_array($method, ['qr', 'online_banking'], true)) {
+    if (!in_array($method, ['online_banking', 'toyyibpay'], true)) {
         $errors[] = 'Please choose a payment method.';
     }
 

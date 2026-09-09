@@ -193,8 +193,8 @@
     chatIntent = 'booking_id';
     return botSayMulti([
       T(
-        'We accept payment via QR code or online banking. A deposit confirms your booking (status changes to "Confirmed"); the remaining balance is settled at check-in.',
-        'Kami menerima pembayaran melalui QR code atau online banking. Deposit akan mengesahkan tempahan anda (status bertukar kepada "Confirmed"); baki bayaran diselesaikan semasa check-in.'
+        'We accept payment via online banking or FPX (ToyyibPay). A deposit confirms your booking (status changes to "Confirmed"); the remaining balance is settled at check-in.',
+        'Kami menerima pembayaran melalui online banking atau FPX (ToyyibPay). Deposit akan mengesahkan tempahan anda (status bertukar kepada "Confirmed"); baki bayaran diselesaikan semasa check-in.'
       ),
       T('Want to check the payment status of a specific booking? Just tell me your Booking ID.', 'Nak semak status pembayaran tempahan tertentu? Beritahu saya Booking ID anda.')
     ]);
@@ -260,13 +260,13 @@
   function startBookingStatus() {
     bookingSlots = { ref: null };
     chatIntent = 'booking_id';
-    return botSay(T('Sure! What is your Booking ID / reference number?', 'Baik! Apakah nombor rujukan/Booking ID tempahan anda?'));
+    return botSay(T('Sure! What is your Booking ID / reference number? (e.g. CDV12)', 'Baik! Apakah nombor rujukan/Booking ID tempahan anda? (cth: CDV12)'));
   }
 
   function handleBookingId(text) {
     var ref = extractNumber(text);
     if (!ref) {
-      return botSay(T('Please enter a valid Booking ID (numbers only), e.g. 12.', 'Sila masukkan Booking ID yang sah (nombor sahaja), cth: 12.'));
+      return botSay(T('Please enter a valid Booking ID, e.g. CDV12.', 'Sila masukkan Booking ID yang sah, cth: CDV12.'));
     }
     bookingSlots.ref = ref;
     chatIntent = 'booking_phone';
@@ -293,7 +293,7 @@
           ? (T(' (Balance due: RM ', ' (Baki: RM ') + data.balance_due.toFixed(2) + ')')
           : '';
         addChatMessage(
-          T('Booking #', 'Tempahan #') + data.booking_id + ': <strong>' + data.status + '</strong><br>' +
+          T('Booking ', 'Tempahan ') + data.booking_ref + ': <strong>' + data.status + '</strong><br>' +
           T('Villa/Campsite', 'Villa/Campsite') + ': ' + escapeHtml(data.accommodations) + '<br>' +
           T('Check-in', 'Check-in') + ': ' + data.check_in + ' &middot; ' + T('Check-out', 'Check-out') + ': ' + data.check_out + '<br>' +
           T('Guests', 'Bilangan Tetamu') + ': ' + data.total_guest + '<br>' +

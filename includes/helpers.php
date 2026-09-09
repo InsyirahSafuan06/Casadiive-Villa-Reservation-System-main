@@ -11,6 +11,78 @@ function format_status(string $status): string
     return ucwords(str_replace('_', ' ', $status));
 }
 
+/** Bina rujukan tempahan yang tetamu nampak/guna, cth. booking_id 16 jadi "CDV16". */
+function format_booking_ref(int $bookingId): string
+{
+    return 'CDV' . $bookingId;
+}
+
+/**
+ * Songsangkan format_booking_ref() — terima input tetamu ("CDV16", "cdv16", atau "16" je)
+ * dan pulangkan booking_id sebagai int, atau false kalau format tak sah.
+ */
+function parse_booking_ref(string $ref): int|false
+{
+    $ref = trim($ref);
+    if (stripos($ref, 'CDV') === 0) {
+        $ref = substr($ref, 3);
+    }
+
+    return filter_var($ref, FILTER_VALIDATE_INT);
+}
+
+/**
+ * Jumlah besar SEBENAR yang perlu dibayar customer = kos penginapan (total_amount) +
+ * deposit tempahan (deposit_amount). Deposit di sini caj TAMBAHAN atas kos penginapan,
+ * bukan sebahagian/potongan daripadanya — pakai function ni di MANA-MANA tempat yang papar
+ * atau caj "jumlah besar"/"Total Price" supaya konsisten seluruh sistem.
+ */
+function booking_grand_total(array $booking): float
+{
+    return (float) $booking['total_amount'] + (float) $booking['deposit_amount'];
+}
+
+/**
+ * Rekod satu bayaran penuh yang berjaya untuk satu booking, dan sahkan booking tu
+ * (pending -> confirmed) dalam satu transaction — dikongsi oleh flow simulasi online
+ * banking (process_payment.php) dan flow ToyyibPay sebenar (toyyibpay_return.php), supaya
+ * dua-dua guna logik "rekod bayaran" yang sama, tak duplicate.
+ * Pulangkan false kalau booking dah ada rekod 'paid' sebelum ni (elak rekod bayaran dua kali).
+ */
+function record_booking_payment(PDO $pdo, int $bookingId, float $amount, string $paymentMethod, ?string $receipt = null): bool
+{
+    $stmt = $pdo->prepare("SELECT payment_id FROM payment WHERE booking_id = :id AND payment_status = 'paid' LIMIT 1");
+    $stmt->execute(['id' => $bookingId]);
+    if ($stmt->fetch()) {
+        return false; // dah bayar sebelum ni, jangan rekod/confirm lagi
+    }
+
+    $pdo->beginTransaction();
+    try {
+        $stmt = $pdo->prepare(
+            "INSERT INTO payment (booking_id, deposit_paid, payment_method, payment_status, receipt)
+             VALUES (:booking_id, :deposit_paid, :payment_method, 'paid', :receipt)"
+        );
+        $stmt->execute([
+            'booking_id' => $bookingId,
+            'deposit_paid' => $amount,
+            'payment_method' => $paymentMethod,
+            'receipt' => $receipt,
+        ]);
+
+        $stmt = $pdo->prepare(
+            "UPDATE booking SET booking_status = 'confirmed' WHERE booking_id = :id AND booking_status = 'pending'"
+        );
+        $stmt->execute(['id' => $bookingId]);
+
+        $pdo->commit();
+        return true;
+    } catch (Throwable $e) {
+        $pdo->rollBack();
+        throw $e;
+    }
+}
+
 /**
  * Booking yang dibatalkan tapi deposit dia masih 'paid'/'partial' (belum ditandakan
  * 'refunded') bermakna staff/admin masih terhutang refund kat tetamu tu. Sistem ni

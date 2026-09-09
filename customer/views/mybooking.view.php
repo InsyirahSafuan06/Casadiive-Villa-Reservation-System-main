@@ -24,7 +24,7 @@
         <div class="receipt-head">
           <div>
             <p class="brand">Casadive Villa</p>
-            <p class="receipt-ref">Booking Reference #<?= (int) $booking['booking_id'] ?> &middot; Booked on <?= htmlspecialchars(date('d M Y', strtotime($booking['booking_date']))) ?></p>
+            <p class="receipt-ref">Booking Reference <?= htmlspecialchars(format_booking_ref((int) $booking['booking_id'])) ?> &middot; Booked on <?= htmlspecialchars(date('d M Y', strtotime($booking['booking_date']))) ?></p>
           </div>
           <span class="status-badge status-<?= htmlspecialchars($booking['booking_status']) ?>"><?= htmlspecialchars(format_status($booking['booking_status'])) ?></span>
         </div>
@@ -33,9 +33,9 @@
         <div class="receipt-block">
           <h3>Deposit Refund</h3>
           <?php if ($latestPaymentStatus === 'refunded'): ?>
-            <p>Your deposit of RM <?= number_format((float) $booking['deposit_amount'], 2) ?> has been refunded.</p>
+            <p>Your payment of RM <?= number_format($amountPaid, 2) ?> has been refunded.</p>
           <?php elseif (in_array($latestPaymentStatus, ['paid', 'partial'], true)): ?>
-            <p>Your deposit of RM <?= number_format((float) $booking['deposit_amount'], 2) ?> is being processed for refund. Since refunds are handled manually (bank transfer/cash), please allow a few business days, or contact us directly if you need it sooner.</p>
+            <p>Your payment of RM <?= number_format($amountPaid, 2) ?> is being processed for refund. Since refunds are handled manually (bank transfer/cash), please allow a few business days, or contact us directly if you need it sooner.</p>
           <?php endif; ?>
         </div>
         <?php endif; ?>
@@ -83,22 +83,34 @@
                 <span>RM <?= number_format((float) $item['price'], 2) ?></span>
               </div>
             <?php endforeach; ?>
+            <div class="receipt-row">
+              <span>Booking Deposit</span>
+              <span>RM <?= number_format((float) $booking['deposit_amount'], 2) ?></span>
+            </div>
             <div class="receipt-row total">
               <span>Total Price</span>
-              <span>RM <?= number_format((float) $booking['total_amount'], 2) ?></span>
+              <span>RM <?= number_format(booking_grand_total($booking), 2) ?></span>
             </div>
             <div class="receipt-row">
-              <span>Deposit</span>
-              <span>RM <?= number_format((float) $booking['deposit_amount'], 2) ?></span>
+              <span>Amount Paid</span>
+              <span>RM <?= number_format($amountPaid, 2) ?></span>
             </div>
             <div class="receipt-row balance">
               <span>Balance Due</span>
-              <span>RM <?= number_format((float) $booking['total_amount'] - (float) $booking['deposit_amount'], 2) ?></span>
+              <span>RM <?= number_format(booking_grand_total($booking) - $amountPaid, 2) ?></span>
             </div>
           </div>
         </div>
 
+        <?php
+          // booking belum bayar/deposit belum settle lagi kalau takde rekod payment atau status dia 'pending'
+          $isUnpaid = $latestPaymentStatus === null || $latestPaymentStatus === 'pending';
+          $showPayNow = $isUnpaid && in_array($booking['booking_status'], ['pending', 'confirmed'], true);
+        ?>
         <div class="receipt-actions">
+          <?php if ($showPayNow): ?>
+            <a href="payment.php?booking_id=<?= (int) $booking['booking_id'] ?>" class="receipt-print">Pay Now</a>
+          <?php endif; ?>
           <button type="button" class="receipt-print" onclick="window.print()">Print Receipt</button>
           <a href="mybooking.php" class="receipt-back">Look Up Another Booking</a>
           <?php if (in_array($booking['booking_status'], ['pending', 'confirmed'], true)): ?>
@@ -227,7 +239,7 @@
         <form method="get">
           <div class="form-field">
             <label for="ref">Booking Reference</label>
-            <input type="text" id="ref" name="ref" placeholder="e.g. 12" value="<?= htmlspecialchars($ref) ?>" required>
+            <input type="text" id="ref" name="ref" placeholder="e.g. CDV12" value="<?= htmlspecialchars($ref) ?>" required>
           </div>
           <div class="form-field">
             <label for="phone">Phone Number</label>

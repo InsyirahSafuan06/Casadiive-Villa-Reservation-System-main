@@ -9,7 +9,7 @@ require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/helpers.php';
 
 $allowedBanks = ['Bank Islam', 'Maybank', 'CIMB Bank', 'Public Bank', 'RHB Bank', 'Hong Leong Bank'];
-$methodLabels = ['qr' => 'QR / DuitNow', 'online_banking' => 'FPX Online Banking'];
+$methodLabels = ['online_banking' => 'FPX Online Banking', 'toyyibpay' => 'FPX'];
 
 $bookingId = filter_var($_POST['booking_id'] ?? $_GET['booking_id'] ?? '', FILTER_VALIDATE_INT);
 $method = $_POST['method'] ?? $_GET['method'] ?? '';
@@ -22,15 +22,11 @@ $nights = 0;
 
 // value-value ni datang dari URL yang payment.php bina, tapi kita check balik sini —
 // jangan sekali percaya value tu betul just sebab dia sampai melalui redirect "Location:"
-if (!in_array($method, ['qr', 'online_banking'], true)) {
+if (!in_array($method, ['online_banking', 'toyyibpay'], true)) {
     $method = '';
 }
-if ($method === 'online_banking') {
-    if (!in_array($bank, $allowedBanks, true)) {
-        $bank = '';
-    }
-} else {
-    $bank = ''; // QR takyah pilih bank, so kosongkan je
+if ($method === 'online_banking' && !in_array($bank, $allowedBanks, true)) {
+    $bank = '';
 }
 
 if ($bookingId !== false) {
@@ -77,7 +73,13 @@ if ($booking && !$paid && $method !== '' && $_SERVER['REQUEST_METHOD'] === 'POST
     }
 
     if (!$errors) {
-        header('Location: process_payment.php?booking_id=' . $bookingId . '&method=' . urlencode($method) . '&bank=' . urlencode($bank));
+        if ($method === 'toyyibpay') {
+            // ToyyibPay sendiri yang layan page bayaran & pengesahan — kita cuma cipta bil
+            // sebenar dan redirect ke sana, bukan lalu process_payment.php (yang untuk simulasi je)
+            header('Location: toyyibpay_pay.php?ref=' . urlencode(format_booking_ref($bookingId)) . '&phone=' . urlencode($booking['phone']));
+        } else {
+            header('Location: process_payment.php?booking_id=' . $bookingId . '&method=' . urlencode($method) . '&bank=' . urlencode($bank));
+        }
         exit;
     }
 }
