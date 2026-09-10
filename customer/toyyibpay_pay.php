@@ -53,15 +53,20 @@ if (!toyyibpay_configured()) {
 }
 
 $stmt = $pdo->prepare(
-    "SELECT DISTINCT a.accommodation_type
+    "SELECT a.accommodation_name, a.accommodation_type
      FROM booking_item bi JOIN accommodation a ON a.accommodation_id = bi.accommodation_id
      WHERE bi.booking_id = :id"
 );
 $stmt->execute(['id' => $refId]);
-$types = $stmt->fetchAll(PDO::FETCH_COLUMN);
+$items = $stmt->fetchAll();
+$types = array_unique(array_column($items, 'accommodation_type'));
 $typeLabel = in_array('Villa', $types, true) && in_array('Campsite', $types, true)
     ? 'Villa & Campsite'
     : ($types[0] ?? 'Booking');
+
+// booking hanya untuk satu accommodation je (lihat bookingform.php) — guna category code
+// ToyyibPay khusus villa tu supaya bayaran masuk category yang betul dalam dashboard ToyyibPay
+$categoryCode = toyyibpay_category_code_for((string) ($items[0]['accommodation_name'] ?? ''));
 
 $bookingRef = format_booking_ref($refId);
 $amountSen = (int) round(booking_grand_total($booking) * 100);
@@ -78,6 +83,7 @@ $returnUrl = $siteBaseUrl . '/toyyibpay_return.php';
 $billEmail = $booking['email'] ?: preg_replace('/[^0-9]/', '', $booking['phone']) . '@no-email.casadivevilla.local';
 
 $billCode = toyyibpay_create_bill([
+    'categoryCode' => $categoryCode,
     'billName' => substr($bookingRef . ' - ' . $typeLabel, 0, 30), // ToyyibPay hadkan billName kat 30 aksara
     'billDescription' => substr('Casadive Villa booking ' . $bookingRef . ' (' . $typeLabel . ')', 0, 100),
     'billAmount' => $amountSen,

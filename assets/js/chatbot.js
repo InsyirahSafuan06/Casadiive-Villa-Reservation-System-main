@@ -5,7 +5,8 @@
  * come from CHATBOT_DATA (real accommodation rows, built server-side and set as a global by a
  * small inline <script> in index.php before this file loads). Live availability/recommendation
  * and booking-status lookups call real DB-backed endpoints (customer/chatbot_recommend.php,
- * customer/chatbot_booking_status.php) — never invented.
+ * customer/chatbot_booking_status.php) — never invented. Voice input (mic button) is optional
+ * browser speech-to-text — it just fills the same text pipeline as typing, nothing AI-side.
  */
 (function () {
   var WHATSAPP_NUMBER = CHATBOT_DATA.whatsapp;
@@ -18,6 +19,7 @@
   var chatbotLog = document.getElementById('chatbot-log');
   var chatbotForm = document.getElementById('chatbot-form');
   var chatbotInput = document.getElementById('chatbot-input');
+  var chatbotMic = document.getElementById('chatbot-mic');
   var chatbotQuickreplies = document.getElementById('chatbot-quickreplies');
   var chatbotGreeted = false;
 
@@ -522,4 +524,51 @@
     chatbotInput.value = '';
     handleUserMessage(text);
   });
+
+  // ---- voice input (Web Speech API) — mic button only shown when the browser supports it.
+  // Speech is transcribed client-side, then fed into the SAME pipeline as typed text (quick
+  // intents first, real AI fallback after) — nothing special-cased for voice server-side. ----
+  var SpeechRecognitionImpl = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (SpeechRecognitionImpl && chatbotMic) {
+    var recognizer = new SpeechRecognitionImpl();
+    var isListening = false;
+    recognizer.continuous = false;
+    recognizer.interimResults = false;
+    recognizer.maxAlternatives = 1;
+
+    chatbotMic.hidden = false;
+
+    recognizer.addEventListener('result', function (e) {
+      var transcript = (e.results[0] && e.results[0][0] && e.results[0][0].transcript || '').trim();
+      if (transcript) handleUserMessage(transcript);
+    });
+
+    recognizer.addEventListener('end', function () {
+      isListening = false;
+      chatbotMic.classList.remove('is-listening');
+    });
+
+    recognizer.addEventListener('error', function () {
+      isListening = false;
+      chatbotMic.classList.remove('is-listening');
+    });
+
+    chatbotMic.addEventListener('click', function () {
+      if (isListening) {
+        recognizer.stop();
+        return;
+      }
+      // guna bahasa perbualan semasa (flip automatik ikut apa yang ditaip sebelum ni) —
+      // Web Speech API perlukan SATU locale tetap setiap sesi rakam, tak boleh auto-detect
+      recognizer.lang = chatLang === 'ms' ? 'ms-MY' : 'en-US';
+      try {
+        recognizer.start();
+        isListening = true;
+        chatbotMic.classList.add('is-listening');
+      } catch (err) {
+        isListening = false;
+        chatbotMic.classList.remove('is-listening');
+      }
+    });
+  }
 })();

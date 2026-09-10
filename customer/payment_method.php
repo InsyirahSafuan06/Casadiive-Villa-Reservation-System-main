@@ -7,8 +7,9 @@
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/helpers.php';
+require_once __DIR__ . '/../includes/email_notify.php';
 
-$methodLabels = ['toyyibpay' => 'Online Banking'];
+$methodLabels = ['toyyibpay' => 'Online Banking', 'qr' => 'QR Payment'];
 
 $bookingId = filter_var($_POST['booking_id'] ?? $_GET['booking_id'] ?? '', FILTER_VALIDATE_INT);
 $method = $_POST['method'] ?? $_GET['method'] ?? '';
@@ -20,7 +21,7 @@ $nights = 0;
 
 // value ni datang dari URL yang payment.php bina, tapi kita check balik sini —
 // jangan sekali percaya value tu betul just sebab dia sampai melalui redirect "Location:"
-if (!in_array($method, ['toyyibpay'], true)) {
+if (!in_array($method, ['toyyibpay', 'qr'], true)) {
     $method = '';
 }
 
@@ -67,11 +68,54 @@ if ($booking && !$paid && $method !== '' && $_SERVER['REQUEST_METHOD'] === 'POST
         $errors[] = 'Please confirm the payment details before proceeding.';
     }
 
-    if (!$errors) {
+    if (!$errors && $method === 'toyyibpay') {
         // ToyyibPay sendiri yang layan page bayaran & pengesahan — kita cuma cipta bil
         // sebenar dan redirect ke sana
         header('Location: toyyibpay_pay.php?ref=' . urlencode(format_booking_ref($bookingId)) . '&phone=' . urlencode($booking['phone']));
         exit;
+    }
+
+    if (!$errors && $method === 'qr') {
+        // bayaran QR ni manual (customer scan & bayar sendiri di luar sistem) — kita cuma
+        // simpan bukti bayaran yang dia upload, terus tanda booking 'confirmed'/'paid'
+        $receiptPath = null;
+
+        if (empty($_FILES['payment_proof']['name']) || $_FILES['payment_proof']['error'] !== UPLOAD_ERR_OK) {
+            $errors[] = 'Please upload your payment receipt/proof of payment.';
+        } else {
+            $file = $_FILES['payment_proof'];
+            $allowedExt = ['jpg', 'jpeg', 'png', 'webp'];
+            $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+            $maxSize = 5 * 1024 * 1024; // 5MB
+
+            if (!in_array($ext, $allowedExt, true) || $file['size'] <= 0 || $file['size'] > $maxSize || @getimagesize($file['tmp_name']) === false) {
+                $errors[] = 'Please upload a valid receipt image (JPG, PNG or WEBP, max 5MB).';
+            } else {
+                $destDir = __DIR__ . '/../assets/uploads/payments/';
+                if (!is_dir($destDir)) {
+                    mkdir($destDir, 0755, true);
+                }
+                $filename = 'payment_' . $bookingId . '_' . bin2hex(random_bytes(4)) . '.' . $ext;
+
+                if (move_uploaded_file($file['tmp_name'], $destDir . $filename)) {
+                    $receiptPath = 'assets/uploads/payments/' . $filename;
+                } else {
+                    $errors[] = 'We could not save your uploaded receipt. Please try again.';
+                }
+            }
+        }
+
+        if (!$errors) {
+            $paidNow = record_booking_payment($pdo, $bookingId, booking_grand_total($booking), 'qr', $receiptPath);
+
+            if (!$paidNow) {
+                $errors[] = 'This booking has already been paid for.';
+            } else {
+                send_status_email($pdo, $bookingId, 'confirmed');
+                header('Location: sucess_payment.php?ref=' . $bookingId . '&phone=' . urlencode($booking['phone']));
+                exit;
+            }
+        }
     }
 }
 

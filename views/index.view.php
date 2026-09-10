@@ -171,6 +171,9 @@
       </div>
       <form class="chatbot-input-row" id="chatbot-form">
         <input type="text" id="chatbot-input" placeholder="Ask a question..." autocomplete="off" aria-label="Type your question">
+        <button type="button" class="chatbot-mic-btn" id="chatbot-mic" aria-label="Speak your question" hidden>
+          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 14a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v5a3 3 0 0 0 3 3Z" fill="currentColor"/><path d="M19 11a1 1 0 1 0-2 0 5 5 0 0 1-10 0 1 1 0 1 0-2 0 7 7 0 0 0 6 6.93V20H9a1 1 0 1 0 0 2h6a1 1 0 1 0 0-2h-2v-2.07A7 7 0 0 0 19 11Z" fill="currentColor"/></svg>
+        </button>
         <button type="submit">Send</button>
       </form>
     </div>

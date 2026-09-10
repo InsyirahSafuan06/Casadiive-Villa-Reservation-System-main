@@ -64,10 +64,18 @@
               <input type="radio" name="method" value="toyyibpay" checked>
               <span>Online Banking</span>
             </label>
+            <label class="method-option">
+              <input type="radio" name="method" value="qr">
+              <span>QR Payment</span>
+            </label>
           </div>
 
           <div class="method-panel" id="panel-toyyibpay">
             <p class="method-hint">You'll be redirected to ToyyibPay to securely complete your payment via FPX online banking.</p>
+          </div>
+
+          <div class="method-panel" id="panel-qr" hidden>
+            <p class="method-hint">Scan the QR code with your banking app or eWallet to pay, then upload your payment receipt on the next step.</p>
           </div>
 
           <button type="submit" class="pay-btn">Pay</button>

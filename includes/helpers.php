@@ -123,6 +123,60 @@ function compute_stay_price(float $weekdayPrice, ?float $weekendPrice, DateTime 
 }
 
 /**
+ * Cari status + ringkasan pembayaran satu booking guna "ref + phone" (macam mybooking.php).
+ * Digunakan oleh customer/chatbot_booking_status.php — diasingkan dari situ supaya query
+ * ni senang diuji/diguna semula kalau perlu di tempat lain kelak.
+ *
+ * @return array{found: bool, booking_ref?: string, status?: string, check_in?: string,
+ *     check_out?: string, total_guest?: int, accommodations?: string, payment_status?: ?string,
+ *     balance_due?: float}
+ */
+function lookup_booking_status(PDO $pdo, int $ref, string $phone): array
+{
+    $stmt = $pdo->prepare(
+        'SELECT b.booking_id, b.check_in, b.check_out, b.total_guest, b.total_amount,
+                b.deposit_amount, b.booking_status
+         FROM booking b
+         JOIN customer c ON c.customer_id = b.customer_id
+         WHERE b.booking_id = :ref AND c.phone = :phone'
+    );
+    $stmt->execute(['ref' => $ref, 'phone' => $phone]);
+    $booking = $stmt->fetch();
+
+    if (!$booking) {
+        return ['found' => false];
+    }
+
+    $stmt = $pdo->prepare(
+        'SELECT GROUP_CONCAT(a.accommodation_name SEPARATOR ", ") AS accommodations
+         FROM booking_item bi JOIN accommodation a ON a.accommodation_id = bi.accommodation_id
+         WHERE bi.booking_id = :id'
+    );
+    $stmt->execute(['id' => $booking['booking_id']]);
+    $accommodations = $stmt->fetchColumn() ?: '—';
+
+    $stmt = $pdo->prepare('SELECT payment_status FROM payment WHERE booking_id = :id ORDER BY payment_id DESC LIMIT 1');
+    $stmt->execute(['id' => $booking['booking_id']]);
+    $paymentStatus = $stmt->fetchColumn() ?: null;
+
+    $stmt = $pdo->prepare("SELECT deposit_paid FROM payment WHERE booking_id = :id AND payment_status = 'paid' ORDER BY payment_id DESC LIMIT 1");
+    $stmt->execute(['id' => $booking['booking_id']]);
+    $amountPaid = (float) ($stmt->fetchColumn() ?: 0);
+
+    return [
+        'found' => true,
+        'booking_ref' => format_booking_ref((int) $booking['booking_id']),
+        'status' => format_status($booking['booking_status']),
+        'check_in' => $booking['check_in'],
+        'check_out' => $booking['check_out'],
+        'total_guest' => (int) $booking['total_guest'],
+        'accommodations' => $accommodations,
+        'payment_status' => $paymentStatus ? format_status($paymentStatus) : null,
+        'balance_due' => round(booking_grand_total($booking) - $amountPaid, 2),
+    ];
+}
+
+/**
  * "Smart Recommendation" — padankan accommodation yang available dengan keperluan pelanggan
  * (bilangan tetamu, tarikh, budget, jenis). Ni BUKAN LLM/AI sebenar — cuma scoring rules based
  * on data DB sebenar, supaya sebab-sebab yang dipaparkan (reasons) memang tepat dan tak

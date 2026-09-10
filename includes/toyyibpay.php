@@ -12,7 +12,14 @@
 declare(strict_types=1);
 
 const TOYYIBPAY_SECRET_KEY = '5srvns99-2dvf-pzbf-teb1-fvnraubics5e';
-const TOYYIBPAY_CATEGORY_CODE = 'ar03kmpx';
+const TOYYIBPAY_CATEGORY_CODE = 'ar03kmpx'; // default/fallback — juga category code untuk Casa 1
+
+// satu category ToyyibPay setiap villa, supaya bayaran untuk villa tu masuk category yang betul
+// dalam dashboard ToyyibPay. Villa yang takde entri di sini guna TOYYIBPAY_CATEGORY_CODE (Casa 1).
+const TOYYIBPAY_CATEGORY_CODES_BY_ACCOMMODATION = [
+    'Casa 1' => 'ar03kmpx',
+    'Casa 2' => '9dzvj2xh',
+];
 
 // tukar ke 'https://dev.toyyibpay.com' kalau nak test guna sandbox/staging environment ToyyibPay
 const TOYYIBPAY_BASE_URL = 'https://toyyibpay.com';
@@ -20,6 +27,12 @@ const TOYYIBPAY_BASE_URL = 'https://toyyibpay.com';
 function toyyibpay_configured(): bool
 {
     return TOYYIBPAY_SECRET_KEY !== '' && TOYYIBPAY_CATEGORY_CODE !== '';
+}
+
+/** Category code ToyyibPay untuk satu villa/accommodation, atau default kalau tiada entri khusus. */
+function toyyibpay_category_code_for(string $accommodationName): string
+{
+    return TOYYIBPAY_CATEGORY_CODES_BY_ACCOMMODATION[$accommodationName] ?? TOYYIBPAY_CATEGORY_CODE;
 }
 
 /**

@@ -45,7 +45,7 @@ if ($bookingId !== false) {
 // pembayaran sebenar jadi kemudian dalam payment_method.php / process_payment.php
 if ($booking && !$paid && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $method = $_POST['method'] ?? '';
-    if (!in_array($method, ['toyyibpay'], true)) {
+    if (!in_array($method, ['toyyibpay', 'qr'], true)) {
         $errors[] = 'Please choose a payment method.';
     }
 

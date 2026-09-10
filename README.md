@@ -21,7 +21,8 @@ and accommodation management.
 ├── assets/
 │   ├── images/                 Static site imagery
 │   ├── js/                     index.js, chatbot.js, review-photo.js (see "Views & JS" below)
-│   └── uploads/reviews/        Guest review photos that passed client-side AI verification (created at runtime)
+│   ├── uploads/reviews/        Guest review photos that passed client-side AI verification (created at runtime)
+│   └── uploads/payments/       QR payment proof/receipt uploads (created at runtime)
 ├── includes/                   Shared PHP (not web-facing content)
 │   ├── db.php                  PDO connection to MySQL
 │   ├── auth.php                Session + CSRF helpers: attempt_login(), current_user(), require_login(), csrf_field()/csrf_verify()

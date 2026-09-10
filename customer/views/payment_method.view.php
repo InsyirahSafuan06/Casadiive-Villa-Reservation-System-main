@@ -54,7 +54,7 @@
           </div>
         <?php endif; ?>
 
-        <form class="payment-card" method="post" id="confirm-form">
+        <form class="payment-card" method="post" id="confirm-form" enctype="multipart/form-data">
           <?= csrf_field() ?>
           <input type="hidden" name="booking_id" value="<?= $bookingId ?>">
           <input type="hidden" name="method" value="<?= htmlspecialchars($method) ?>">
@@ -96,13 +96,26 @@
             </div>
           </div>
 
+          <?php if ($method === 'qr'): ?>
+            <div class="qr-payment-block" style="text-align:center;margin:24px 0;">
+              <h2 class="summary-heading">Scan &amp; Pay</h2>
+              <img src="<?= htmlspecialchars($base) ?>assets/images/qr-payment.jpg" alt="Touch 'n Go eWallet payment QR code" style="max-width:280px;width:100%;margin:12px auto;display:block;border-radius:12px;">
+              <p class="method-hint">Scan this QR with your banking app or eWallet to pay the amount above, then upload your payment receipt/screenshot below.</p>
+
+              <label class="confirm-check" style="display:block;text-align:left;margin-top:16px;">
+                <span>Upload payment receipt (JPG, PNG or WEBP, max 5MB)</span><br>
+                <input type="file" name="payment_proof" accept=".jpg,.jpeg,.png,.webp,image/*" required style="margin-top:8px;">
+              </label>
+            </div>
+          <?php endif; ?>
+
           <label class="confirm-check">
             <input type="checkbox" name="confirm" required>
             <span>I confirm that the payment details above are correct.</span>
           </label>
 
           <div class="confirm-actions">
-            <button type="submit" class="pay-btn">Confirm Payment</button>
+            <button type="submit" class="pay-btn"><?= $method === 'qr' ? 'Submit Payment Proof' : 'Confirm Payment' ?></button>
             <a href="payment.php?booking_id=<?= $bookingId ?>" class="pay-btn pay-btn-outline">Cancel &amp; Go Back</a>
           </div>
         </form>

@@ -220,7 +220,11 @@
                 <td><?= number_format((float) $p['deposit_paid'], 2) ?></td>
                 <td><?= htmlspecialchars($p['payment_date']) ?></td>
                 <td><span class="status-badge status-<?= htmlspecialchars($p['payment_status']) ?>"><?= htmlspecialchars(ucfirst($p['payment_status'])) ?></span></td>
-                <td><?= htmlspecialchars($p['receipt'] ?? '—') ?></td>
+                <td><?php if ($p['receipt'] && str_starts_with($p['receipt'], 'assets/uploads/payments/')): ?>
+                  <a href="../<?= htmlspecialchars($p['receipt']) ?>" target="_blank" rel="noopener" class="btn btn-outline" style="padding:4px 10px;font-size:12px;">View Proof</a>
+                <?php else: ?>
+                  <?= htmlspecialchars($p['receipt'] ?? '—') ?>
+                <?php endif; ?></td>
               </tr>
             <?php endforeach; endif; ?>
           </tbody>
