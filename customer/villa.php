@@ -4,11 +4,54 @@
  * Halaman ini memaparkan semua pakej vila yang tersedia dan pautkannya ke halaman butiran tempahan.
  */
 require_once __DIR__ . '/../includes/db.php';
+require_once __DIR__ . '/../includes/helpers.php';
 
-// ambil vila yang admin dah tandakan "available" je — yang tak available tak payah tunjuk
-$villas = $pdo->query(
-    "SELECT * FROM accommodation WHERE accommodation_type = 'Villa' AND status = 'available' ORDER BY accommodation_id"
-)->fetchAll();
+// bar "Check Availability" kat homepage hantar customer ke sini bawa check_in/check_out/guests —
+// kalau salah satu ada, kita tapis betul-betul ikut availability sebenar (bukan just papar semua)
+$searchCheckIn = trim((string) ($_GET['check_in'] ?? ''));
+$searchCheckOut = trim((string) ($_GET['check_out'] ?? ''));
+$searchGuestsRaw = trim((string) ($_GET['guests'] ?? ''));
+$searchActive = $searchCheckIn !== '' || $searchCheckOut !== '' || $searchGuestsRaw !== '';
+$searchError = null;
+$villas = [];
+
+// had capacity SEBENAR merentasi semua pakej Villa — untuk mesej yang jelas bila tetamu terlalu ramai
+$maxVillaCapacity = (int) $pdo->query(
+    "SELECT COALESCE(MAX(capacity), 0) FROM accommodation WHERE accommodation_type = 'Villa' AND status = 'available'"
+)->fetchColumn();
+
+if ($searchActive) {
+    $searchGuests = filter_var($searchGuestsRaw, FILTER_VALIDATE_INT);
+
+    if ($searchGuests === false || $searchGuests < 1) {
+        $searchError = 'Please enter a valid number of guests.';
+    } elseif ($searchGuests > $maxVillaCapacity) {
+        $searchError = "Sorry, our Villa packages can't accommodate more than {$maxVillaCapacity} guests. Please reduce the number of guests, or try Campsite instead.";
+    } elseif ($searchCheckIn !== '' && $searchCheckOut !== '' && $searchCheckOut <= $searchCheckIn) {
+        $searchError = 'Check-out date must be after check-in date.';
+    } else {
+        $useDates = $searchCheckIn !== '' && $searchCheckOut !== '';
+        $matches = recommend_accommodations($pdo, [
+            'guests' => $searchGuests,
+            'type' => 'Villa',
+            'check_in' => $useDates ? $searchCheckIn : null,
+            'check_out' => $useDates ? $searchCheckOut : null,
+            'budget' => null,
+        ]);
+        $villas = array_column($matches, 'accommodation');
+
+        if (!$villas) {
+            $searchError = $useDates
+                ? 'No villas are available for those dates with that number of guests. Please try different dates.'
+                : 'No villas match that number of guests right now.';
+        }
+    }
+} else {
+    // takde carian — papar semua vila yang admin dah tandakan "available" je
+    $villas = $pdo->query(
+        "SELECT * FROM accommodation WHERE accommodation_type = 'Villa' AND status = 'available' ORDER BY accommodation_id"
+    )->fetchAll();
+}
 
 // icon kecil untuk setiap kad pakej kat bawah tu (room, pool, wifi)
 $icons = [

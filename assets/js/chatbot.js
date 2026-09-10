@@ -21,7 +21,10 @@
   var chatbotInput = document.getElementById('chatbot-input');
   var chatbotMic = document.getElementById('chatbot-mic');
   var chatbotQuickreplies = document.getElementById('chatbot-quickreplies');
+  var chatbotListening = document.getElementById('chatbot-listening');
+  var chatbotListeningStop = document.getElementById('chatbot-listening-stop');
   var chatbotGreeted = false;
+  var speechSynth = window.speechSynthesis;
 
   var chatLang = 'en'; // 'en' | 'ms' — flips based on detected language of free-typed messages
   var chatIntent = null; // null | 'reco_guests' | 'reco_dates' | 'booking_id' | 'booking_phone'
@@ -35,7 +38,59 @@
     bubble.className = 'chat-bubble ' + sender;
     bubble.innerHTML = html;
     chatbotLog.appendChild(bubble);
+    if (sender === 'bot') appendBubbleActions(bubble);
     chatbotLog.scrollTop = chatbotLog.scrollHeight;
+  }
+
+  // ---- copy / read-aloud icons under each bot bubble — pure UI polish, mirrors the mic's
+  // speech-to-text with speech-to-speech using the same browser Web Speech API ----
+  function copyToClipboard(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).catch(function () {});
+    }
+  }
+
+  function toggleSpeak(text, btn) {
+    if (!speechSynth) return;
+    var wasActive = btn.classList.contains('is-active');
+    speechSynth.cancel();
+    document.querySelectorAll('.chat-bubble-action.is-active').forEach(function (b) { b.classList.remove('is-active'); });
+    if (wasActive) return; // second click on the same bubble just stops it
+
+    var utter = new SpeechSynthesisUtterance(text);
+    utter.lang = chatLang === 'ms' ? 'ms-MY' : 'en-US';
+    utter.onend = function () { btn.classList.remove('is-active'); };
+    utter.onerror = function () { btn.classList.remove('is-active'); };
+    btn.classList.add('is-active');
+    speechSynth.speak(utter);
+  }
+
+  function appendBubbleActions(bubble) {
+    var text = bubble.textContent.trim();
+    if (!text) return;
+
+    var row = document.createElement('div');
+    row.className = 'chat-bubble-actions';
+    row.innerHTML =
+      '<button type="button" class="chat-bubble-action" data-role="copy" aria-label="Copy message" title="Copy">' +
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>' +
+      '</button>' +
+      '<button type="button" class="chat-bubble-action" data-role="speak" aria-label="Read aloud" title="Read aloud">' +
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>' +
+      '</button>';
+
+    row.querySelector('[data-role="copy"]').addEventListener('click', function (e) {
+      copyToClipboard(text);
+      var btn = e.currentTarget;
+      btn.classList.add('is-active');
+      setTimeout(function () { btn.classList.remove('is-active'); }, 900);
+    });
+
+    row.querySelector('[data-role="speak"]').addEventListener('click', function (e) {
+      toggleSpeak(text, e.currentTarget);
+    });
+
+    chatbotLog.appendChild(row);
   }
 
   function escapeHtml(text) {
@@ -538,19 +593,24 @@
 
     chatbotMic.hidden = false;
 
+    function setListeningUI(on) {
+      isListening = on;
+      chatbotMic.classList.toggle('is-listening', on);
+      if (chatbotListening) chatbotListening.hidden = !on;
+      if (chatbotQuickreplies) chatbotQuickreplies.hidden = on;
+    }
+
     recognizer.addEventListener('result', function (e) {
       var transcript = (e.results[0] && e.results[0][0] && e.results[0][0].transcript || '').trim();
       if (transcript) handleUserMessage(transcript);
     });
 
     recognizer.addEventListener('end', function () {
-      isListening = false;
-      chatbotMic.classList.remove('is-listening');
+      setListeningUI(false);
     });
 
     recognizer.addEventListener('error', function () {
-      isListening = false;
-      chatbotMic.classList.remove('is-listening');
+      setListeningUI(false);
     });
 
     chatbotMic.addEventListener('click', function () {
@@ -563,12 +623,16 @@
       recognizer.lang = chatLang === 'ms' ? 'ms-MY' : 'en-US';
       try {
         recognizer.start();
-        isListening = true;
-        chatbotMic.classList.add('is-listening');
+        setListeningUI(true);
       } catch (err) {
-        isListening = false;
-        chatbotMic.classList.remove('is-listening');
+        setListeningUI(false);
       }
     });
+
+    if (chatbotListeningStop) {
+      chatbotListeningStop.addEventListener('click', function () {
+        recognizer.stop();
+      });
+    }
   }
 })();

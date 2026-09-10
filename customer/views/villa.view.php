@@ -9,8 +9,31 @@
 
   <!-- PACKAGES -->
   <section class="packages" id="packages">
-    <div class="container package-grid">
+    <div class="container">
 
+      <?php if ($searchActive): ?>
+        <?php if ($searchError): ?>
+          <p class="search-notice search-notice-error"><?= htmlspecialchars($searchError) ?></p>
+        <?php else: ?>
+          <p class="search-notice search-notice-ok">
+            Showing <?= count($villas) ?> villa<?= count($villas) === 1 ? '' : 's' ?> available
+            for <?= (int) ($_GET['guests'] ?? 0) ?> guest<?= (int) ($_GET['guests'] ?? 0) === 1 ? '' : 's' ?>
+            <?php if ($searchCheckIn !== '' && $searchCheckOut !== ''): ?>
+              from <?= htmlspecialchars($searchCheckIn) ?> to <?= htmlspecialchars($searchCheckOut) ?>
+            <?php endif; ?>.
+          </p>
+        <?php endif; ?>
+      <?php endif; ?>
+
+      <?php
+      // bila customer datang dari carian, bawa terus tarikh/tetamu tu ke borang tempahan
+      // (Book now) supaya dia tak payah isi semula
+      $searchQuery = $searchActive
+          ? '&check_in=' . urlencode($searchCheckIn) . '&check_out=' . urlencode($searchCheckOut) . '&guests=' . urlencode((string) ($_GET['guests'] ?? ''))
+          : '';
+      ?>
+
+      <div class="package-grid">
       <?php foreach ($villas as $villa):
         // takde column khas "ada pool"/"ada wifi" dalam DB, so kita just cari perkataan tu
         // dalam features/description untuk decide icon mana nak tunjuk
@@ -44,15 +67,16 @@
             <span class="package-price">RM <?= number_format((float) $villa['price'], 0) ?></span>
             <div class="package-actions">
               <a href="detail.php?id=<?= (int) $villa['accommodation_id'] ?>" class="btn view-detail">View Detail</a>
-              <a href="bookingform.php?accommodation=<?= urlencode($villa['accommodation_name']) ?>" class="btn book-now">Book now</a>
+              <a href="bookingform.php?accommodation=<?= urlencode($villa['accommodation_name']) . $searchQuery ?>" class="btn book-now">Book now</a>
             </div>
           </div>
         </div>
       </article>
       <?php endforeach; ?>
+      </div>
 
-      <?php if (!$villas): ?>
-        <p style="font-family:'Raleway',sans-serif;font-weight:600;">No villa packages are available right now. Please check back soon.</p>
+      <?php if (!$villas && !$searchActive): ?>
+        <p class="search-notice">No villa packages are available right now. Please check back soon.</p>
       <?php endif; ?>
 
     </div>

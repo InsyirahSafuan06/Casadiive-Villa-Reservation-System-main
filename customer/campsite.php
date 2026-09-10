@@ -4,11 +4,54 @@
  * Halaman ini memaparkan semua pilihan khemah yang tersedia dan pautkan setiap satu ke halaman tempahan atau butiran.
  */
 require_once __DIR__ . '/../includes/db.php';
+require_once __DIR__ . '/../includes/helpers.php';
 
-// ambil campsite yang admin dah tandakan "available" je
-$campsites = $pdo->query(
-    "SELECT * FROM accommodation WHERE accommodation_type = 'Campsite' AND status = 'available' ORDER BY accommodation_id"
-)->fetchAll();
+// bar "Check Availability" kat homepage hantar customer ke sini bawa check_in/check_out/guests —
+// kalau salah satu ada, kita tapis betul-betul ikut availability sebenar (bukan just papar semua)
+$searchCheckIn = trim((string) ($_GET['check_in'] ?? ''));
+$searchCheckOut = trim((string) ($_GET['check_out'] ?? ''));
+$searchGuestsRaw = trim((string) ($_GET['guests'] ?? ''));
+$searchActive = $searchCheckIn !== '' || $searchCheckOut !== '' || $searchGuestsRaw !== '';
+$searchError = null;
+$campsites = [];
+
+// had capacity SEBENAR merentasi semua pakej Campsite — untuk mesej yang jelas bila tetamu terlalu ramai
+$maxCampsiteCapacity = (int) $pdo->query(
+    "SELECT COALESCE(MAX(capacity), 0) FROM accommodation WHERE accommodation_type = 'Campsite' AND status = 'available'"
+)->fetchColumn();
+
+if ($searchActive) {
+    $searchGuests = filter_var($searchGuestsRaw, FILTER_VALIDATE_INT);
+
+    if ($searchGuests === false || $searchGuests < 1) {
+        $searchError = 'Please enter a valid number of guests.';
+    } elseif ($searchGuests > $maxCampsiteCapacity) {
+        $searchError = "Sorry, our Campsite packages can't accommodate more than {$maxCampsiteCapacity} guests. Please reduce the number of guests, or try Villa instead.";
+    } elseif ($searchCheckIn !== '' && $searchCheckOut !== '' && $searchCheckOut <= $searchCheckIn) {
+        $searchError = 'Check-out date must be after check-in date.';
+    } else {
+        $useDates = $searchCheckIn !== '' && $searchCheckOut !== '';
+        $matches = recommend_accommodations($pdo, [
+            'guests' => $searchGuests,
+            'type' => 'Campsite',
+            'check_in' => $useDates ? $searchCheckIn : null,
+            'check_out' => $useDates ? $searchCheckOut : null,
+            'budget' => null,
+        ]);
+        $campsites = array_column($matches, 'accommodation');
+
+        if (!$campsites) {
+            $searchError = $useDates
+                ? 'No campsite packages are available for those dates with that number of guests. Please try different dates.'
+                : 'No campsite packages match that number of guests right now.';
+        }
+    }
+} else {
+    // takde carian — papar semua campsite yang admin dah tandakan "available" je
+    $campsites = $pdo->query(
+        "SELECT * FROM accommodation WHERE accommodation_type = 'Campsite' AND status = 'available' ORDER BY accommodation_id"
+    )->fetchAll();
+}
 
 // icon kecil untuk setiap kad pakej kat bawah tu (site, pool, tent)
 $icons = [

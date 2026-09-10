@@ -138,6 +138,29 @@
   .packages{
     padding: 90px 0 110px;
   }
+
+  /* search result banner (from the homepage "Check Availability" bar) — kept large & high
+     contrast on purpose so it's easy to read at a glance, not fine print */
+  .search-notice{
+    font-family: 'Raleway', sans-serif;
+    font-weight: 700;
+    font-size: 18px;
+    line-height: 1.5;
+    padding: 18px 24px;
+    border-radius: 10px;
+    margin-bottom: 40px;
+  }
+  .search-notice-ok{
+    background: var(--sand-light);
+    color: var(--brown);
+    border: 1px solid rgba(91,58,41,.15);
+  }
+  .search-notice-error{
+    background: #fdecea;
+    color: #9a3226;
+    border: 1px solid #f3c2bd;
+  }
+
   .package-grid{
     display:grid;
     grid-template-columns: 1fr 1fr;

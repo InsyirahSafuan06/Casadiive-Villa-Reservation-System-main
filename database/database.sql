@@ -126,7 +126,7 @@ CREATE TABLE `review` (
   comment                    TEXT,
   image_path                 VARCHAR(255) NULL COMMENT 'set only once an uploaded/captured photo passes client-side AI verification',
   image_verification_status  ENUM('not_applicable','verified','rejected') NOT NULL DEFAULT 'not_applicable',
-  image_category              VARCHAR(50) NULL COMMENT 'category the client-side model detected, e.g. bedroom/selfie/food/vehicle/uncertain',
+  image_category             VARCHAR(50) NULL COMMENT 'category the client-side model detected, e.g. bedroom/selfie/food/vehicle/uncertain',
   image_confidence           DECIMAL(4,3) NULL COMMENT 'model confidence score (0-1) reported by the client at upload time',
   review_date                DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT fk_review_booking FOREIGN KEY (booking_id)
@@ -164,21 +164,21 @@ INSERT INTO `user` (username, password, fullname, email, phone, role, status) VA
 ('staff', '$2y$10$yfE.LeII4j/qo7r022Ld6elviifDOMu5.oVupuJUNr.dxn8HAvkHi', 'Front Desk Staff', 'staff@casadivevilla.com', '0123456780', 'staff', 'active');
 
 INSERT INTO `accommodation`
-  (accommodation_name, accommodation_type, price, price_weekend, price_holiday, capacity, pax_label, features, description, status, door_code)
+  (accommodation_name, accommodation_type, price, price_weekend, price_holiday, capacity, pax_label, features, description, status, image, door_code)
 VALUES
 ('Casa 1', 'Villa', 1.00, 1.00, 1.00, 5, '4-5 PAX',
  '1 Queen Bed\n1 Bunk Bed\nBathroom\nAircond\nSea View\nPool View\nKettle\nIron + Iron Board\nWifi',
- 'Spacious and comfortable, perfect for families or groups.', 'available', '1745'),
+ 'Spacious and comfortable, perfect for families or groups.', 'available', '../assets/images/casa1-porch.jpg', '1745'),
 ('Casa 2', 'Villa', 1.00, 1.00, 1.00, 3, '2-3 PAX',
  '1 Queen Bed\nBathroom\nAircond\nSea View\nPool View\nKettle\nIron + Iron Board\nWifi',
- 'Perfect for couples or small families looking for relaxing beachfront stay with beautiful sea and pool views.', 'available', '2836'),
+ 'Perfect for couples or small families looking for relaxing beachfront stay with beautiful sea and pool views.', 'available', '../assets/images/casa2-close.jpg', '2836'),
 ('Casa 3', 'Villa', 1.00, 1.00, 1.00, 3, '2-3 PAX',
  '1 Queen Bed\nBathroom\nAircond\nSea View\nPool View\nKettle\nIron + Iron Board\nWifi',
- 'Perfect for couples or small families looking for relaxing beachfront stay with beautiful sea and pool views.', 'available', '3917'),
+ 'Perfect for couples or small families looking for relaxing beachfront stay with beautiful sea and pool views.', 'available', '../assets/images/casa3-balcony-view.jpg', '3917'),
 ('Casa 4', 'Villa', 1.00, 1.00, 1.00, 5, '4-5 PAX',
  '2 Sofa Beds\nLiving Room\nBathroom\nAircond\nSea View\nPool View\nKettle\nIron + Iron Board\nWifi\nSmall Kitchen',
- 'Spacious and comfortable, perfect for families or groups.', 'available', '4028'),
-('Campsite Package 1', 'Campsite', 1.00, NULL, NULL, 2, NULL, NULL, 'Site only, 1 unit only.',                          'available', NULL),
-('Campsite Package 2', 'Campsite', 1.00, NULL, NULL, 4, NULL, NULL, 'Site with pool access and a small tent rental.',   'available', NULL),
-('Campsite Package 3', 'Campsite', 1.00, NULL, NULL, 2, NULL, NULL, 'Site only, max 2 pax, 1 unit only.',               'available', NULL),
-('Campsite Package 4', 'Campsite', 1.00, NULL, NULL, 6, NULL, NULL, 'Site with pool access and a small tent rental, max 6 pax.', 'available', NULL);
+ 'Spacious and comfortable, perfect for families or groups.', 'available', '../assets/images/wooden-villa-day.jpg', '4028'),
+('Campsite Package 1', 'Campsite', 1.00, NULL, NULL, 2, NULL, NULL, 'Site only, 1 unit only.',                          'available', '../assets/images/campsite-tent-pool.jpg', NULL),
+('Campsite Package 2', 'Campsite', 1.00, NULL, NULL, 4, NULL, NULL, 'Site with pool access and a small tent rental.',   'available', '../assets/images/campsite-tents-pool.jpg', NULL),
+('Campsite Package 3', 'Campsite', 1.00, NULL, NULL, 2, NULL, NULL, 'Site only, max 2 pax, 1 unit only.',               'available', '../assets/images/campsite-tent-pool.jpg', NULL),
+('Campsite Package 4', 'Campsite', 1.00, NULL, NULL, 6, NULL, NULL, 'Site with pool access and a small tent rental, max 6 pax.', 'available', '../assets/images/campsite-tents-pool.jpg', NULL);

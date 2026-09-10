@@ -35,6 +35,57 @@ function initReviewPhotoWidget(ids) {
   var modelLoading = null;
   var cameraStream = null;
 
+  // ---- scan-frame corners (over the live camera feed) + a "Verified" badge that pops onto
+  // the accepted preview thumbnail — purely visual polish, doesn't change what's validated ----
+  function addScanFrame() {
+    if (!cameraVideo || cameraVideo.parentNode.classList.contains('rp-scan-frame')) return;
+    var wrap = document.createElement('div');
+    wrap.className = 'rp-scan-frame';
+    cameraVideo.parentNode.insertBefore(wrap, cameraVideo);
+    wrap.appendChild(cameraVideo);
+    ['tl', 'tr', 'bl', 'br'].forEach(function (pos) {
+      var corner = document.createElement('span');
+      corner.className = 'rp-scan-corner rp-scan-corner-' + pos;
+      wrap.appendChild(corner);
+    });
+  }
+  addScanFrame();
+
+  function ensurePreviewBadge() {
+    var wrap = preview.parentNode;
+    if (!wrap.classList.contains('rp-preview-wrap')) {
+      wrap = document.createElement('div');
+      wrap.className = 'rp-preview-wrap';
+      preview.parentNode.insertBefore(wrap, preview);
+      wrap.appendChild(preview);
+
+      var badge = document.createElement('div');
+      badge.className = 'rp-verify-badge';
+      badge.innerHTML =
+        '<svg class="rp-verify-icon" viewBox="0 0 24 24" aria-hidden="true">' +
+        '<circle cx="12" cy="12" r="11" fill="#1e9e57"/>' +
+        '<path d="M7 12.5 10.5 16 17 8.5" stroke="#fff" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>' +
+        '</svg>';
+      wrap.appendChild(badge);
+    }
+    return wrap.querySelector('.rp-verify-badge');
+  }
+
+  function showVerifiedBadge() {
+    var badge = ensurePreviewBadge();
+    badge.classList.remove('is-visible');
+    void badge.offsetWidth; // force reflow so the pop-in animation restarts every time
+    badge.classList.add('is-visible');
+  }
+
+  function hideVerifiedBadge() {
+    var wrap = preview.parentNode;
+    if (wrap.classList.contains('rp-preview-wrap')) {
+      var badge = wrap.querySelector('.rp-verify-badge');
+      if (badge) badge.classList.remove('is-visible');
+    }
+  }
+
   var VEHICLE_CLASSES = ['car', 'motorcycle', 'bus', 'truck', 'bicycle', 'train', 'airplane', 'boat'];
   var FOOD_CLASSES = ['banana', 'apple', 'sandwich', 'orange', 'broccoli', 'carrot', 'hot dog', 'pizza', 'donut', 'cake', 'bowl'];
 
@@ -108,6 +159,7 @@ function initReviewPhotoWidget(ids) {
     preview.hidden = true; // Sembunyikan jika fail dibersihkan
     preview.src = '';
     if (removeBtn) removeBtn.hidden = true;
+    hideVerifiedBadge();
   }
 
   function handleFile(file) {
@@ -123,6 +175,7 @@ function initReviewPhotoWidget(ids) {
           preview.src = url;
           preview.hidden = false;
           if (removeBtn) removeBtn.hidden = false;
+          showVerifiedBadge();
 
           categoryField.value = result.category;
           confidenceField.value = result.confidence.toFixed(3);

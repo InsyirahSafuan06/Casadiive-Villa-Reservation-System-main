@@ -106,31 +106,42 @@
   <!-- TESTIMONIALS -->
   <section class="testimonials">
     <div class="container">
-      <h2>What Our Guests Say</h2>
+      <div class="testimonials-head">
+        <h2>What Our<br>Guests Say</h2>
+        <svg class="testimonials-quote-mark" width="72" height="54" viewBox="0 0 72 54" fill="none" aria-hidden="true">
+          <path d="M0 54V32.4C0 14.4 10.8 2.4 28.8 0L31.2 8.4C20.4 10.8 14.4 18 14.4 27.6H28.8V54H0Z" fill="currentColor"/>
+          <path d="M39.6 54V32.4C39.6 14.4 50.4 2.4 68.4 0L70.8 8.4C60 10.8 54 18 54 27.6H68.4V54H39.6Z" fill="currentColor"/>
+        </svg>
+      </div>
 
       <?php if ($reviews): ?>
       <div class="testimonial-track">
         <?php foreach ($reviews as $review): ?>
         <article class="testimonial-card">
-          <div class="stars" data-rating="<?= (int) $review['rating'] ?>" aria-label="<?= (int) $review['rating'] ?> out of 5 stars">
-            <?php for ($i = 1; $i <= 5; $i++): ?>
-              <span class="star">&#9733;</span>
-            <?php endfor; ?>
+          <div class="testimonial-photo-frame">
+            <?php if ($review['image_path']): ?>
+              <img class="testimonial-photo" src="<?= htmlspecialchars($review['image_path']) ?>" alt="Room photo shared by <?= htmlspecialchars($review['full_name']) ?>">
+            <?php else: ?>
+              <div class="testimonial-photo-placeholder" aria-hidden="true">&#8220;</div>
+            <?php endif; ?>
           </div>
-          <p class="testimonial-date"><?= htmlspecialchars(date('j M. Y', strtotime($review['review_date']))) ?></p>
-          <p class="testimonial-quote"><?= htmlspecialchars($review['comment'] ?: 'Great stay!') ?></p>
-          <?php if ($review['image_path']): ?>
-            <img class="testimonial-photo" src="<?= htmlspecialchars($review['image_path']) ?>" alt="Room photo shared by <?= htmlspecialchars($review['full_name']) ?>">
-          <?php endif; ?>
-          <div class="testimonial-person">
-            <div class="avatar"></div>
+
+          <p class="testimonial-quote">&#8220;<?= htmlspecialchars($review['comment'] ?: 'Great stay!') ?>&#8221;</p>
+
+          <div class="testimonial-footer">
             <div class="testimonial-person-info">
               <span class="testimonial-person-name"><?= htmlspecialchars($review['full_name']) ?></span>
               <?php if ($review['location']): ?>
                 <span class="testimonial-person-location"><?= htmlspecialchars($review['location']) ?></span>
               <?php endif; ?>
             </div>
+            <div class="stars" data-rating="<?= (int) $review['rating'] ?>" aria-label="<?= (int) $review['rating'] ?> out of 5 stars">
+              <?php for ($i = 1; $i <= 5; $i++): ?>
+                <span class="star">&#9733;</span>
+              <?php endfor; ?>
+            </div>
           </div>
+          <p class="testimonial-date"><?= htmlspecialchars(date('j M. Y', strtotime($review['review_date']))) ?></p>
         </article>
         <?php endforeach; ?>
       </div>
@@ -155,10 +166,21 @@
 
     <div class="chatbot-panel" id="chatbot-panel">
       <div class="chatbot-header">
-        <span>Casadive Villa Assistant</span>
+        <span class="chatbot-header-avatar" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M12 2 13.8 8.2 20 10 13.8 11.8 12 18 10.2 11.8 4 10 10.2 8.2 12 2Z" fill="currentColor"/><path d="M19 14 19.9 17.1 23 18 19.9 18.9 19 22 18.1 18.9 15 18 18.1 17.1 19 14Z" fill="currentColor"/></svg>
+        </span>
+        <span class="chatbot-header-text">
+          <strong>Casadive Villa Assistant</strong>
+          <small>Ask me anything about your stay</small>
+        </span>
         <button type="button" class="chatbot-close" id="chatbot-close" aria-label="Close chat">&times;</button>
       </div>
       <div class="chatbot-log" id="chatbot-log" aria-live="polite"></div>
+      <div class="chatbot-listening" id="chatbot-listening" hidden>
+        <span class="chatbot-listening-orb"></span>
+        <span class="chatbot-listening-label">Listening&hellip;</span>
+        <button type="button" class="chatbot-listening-stop" id="chatbot-listening-stop" aria-label="Stop listening">&times;</button>
+      </div>
       <div class="chatbot-quickreplies" id="chatbot-quickreplies">
         <button type="button" class="chip" data-action="check_availability">Check Availability</button>
         <button type="button" class="chip" data-action="recommend">Recommend a Villa</button>

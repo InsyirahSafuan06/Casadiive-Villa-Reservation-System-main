@@ -171,3 +171,34 @@
   color: #fff;
   border-color: #ff8400;
 }
+
+/* ---------- SCAN FRAME (camera) + VERIFIED BADGE (preview) — injected by review-photo.js ---------- */
+.rp-scan-frame { position: relative; }
+.rp-scan-corner {
+  position: absolute;
+  width: 34px;
+  height: 34px;
+  border: 4px solid #22c55e;
+  opacity: .9;
+  pointer-events: none;
+  z-index: 2;
+}
+.rp-scan-corner-tl { top: 14px; left: 14px; border-right: none; border-bottom: none; border-radius: 8px 0 0 0; }
+.rp-scan-corner-tr { top: 14px; right: 14px; border-left: none; border-bottom: none; border-radius: 0 8px 0 0; }
+.rp-scan-corner-bl { bottom: 14px; left: 14px; border-right: none; border-top: none; border-radius: 0 0 0 8px; }
+.rp-scan-corner-br { bottom: 14px; right: 14px; border-left: none; border-top: none; border-radius: 0 0 8px 0; }
+
+.rp-preview-wrap { position: relative; display: inline-block; }
+.rp-verify-badge {
+  position: absolute;
+  right: -8px;
+  bottom: -8px;
+  width: 32px;
+  height: 32px;
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(.4);
+  transition: transform .35s cubic-bezier(.34, 1.56, .64, 1), opacity .25s ease;
+}
+.rp-verify-badge.is-visible { opacity: 1; transform: scale(1); }
+.rp-verify-icon { width: 100%; height: 100%; display: block; filter: drop-shadow(0 2px 4px rgba(0, 0, 0, .25)); }
