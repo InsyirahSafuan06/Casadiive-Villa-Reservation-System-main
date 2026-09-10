@@ -10,10 +10,10 @@ declare(strict_types=1); // bagitahu PHP kita nak jenis data yang ketat, tak bol
 // kalau tak set, pengiraan "esok" untuk reminder check-in boleh jadi salah
 date_default_timezone_set('Asia/Kuala_Lumpur');
 
-$dbHost = 'localhost'; // nama hosting database kami ialah localhost (komputer sendiri, guna XAMPP)
-$dbName = 'casadive_villa_reservation'; // nama database yang kita nak sambung
-$dbUser = 'root'; // username untuk masuk database (default XAMPP)
-$dbPass = ''; // password untuk masuk database (default XAMPP takde password pun takpe)
+$dbHost = 'localhost'; // hosting production (ruangprojek.com) — localhost merujuk kepada server hosting itu sendiri
+$dbName = 'sabrisae_casadivevilla'; // nama database production
+$dbUser = 'sabrisae_casadivevilla'; // username untuk masuk database production
+$dbPass = 'casaDiveVilla_2026'; // password untuk masuk database production
 
 try {
     // sini kita betul-betul sambung ke database, guna maklumat yang kita set kat atas tadi
