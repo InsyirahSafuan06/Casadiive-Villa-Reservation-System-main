@@ -1083,7 +1083,10 @@
       outline: 2px solid var(--orange);
   }
 
-  .chatbot-input-row button {
+  /* :not(.chatbot-mic-btn) — ni cuma untuk butang "Send"; mic ada bentuk/saiz/background
+     dia sendiri (lihat .chatbot-mic-btn di bawah), tanpa :not() ni rule generic kat atas
+     menang atas specificity dan "makan" padding/background circle mic tu */
+  .chatbot-input-row button:not(.chatbot-mic-btn) {
       background: var(--orange);
       color: #fff;
       border-radius: 100px;
@@ -1093,7 +1096,7 @@
       font-size: 13px;
   }
 
-  .chatbot-input-row button:hover {
+  .chatbot-input-row button:not(.chatbot-mic-btn):hover {
       filter: brightness(1.05);
   }
 

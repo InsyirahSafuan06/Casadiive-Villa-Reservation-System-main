@@ -179,7 +179,7 @@ function initReviewPhotoWidget(ids) {
           setStatus('✕ Image rejected. Please upload a clear photo of the villa room only.', 'reject');
         }
       }).catch(function () {
-        setStatus('Could not load the AI model right now — please try again, or submit your review without a photo.', 'reject');
+        setStatus('Please try again, or submit your review without a photo.', 'reject');
       });
     };
     img.src = url;
