@@ -76,9 +76,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['form'] ?? '') === 'review'
             // lulus. Kat server kita cuma sahkan fail tu betul-betul gambar (bukan re-verify
             // kandungan — takde model AI kat server), sebagai lapisan keselamatan asas je.
             $imagePath = null;
-            $imageStatus = 'not_applicable';
-            $imageCategory = null;
-            $imageConfidence = null;
 
             if (!empty($_FILES['review_image']['name']) && $_FILES['review_image']['error'] === UPLOAD_ERR_OK) {
                 $file = $_FILES['review_image'];
@@ -95,10 +92,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['form'] ?? '') === 'review'
 
                     if (move_uploaded_file($file['tmp_name'], $destDir . $filename)) {
                         $imagePath = 'assets/uploads/reviews/' . $filename;
-                        $imageStatus = 'verified';
-                        $imageCategory = trim((string) ($_POST['image_category'] ?? '')) ?: null;
-                        $confidenceRaw = $_POST['image_confidence'] ?? null;
-                        $imageConfidence = is_numeric($confidenceRaw) ? round((float) $confidenceRaw, 3) : null;
                     }
                 }
             }
@@ -107,17 +100,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['form'] ?? '') === 'review'
                 // table `review` ada UNIQUE constraint kat booking_id, so kalau cuba review
                 // kali kedua untuk booking yang sama, insert ni akan gagal dan masuk catch bawah
                 $stmt = $pdo->prepare(
-                    'INSERT INTO review (booking_id, rating, comment, image_path, image_verification_status, image_category, image_confidence)
-                     VALUES (:booking_id, :rating, :comment, :image_path, :image_status, :image_category, :image_confidence)'
+                    'INSERT INTO review (booking_id, rating, comment, image_path)
+                     VALUES (:booking_id, :rating, :comment, :image_path)'
                 );
                 $stmt->execute([
                     'booking_id' => $rRef,
                     'rating' => $rating,
                     'comment' => $comment !== '' ? $comment : null,
                     'image_path' => $imagePath,
-                    'image_status' => $imageStatus,
-                    'image_category' => $imageCategory,
-                    'image_confidence' => $imageConfidence,
                 ]);
             } catch (Exception $e) {
                 $reviewError = 'You have already reviewed this booking.';

@@ -97,15 +97,51 @@
           </div>
 
           <?php if ($method === 'qr'): ?>
-            <div class="qr-payment-block" style="text-align:center;margin:24px 0;">
+            <div class="qr-payment-block">
               <h2 class="summary-heading">Scan &amp; Pay</h2>
-              <img src="<?= htmlspecialchars($base) ?>assets/images/qr-payment.jpg" alt="Touch 'n Go eWallet payment QR code" style="max-width:280px;width:100%;margin:12px auto;display:block;border-radius:12px;">
+
+              <div class="qr-code-frame" id="qr-code-frame">
+                <img src="<?= htmlspecialchars($base) ?>assets/images/qr-payment.jpg" alt="Touch 'n Go eWallet payment QR code" id="qr-code-img">
+                <div class="qr-code-fallback">
+                  <svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM20 14v3M14 20h3M20 20v.01"/></svg>
+                  <span>QR code is not available right now.<br>Please contact us on WhatsApp to pay.</span>
+                </div>
+              </div>
+
               <p class="method-hint">Scan this QR with your banking app or eWallet to pay the amount above, then upload your payment receipt/screenshot below.</p>
 
-              <label class="confirm-check" style="display:block;text-align:left;margin-top:16px;">
-                <span>Upload payment receipt (JPG, PNG or WEBP, max 5MB)</span><br>
-                <input type="file" name="payment_proof" accept=".jpg,.jpeg,.png,.webp,image/*" required style="margin-top:8px;">
+              <label class="upload-dropzone" id="payment-proof-dropzone" for="payment-proof-input">
+                <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M12 4 7 9M12 4l5 5"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>
+                <span class="upload-dropzone-title">Click to upload payment receipt</span>
+                <span class="upload-dropzone-hint">JPG, PNG or WEBP &middot; max 5MB</span>
+                <span class="upload-filename" id="payment-proof-filename" hidden></span>
               </label>
+              <input type="file" id="payment-proof-input" name="payment_proof" accept=".jpg,.jpeg,.png,.webp,image/*" required hidden>
+
+              <script>
+                (function () {
+                  var input = document.getElementById('payment-proof-input');
+                  var dropzone = document.getElementById('payment-proof-dropzone');
+                  var filenameEl = document.getElementById('payment-proof-filename');
+                  input.addEventListener('change', function () {
+                    var file = input.files && input.files[0];
+                    if (!file) {
+                      dropzone.classList.remove('has-file');
+                      filenameEl.hidden = true;
+                      return;
+                    }
+                    dropzone.classList.add('has-file');
+                    filenameEl.hidden = false;
+                    filenameEl.textContent = '✓ ' + file.name;
+                  });
+
+                  var qrFrame = document.getElementById('qr-code-frame');
+                  var qrImg = document.getElementById('qr-code-img');
+                  qrImg.addEventListener('error', function () {
+                    qrFrame.classList.add('is-broken');
+                  });
+                })();
+              </script>
             </div>
           <?php endif; ?>
 

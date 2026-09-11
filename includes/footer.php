@@ -7,11 +7,24 @@ declare(strict_types=1);
 $base ??= ''; 
 $showWhatsapp ??= false; 
 
-// Cache-busting untuk footer CSS
+// Cache-busting untuk footer CSS + JS (review-photo.js/footer-review-init.js), supaya browser
+// customer tak terus guna versi lama yang dah di-cache lepas fail-fail ni diubah
 $footerCssHref = 'assets/css/footer.css';
 $footerCssPath = __DIR__ . '/../assets/css/footer.css';
 if (is_file($footerCssPath)) {
     $footerCssHref .= '?v=' . filemtime($footerCssPath);
+}
+
+$reviewPhotoJsHref = 'assets/js/review-photo.js';
+$reviewPhotoJsPath = __DIR__ . '/../assets/js/review-photo.js';
+if (is_file($reviewPhotoJsPath)) {
+    $reviewPhotoJsHref .= '?v=' . filemtime($reviewPhotoJsPath);
+}
+
+$footerReviewInitJsHref = 'assets/js/footer-review-init.js';
+$footerReviewInitJsPath = __DIR__ . '/../assets/js/footer-review-init.js';
+if (is_file($footerReviewInitJsPath)) {
+    $footerReviewInitJsHref .= '?v=' . filemtime($footerReviewInitJsPath);
 }
 ?>
   <!-- FOOTER -->
@@ -93,9 +106,7 @@ if (is_file($footerCssPath)) {
             
             <!-- PENEGAPAN FORMAT GAMBAR DI SINI (Hanya terima PNG, JPEG, JPG dari galeri) -->
             <input type="file" id="footer-file-input" name="review_image" accept="image/png, image/jpeg, image/jpg" hidden>
-            
-            <input type="hidden" id="footer-image-category" name="image_category">
-            <input type="hidden" id="footer-image-confidence" name="image_confidence">
+
             <img id="footer-image-preview" class="footer-image-preview" hidden alt="Selected room photo preview">
             <button type="button" class="footer-photo-btn footer-photo-btn-outline" id="footer-remove-btn" hidden>Remove Photo</button>
             <p id="footer-verify-status" class="footer-verify-status" hidden></p>
@@ -143,13 +154,13 @@ if (is_file($footerCssPath)) {
 
   <!-- ASSETS & SCRIPT INJECTIONS -->
   <link rel="stylesheet" href="<?= htmlspecialchars($base . $footerCssHref) ?>">
-  <script src="<?= htmlspecialchars($base) ?>assets/js/review-photo.js"></script>
+  <script src="<?= htmlspecialchars($base . $reviewPhotoJsHref) ?>"></script>
   <script>
     // fail .js luar takleh proses <?php ?>, so jambatan kecil ni perlu kekal inline
     // (sama teknik macam CHATBOT_DATA dalam views/index.view.php)
     var FOOTER_REVIEW_HOME_URL = <?= json_encode($base . 'index.php') ?>;
   </script>
-  <script src="<?= htmlspecialchars($base) ?>assets/js/footer-review-init.js"></script>
+  <script src="<?= htmlspecialchars($base . $footerReviewInitJsHref) ?>"></script>
 
 </body>
 </html>

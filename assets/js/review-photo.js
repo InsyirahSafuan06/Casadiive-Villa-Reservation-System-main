@@ -13,8 +13,6 @@ function initReviewPhotoWidget(ids) {
   var fileInput = document.getElementById(ids.fileInput);
   var preview = document.getElementById(ids.preview);
   var statusEl = document.getElementById(ids.status);
-  var categoryField = document.getElementById(ids.category);
-  var confidenceField = document.getElementById(ids.confidence);
   var statusClass = ids.statusClass;
 
   var cameraModal = document.getElementById(ids.cameraModal);
@@ -109,7 +107,7 @@ function initReviewPhotoWidget(ids) {
     if (cocoModel) return Promise.resolve(cocoModel);
     if (modelLoading) return modelLoading;
 
-    setStatus('Loading AI model…', 'processing');
+    setStatus('Loading…', 'processing');
     modelLoading = loadScript('https://jsdelivr.net')
       .then(function () { return loadScript('https://jsdelivr.net'); })
       .then(function () { return window.cocoSsd.load(); })
@@ -154,8 +152,6 @@ function initReviewPhotoWidget(ids) {
 
   function clearFile() {
     fileInput.value = '';
-    categoryField.value = '';
-    confidenceField.value = '';
     preview.hidden = true; // Sembunyikan jika fail dibersihkan
     preview.src = '';
     if (removeBtn) removeBtn.hidden = true;
@@ -176,9 +172,6 @@ function initReviewPhotoWidget(ids) {
           preview.hidden = false;
           if (removeBtn) removeBtn.hidden = false;
           showVerifiedBadge();
-
-          categoryField.value = result.category;
-          confidenceField.value = result.confidence.toFixed(3);
           assignFile(file);
         } else if (result.category === 'uncertain') {
           setStatus('Please upload a clearer photo showing the villa room.', 'uncertain');

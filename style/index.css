@@ -864,15 +864,21 @@
   }
 
   .chatbot-close {
-      color: #fff;
-      font-size: 22px;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: var(--sand-light);
+      color: var(--brown);
+      font-size: 18px;
       line-height: 1;
-      opacity: .8;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       flex-shrink: 0;
   }
 
   .chatbot-close:hover {
-      opacity: 1;
+      background: #fff;
   }
 
   .chatbot-log {

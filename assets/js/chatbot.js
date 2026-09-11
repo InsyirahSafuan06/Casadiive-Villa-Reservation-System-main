@@ -609,8 +609,18 @@
       setListeningUI(false);
     });
 
-    recognizer.addEventListener('error', function () {
+    recognizer.addEventListener('error', function (e) {
       setListeningUI(false);
+      // 'aborted' = customer sendiri klik stop — tak payah papar apa-apa mesej untuk kes tu
+      if (e.error === 'aborted') return;
+
+      var reasons = {
+        'not-allowed': T('Microphone access was blocked. Please allow microphone access for this site (check your browser\'s address bar) and try again.', 'Akses mikrofon disekat. Sila benarkan akses mikrofon untuk laman ini (semak bar alamat pelayar anda) dan cuba lagi.'),
+        'no-speech': T("I didn't hear anything — please try again.", 'Saya tak dengar apa-apa — sila cuba lagi.'),
+        'audio-capture': T('No microphone was found on this device.', 'Tiada mikrofon dijumpai pada peranti ini.'),
+        'network': T('Voice input needs an internet connection to work — please check your connection and try again.', 'Input suara perlukan sambungan internet untuk berfungsi — sila semak sambungan anda dan cuba lagi.')
+      };
+      addChatMessage(reasons[e.error] || T('Voice input failed. Please try typing instead.', 'Input suara gagal. Sila cuba menaip sebagai gantinya.'), 'bot');
     });
 
     chatbotMic.addEventListener('click', function () {

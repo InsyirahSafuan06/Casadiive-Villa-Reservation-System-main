@@ -125,9 +125,6 @@ CREATE TABLE `review` (
   rating                     TINYINT UNSIGNED NOT NULL CHECK (rating BETWEEN 1 AND 5),
   comment                    TEXT,
   image_path                 VARCHAR(255) NULL COMMENT 'set only once an uploaded/captured photo passes client-side AI verification',
-  image_verification_status  ENUM('not_applicable','verified','rejected') NOT NULL DEFAULT 'not_applicable',
-  image_category             VARCHAR(50) NULL COMMENT 'category the client-side model detected, e.g. bedroom/selfie/food/vehicle/uncertain',
-  image_confidence           DECIMAL(4,3) NULL COMMENT 'model confidence score (0-1) reported by the client at upload time',
   review_date                DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT fk_review_booking FOREIGN KEY (booking_id)
     REFERENCES booking(booking_id) ON DELETE CASCADE ON UPDATE CASCADE

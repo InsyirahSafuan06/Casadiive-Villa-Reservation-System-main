@@ -204,6 +204,90 @@ button{ font-family:inherit; cursor:pointer; }
   color: var(--orange-deep);
 }
 
+/* ---------- QR PAYMENT ---------- */
+.qr-payment-block{
+  text-align:center;
+  margin: 8px 0 30px;
+}
+.qr-code-frame{
+  background:#fff;
+  border: 1px solid rgba(106,58,25,.15);
+  border-radius: 14px;
+  padding: 20px;
+  max-width: 280px;
+  margin: 18px auto;
+  box-shadow: 0 10px 30px rgba(106,58,25,.1);
+}
+.qr-code-frame img{ width:100%; border-radius:6px; }
+.qr-code-fallback{
+  display:none;
+  flex-direction:column;
+  align-items:center;
+  gap:12px;
+  padding: 30px 10px;
+  color: var(--brown-price);
+  font-family:'Raleway', sans-serif;
+  font-weight:600;
+  font-size:14px;
+  line-height:1.5;
+}
+.qr-code-frame.is-broken img{ display:none; }
+.qr-code-frame.is-broken .qr-code-fallback{ display:flex; }
+
+.method-hint{
+  font-family:'Raleway', sans-serif;
+  font-weight:600;
+  font-size:15px;
+  color:#333;
+  max-width: 520px;
+  margin: 0 auto;
+  line-height:1.6;
+}
+
+.upload-dropzone{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap: 6px;
+  border: 2px dashed rgba(106,58,25,.35);
+  border-radius: 12px;
+  background:#fff;
+  padding: 30px 20px;
+  margin-top: 20px;
+  cursor:pointer;
+  transition: border-color .15s ease, background .15s ease;
+}
+.upload-dropzone:hover,
+.upload-dropzone:focus-within{
+  border-color: var(--orange-deep);
+  background: rgba(254,129,10,.05);
+}
+.upload-dropzone.has-file{
+  border-style: solid;
+  border-color: #2e9e4a;
+  background: rgba(46,158,74,.06);
+}
+.upload-dropzone svg{ color: var(--brown-price); flex-shrink:0; }
+.upload-dropzone-title{
+  font-family:'Raleway', sans-serif;
+  font-weight:700;
+  font-size:15px;
+  color: var(--brown-heading);
+}
+.upload-dropzone-hint{
+  font-family:'Raleway', sans-serif;
+  font-weight:500;
+  font-size:12px;
+  color:#777;
+}
+.upload-filename{
+  font-family:'Raleway', sans-serif;
+  font-weight:700;
+  font-size:13px;
+  color:#2e9e4a;
+  margin-top:4px;
+}
+
 .confirm-check{
   display:flex;
   align-items:flex-start;

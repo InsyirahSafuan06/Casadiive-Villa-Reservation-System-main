@@ -201,14 +201,22 @@
     </div>
   </div>
 
-<script src="assets/js/index.js"></script>
+<?php
+// cache-bust index.js/chatbot.js ikut waktu fail diubah, sama macam $pageCss (includes/header.php)
+// — tanpa ni browser boleh terus guna versi lama yang dah di-cache walaupun fail dah ditukar
+$indexJsPath = dirname(__DIR__) . '/assets/js/index.js';
+$indexJsVer = is_file($indexJsPath) ? '?v=' . filemtime($indexJsPath) : '';
+$chatbotJsPath = dirname(__DIR__) . '/assets/js/chatbot.js';
+$chatbotJsVer = is_file($chatbotJsPath) ? '?v=' . filemtime($chatbotJsPath) : '';
+?>
+<script src="assets/js/index.js<?= $indexJsVer ?>"></script>
 
 <script>
   // Data sebenar dari DB (dibina di index.php) diletak sebagai global sebelum chatbot.js
   // dimuatkan — fail .js luar takleh proses <?php ?>, so jambatan kecil ni perlu kekal inline.
   var CHATBOT_DATA = <?= json_encode($chatbotData) ?>;
 </script>
-<script src="assets/js/chatbot.js"></script>
+<script src="assets/js/chatbot.js<?= $chatbotJsVer ?>"></script>
 
 <?php
 $showWhatsapp = true; // homepage je yang ada butang WhatsApp terapung

@@ -166,8 +166,6 @@
                 <button type="button" class="photo-btn" id="review-camera-btn">Open Camera</button>
               </div>
               <input type="file" id="review-file-input" name="review_image" accept="image/*" hidden>
-              <input type="hidden" id="review-image-category" name="image_category">
-              <input type="hidden" id="review-image-confidence" name="image_confidence">
               <img id="review-image-preview" class="review-photo-preview" hidden alt="Selected room photo preview">
               <button type="button" class="photo-btn photo-btn-outline" id="review-remove-btn" hidden>Remove Photo</button>
               <p id="review-verify-status" class="review-verify-status" hidden></p>
@@ -195,7 +193,12 @@
             <button type="button" class="photo-lightbox-back" id="review-lightbox-back">Back to Homepage</button>
           </div>
 
-          <script src="../assets/js/review-photo.js"></script>
+          <?php
+          // cache-bust supaya browser customer tak terus guna versi lama review-photo.js yang dah di-cache
+          $reviewPhotoJsPath = __DIR__ . '/../../assets/js/review-photo.js';
+          $reviewPhotoJsVer = is_file($reviewPhotoJsPath) ? '?v=' . filemtime($reviewPhotoJsPath) : '';
+          ?>
+          <script src="../assets/js/review-photo.js<?= $reviewPhotoJsVer ?>"></script>
           <script>
             initReviewPhotoWidget({
               form: 'review-form',
@@ -206,8 +209,6 @@
               preview: 'review-image-preview',
               status: 'review-verify-status',
               statusClass: 'review-verify-status',
-              category: 'review-image-category',
-              confidence: 'review-image-confidence',
               cameraModal: 'camera-modal',
               cameraVideo: 'camera-video',
               cameraCanvas: 'camera-canvas',

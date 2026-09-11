@@ -9,8 +9,6 @@ initReviewPhotoWidget({
   preview: 'footer-image-preview',
   status: 'footer-verify-status',
   statusClass: 'footer-verify-status',
-  category: 'footer-image-category',
-  confidence: 'footer-image-confidence',
   cameraModal: 'footer-camera-modal',
   cameraVideo: 'footer-camera-video',
   cameraCanvas: 'footer-camera-canvas',
