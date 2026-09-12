@@ -28,6 +28,21 @@ if ($pageCss !== '') {
         $pageCssHref .= '?v=' . filemtime($pageCssPath);
     }
 }
+
+// shared mobile-nav CSS/JS, cache-busted the same way as $pageCss above.
+// loaded after $pageCss so `.nav-links.is-open` can override that page's
+// own `@media (max-width:760px){ .nav-links{display:none} }` rule.
+$navCssHref = $base . 'assets/css/nav-responsive.css';
+$navCssPath = __DIR__ . '/../assets/css/nav-responsive.css';
+if (is_file($navCssPath)) {
+    $navCssHref .= '?v=' . filemtime($navCssPath);
+}
+
+$navJsHref = $base . 'assets/js/nav-toggle.js';
+$navJsPath = __DIR__ . '/../assets/js/nav-toggle.js';
+if (is_file($navJsPath)) {
+    $navJsHref .= '?v=' . filemtime($navJsPath);
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -40,6 +55,7 @@ if ($pageCss !== '') {
 <?php if ($pageCss): ?>
 <link rel="stylesheet" href="<?= htmlspecialchars($pageCssHref) ?>">
 <?php endif; ?>
+<link rel="stylesheet" href="<?= htmlspecialchars($navCssHref) ?>">
 </head>
 <body>
 
@@ -47,7 +63,7 @@ if ($pageCss !== '') {
   <header class="navbar">
     <div class="container">
       <div class="brand">Casadive Villa</div>
-      <nav class="nav-links" aria-label="Primary">
+      <nav class="nav-links" id="navLinks" aria-label="Primary">
         <a href="<?= $base ?>index.php"<?= $active === 'home' ? ' aria-current="page"' : '' ?>>Home</a>
         <a href="<?= $base ?>customer/villa.php"<?= $active === 'villa' ? ' aria-current="page"' : '' ?>>Villa</a>
         <a href="<?= $base ?>customer/campsite.php"<?= $active === 'campsite' ? ' aria-current="page"' : '' ?>>Campsite</a>
@@ -60,5 +76,9 @@ if ($pageCss !== '') {
       <?php else: ?>
         <a href="<?= $base ?>user/login.php" class="btn btn-primary">Sign In</a>
       <?php endif; ?>
+      <button type="button" class="nav-toggle" id="navToggle" aria-label="Toggle menu" aria-expanded="false" aria-controls="navLinks">
+        <span class="nav-toggle-bars"><span></span><span></span><span></span></span>
+      </button>
     </div>
   </header>
+  <script src="<?= htmlspecialchars($navJsHref) ?>" defer></script>

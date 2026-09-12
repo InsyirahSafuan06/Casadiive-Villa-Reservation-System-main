@@ -16,6 +16,7 @@
     background: var(--cream);
     color: var(--text);
     font-family: 'Poppins', sans-serif;
+    overflow-x: hidden;
   }
 
   a{ color:inherit; text-decoration:none; }
@@ -31,7 +32,7 @@
   .dash-topbar{ background: var(--sand-light); position: sticky; top: 0; z-index: 100; }
   .dash-topbar .container{ display:flex; align-items:center; justify-content:space-between; height: 90px; gap: 20px; flex-wrap:wrap; }
   .brand{ font-family:'Dancing Script', cursive; font-weight:700; font-size: 26px; color: var(--orange); white-space:nowrap; }
-  .dash-user{ display:flex; align-items:center; gap: 18px; }
+  .dash-user{ display:flex; align-items:center; flex-wrap: wrap; gap: 12px 18px; }
   .dash-user .who{ font-family:'Raleway', sans-serif; font-weight:600; font-size: 14px; color:#000; }
   .dash-user .who strong{ color: var(--brown-price); }
   .dash-user .role-badge{ text-transform: capitalize; background: var(--brown-price); color:#fff; font-size: 11px; font-weight:600; padding: 3px 10px; border-radius: 50px; margin-left: 6px; }
@@ -127,6 +128,9 @@
     .container{ padding:0 20px; }
     .receipt-card{ padding: 30px 22px; }
     .receipt-grid{ grid-template-columns: 1fr; }
+    .dash-topbar .container{ height:auto; padding-top:16px; padding-bottom:16px; }
+    .dash-user{ width:100%; }
+    .dash-user .who{ width:100%; }
   }
 
   @media print{

@@ -72,8 +72,8 @@
               (<strong><?= htmlspecialchars(ucfirst($old['status'])) ?></strong>) can't be changed here. Ask another admin if that's needed.
             </p>
           <?php else: ?>
-          <div style="display:flex;gap:18px;">
-            <div style="flex:1;">
+          <div class="form-row-2">
+            <div>
               <label style="display:block;font-weight:600;font-size:14px;color:var(--brown-price);margin-bottom:6px;">Role</label>
               <select name="role" style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:6px;font-family:inherit;">
                 <?php foreach ($validRoles as $role): ?>
@@ -81,7 +81,7 @@
                 <?php endforeach; ?>
               </select>
             </div>
-            <div style="flex:1;">
+            <div>
               <label style="display:block;font-weight:600;font-size:14px;color:var(--brown-price);margin-bottom:6px;">Status</label>
               <select name="status" style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:6px;font-family:inherit;">
                 <?php foreach ($validStatuses as $status): ?>

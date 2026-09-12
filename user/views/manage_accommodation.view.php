@@ -46,8 +46,8 @@
             <input type="text" name="accommodation_name" value="<?= htmlspecialchars($old['accommodation_name']) ?>" placeholder="e.g. Villa Package 5" style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:6px;font-family:inherit;" required>
           </div>
 
-          <div style="display:flex;gap:18px;">
-            <div style="flex:1;">
+          <div class="form-row-2">
+            <div>
               <label style="display:block;font-weight:600;font-size:14px;color:var(--brown-price);margin-bottom:6px;">Type</label>
               <select name="accommodation_type" style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:6px;font-family:inherit;">
                 <?php foreach ($validTypes as $type): ?>
@@ -55,7 +55,7 @@
                 <?php endforeach; ?>
               </select>
             </div>
-            <div style="flex:1;">
+            <div>
               <label style="display:block;font-weight:600;font-size:14px;color:var(--brown-price);margin-bottom:6px;">Status</label>
               <select name="status" style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:6px;font-family:inherit;">
                 <?php foreach ($validStatuses as $status): ?>
@@ -65,24 +65,24 @@
             </div>
           </div>
 
-          <div style="display:flex;gap:18px;">
-            <div style="flex:1;">
+          <div class="form-row-2">
+            <div>
               <label style="display:block;font-weight:600;font-size:14px;color:var(--brown-price);margin-bottom:6px;">Weekday Price / Night (RM)</label>
               <input type="number" name="price" value="<?= htmlspecialchars((string) $old['price']) ?>" min="0" step="0.01" style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:6px;font-family:inherit;" required>
               <p style="font-size:12px;color:#999;margin-top:4px;">This is the rate actually used for booking totals.</p>
             </div>
-            <div style="flex:1;">
+            <div>
               <label style="display:block;font-weight:600;font-size:14px;color:var(--brown-price);margin-bottom:6px;">Capacity (guests)</label>
               <input type="number" name="capacity" value="<?= htmlspecialchars((string) $old['capacity']) ?>" min="1" style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:6px;font-family:inherit;" required>
             </div>
           </div>
 
-          <div style="display:flex;gap:18px;">
-            <div style="flex:1;">
+          <div class="form-row-2">
+            <div>
               <label style="display:block;font-weight:600;font-size:14px;color:var(--brown-price);margin-bottom:6px;">Weekend Price / Night (RM, optional)</label>
               <input type="number" name="price_weekend" value="<?= htmlspecialchars((string) $old['price_weekend']) ?>" min="0" step="0.01" style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:6px;font-family:inherit;">
             </div>
-            <div style="flex:1;">
+            <div>
               <label style="display:block;font-weight:600;font-size:14px;color:var(--brown-price);margin-bottom:6px;">Public Holiday Price / Night (RM, optional)</label>
               <input type="number" name="price_holiday" value="<?= htmlspecialchars((string) $old['price_holiday']) ?>" min="0" step="0.01" style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:6px;font-family:inherit;">
             </div>
