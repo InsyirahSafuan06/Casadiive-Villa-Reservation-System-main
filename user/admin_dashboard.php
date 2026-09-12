@@ -118,13 +118,21 @@ $users = $pdo->query(
     'SELECT user_id, username, fullname, email, role, status, created_at FROM user ORDER BY user_id'
 )->fetchAll();
 
-$reviews = $pdo->query(
-    "SELECT r.review_id, r.booking_id, r.rating, r.comment, r.display_name, r.image_path, r.review_date, c.full_name
-     FROM review r
-     JOIN booking b ON b.booking_id = r.booking_id
-     JOIN customer c ON c.customer_id = b.customer_id
-     ORDER BY r.review_date DESC"
-)->fetchAll();
+// dibalut try/catch supaya kalau database belum kena migrate (contoh: lupa jalankan
+// database/add_review_display_name.sql lepas deploy), dashboard still load dengan section
+// Guest Reviews kosong je — dan bukan seluruh dashboard (bookings/accommodations/staff) fatal error.
+try {
+    $reviews = $pdo->query(
+        "SELECT r.review_id, r.booking_id, r.rating, r.comment, r.display_name, r.image_path, r.review_date, c.full_name
+         FROM review r
+         JOIN booking b ON b.booking_id = r.booking_id
+         JOIN customer c ON c.customer_id = b.customer_id
+         ORDER BY r.review_date DESC"
+    )->fetchAll();
+} catch (PDOException $e) {
+    error_log('Failed to load admin dashboard reviews: ' . $e->getMessage());
+    $reviews = [];
+}
 
 // semua logic dah selesai kat atas ni — baris bawah papar HTML page dia.
 // HTML/borang tu disimpan berasingan dalam folder views/ supaya file ni tak jadi terlalu panjang.

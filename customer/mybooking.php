@@ -117,11 +117,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['form'] ?? '') === 'review'
                     'display_name' => $displayName,
                     'image_path' => $imagePath,
                 ]);
-            } catch (Exception $e) {
-                $reviewError = 'You have already reviewed this booking.';
+            } catch (PDOException $e) {
+                // SQLSTATE 23000 = integrity constraint violation — ni je yang sepatutnya bermaksud
+                // "dah pernah review" (UNIQUE constraint kat booking_id). Sebarang error lain (contoh:
+                // 42S22 column not found sebab migration belum jalan) kita log betul-betul dan bagitahu
+                // guest mesej generic, bukan claim "dah review" yang salah/mengelirukan.
+                if ($e->getCode() === '23000') {
+                    $reviewError = 'You have already reviewed this booking.';
+                } else {
+                    error_log('Failed to save review: ' . $e->getMessage());
+                    $reviewError = 'Something went wrong saving your review. Please try again later.';
+                }
+
                 if ($imagePath && is_file(__DIR__ . '/../' . $imagePath)) {
-                    // insert gagal (contoh: dah pernah review) — buang gambar yang dah terlanjur
-                    // di-upload tu, elak fail terbiar kat cakera tanpa rekod DB
+                    // insert gagal — buang gambar yang dah terlanjur di-upload tu, elak fail
+                    // terbiar kat cakera tanpa rekod DB
                     unlink(__DIR__ . '/../' . $imagePath);
                 }
             }
