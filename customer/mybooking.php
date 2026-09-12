@@ -56,6 +56,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['form'] ?? '') === 'review'
     $rating = filter_var($_POST['rating'] ?? '', FILTER_VALIDATE_INT);
     $comment = trim((string) ($_POST['comment'] ?? ''));
 
+    // guest picks what shows publicly on the review — never the real name on their booking.
+    // ticking "post anonymously" (or just leaving the name blank) stores NULL, which the
+    // display side (index.php) renders as "Anonymous".
+    $isAnonymous = isset($_POST['is_anonymous']);
+    $displayName = $isAnonymous ? '' : trim((string) ($_POST['display_name'] ?? ''));
+    $displayName = $displayName !== '' ? mb_substr($displayName, 0, 100) : null;
+
     if (!csrf_verify()) {
         $reviewError = 'Your session expired. Please try again.';
     } elseif ($rRef === false || $rPhone === '') {
@@ -100,13 +107,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['form'] ?? '') === 'review'
                 // table `review` ada UNIQUE constraint kat booking_id, so kalau cuba review
                 // kali kedua untuk booking yang sama, insert ni akan gagal dan masuk catch bawah
                 $stmt = $pdo->prepare(
-                    'INSERT INTO review (booking_id, rating, comment, image_path)
-                     VALUES (:booking_id, :rating, :comment, :image_path)'
+                    'INSERT INTO review (booking_id, rating, comment, display_name, image_path)
+                     VALUES (:booking_id, :rating, :comment, :display_name, :image_path)'
                 );
                 $stmt->execute([
                     'booking_id' => $rRef,
                     'rating' => $rating,
                     'comment' => $comment !== '' ? $comment : null,
+                    'display_name' => $displayName,
                     'image_path' => $imagePath,
                 ]);
             } catch (Exception $e) {
@@ -168,7 +176,7 @@ if ($lookupAttempted) {
             $stmt->execute(['id' => $booking['booking_id']]);
             $items = $stmt->fetchAll();
 
-            $stmt = $pdo->prepare('SELECT rating, comment, image_path, review_date FROM review WHERE booking_id = :id');
+            $stmt = $pdo->prepare('SELECT rating, comment, display_name, image_path, review_date FROM review WHERE booking_id = :id');
             $stmt->execute(['id' => $booking['booking_id']]);
             $existingReview = $stmt->fetch() ?: null; // ada review sedia ada ke tak untuk booking ni
 

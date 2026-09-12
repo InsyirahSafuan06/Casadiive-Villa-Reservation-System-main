@@ -286,6 +286,37 @@
     margin-bottom: 18px;
   }
   .review-form textarea:focus{ outline: 2px solid var(--orange); }
+  .review-name-label{
+    display:block;
+    font-family:'Raleway', sans-serif;
+    font-weight:600;
+    font-size: 13px;
+    margin-bottom: 6px;
+  }
+  .review-form input[type="text"]{
+    width:100%;
+    border: 1px solid var(--brown-price);
+    border-radius: 8px;
+    padding: 14px 18px;
+    font-family:'Raleway', sans-serif;
+    font-weight:500;
+    font-size: 15px;
+    background:transparent;
+    margin-bottom: 14px;
+  }
+  .review-form input[type="text"]:focus{ outline: 2px solid var(--orange); }
+  .review-form input[type="text"]:disabled{ opacity:.5; }
+  .review-anon-check{
+    display:flex;
+    align-items:center;
+    gap: 8px;
+    font-family:'Raleway', sans-serif;
+    font-weight:600;
+    font-size: 13px;
+    margin-bottom: 18px;
+    cursor:pointer;
+  }
+  .review-anon-check input{ width:auto; }
 
   .review-photo{
     max-width: 260px;

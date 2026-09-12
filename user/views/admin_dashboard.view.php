@@ -238,6 +238,7 @@
             <tr>
               <th>#</th>
               <th>Guest</th>
+              <th>Shown Publicly As</th>
               <th>Booking</th>
               <th>Rating</th>
               <th>Comment</th>
@@ -248,11 +249,12 @@
           </thead>
           <tbody>
             <?php if (!$reviews): ?>
-              <tr class="empty-row"><td colspan="8">No reviews yet.</td></tr>
+              <tr class="empty-row"><td colspan="9">No reviews yet.</td></tr>
             <?php else: foreach ($reviews as $r): ?>
               <tr>
                 <td>#<?= (int) $r['review_id'] ?></td>
                 <td><?= htmlspecialchars($r['full_name']) ?></td>
+                <td><?= $r['display_name'] ? htmlspecialchars($r['display_name']) : '<span class="text-muted">Anonymous</span>' ?></td>
                 <td><?= htmlspecialchars(format_booking_ref((int) $r['booking_id'])) ?></td>
                 <td><?= (int) $r['rating'] ?> &#9733;</td>
                 <td><?= htmlspecialchars($r['comment'] ?: '—') ?></td>

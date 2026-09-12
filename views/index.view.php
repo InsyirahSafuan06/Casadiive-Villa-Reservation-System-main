@@ -116,11 +116,13 @@
 
       <?php if ($reviews): ?>
       <div class="testimonial-track">
-        <?php foreach ($reviews as $review): ?>
+        <?php foreach ($reviews as $review):
+          $displayName = $review['display_name'] !== null && $review['display_name'] !== '' ? $review['display_name'] : 'Anonymous';
+        ?>
         <article class="testimonial-card">
           <div class="testimonial-photo-frame">
             <?php if ($review['image_path']): ?>
-              <img class="testimonial-photo" src="<?= htmlspecialchars($review['image_path']) ?>" alt="Room photo shared by <?= htmlspecialchars($review['full_name']) ?>">
+              <img class="testimonial-photo" src="<?= htmlspecialchars($review['image_path']) ?>" alt="Room photo shared by <?= htmlspecialchars($displayName) ?>">
             <?php else: ?>
               <div class="testimonial-photo-placeholder" aria-hidden="true">&#8220;</div>
             <?php endif; ?>
@@ -130,7 +132,7 @@
 
           <div class="testimonial-footer">
             <div class="testimonial-person-info">
-              <span class="testimonial-person-name"><?= htmlspecialchars($review['full_name']) ?></span>
+              <span class="testimonial-person-name"><?= htmlspecialchars($displayName) ?></span>
               <?php if ($review['location']): ?>
                 <span class="testimonial-person-location"><?= htmlspecialchars($review['location']) ?></span>
               <?php endif; ?>

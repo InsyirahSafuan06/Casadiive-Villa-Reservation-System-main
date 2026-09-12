@@ -124,6 +124,7 @@ CREATE TABLE `review` (
   booking_id                 INT UNSIGNED NOT NULL UNIQUE,
   rating                     TINYINT UNSIGNED NOT NULL CHECK (rating BETWEEN 1 AND 5),
   comment                    TEXT,
+  display_name               VARCHAR(100) NULL COMMENT 'name the guest chose to show publicly; NULL/empty means the review is shown as Anonymous — never falls back to the booking''s real name',
   image_path                 VARCHAR(255) NULL COMMENT 'set only once an uploaded/captured photo passes client-side AI verification',
   review_date                DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT fk_review_booking FOREIGN KEY (booking_id)

@@ -119,7 +119,7 @@ $users = $pdo->query(
 )->fetchAll();
 
 $reviews = $pdo->query(
-    "SELECT r.review_id, r.booking_id, r.rating, r.comment, r.image_path, r.review_date, c.full_name
+    "SELECT r.review_id, r.booking_id, r.rating, r.comment, r.display_name, r.image_path, r.review_date, c.full_name
      FROM review r
      JOIN booking b ON b.booking_id = r.booking_id
      JOIN customer c ON c.customer_id = b.customer_id

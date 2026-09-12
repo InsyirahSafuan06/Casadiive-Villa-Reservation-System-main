@@ -6,8 +6,10 @@
 require_once __DIR__ . '/includes/db.php'; // sambung ke database dulu, dapat $pdo
 
 // ambil 6 ulasan terbaru je untuk letak kat homepage, susun dari yang paling baru
+// r.display_name ialah nama yang guest PILIH untuk tunjuk secara terbuka — bukan nama sebenar
+// dalam booking dia (c.full_name). Kosong/anonymous bermaksud kita papar "Anonymous" je.
 $reviews = $pdo->query(
-    "SELECT r.rating, r.comment, r.image_path, r.review_date, c.full_name, c.location
+    "SELECT r.rating, r.comment, r.image_path, r.review_date, r.display_name, c.location
      FROM review r
      JOIN booking b ON b.booking_id = r.booking_id
      JOIN customer c ON c.customer_id = b.customer_id

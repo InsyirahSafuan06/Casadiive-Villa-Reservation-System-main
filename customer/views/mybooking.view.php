@@ -134,6 +134,7 @@
               <svg viewBox="0 0 20 19" class="<?= $i <= (int) $existingReview['rating'] ? '' : 'star-empty' ?>"><polygon points="10,0 12.5,7 20,7 14,11.5 16,19 10,14.5 4,19 6,11.5 0,7 7.5,7"/></svg>
             <?php endfor; ?>
           </div>
+          <p class="review-date">Shown publicly as: <strong><?= htmlspecialchars($existingReview['display_name'] ?: 'Anonymous') ?></strong></p>
           <?php if ($existingReview['comment']): ?>
             <p class="review-comment"><?= nl2br(htmlspecialchars($existingReview['comment'])) ?></p>
           <?php endif; ?>
@@ -157,6 +158,12 @@
                 <label for="rating-<?= $i ?>" title="<?= $i ?> stars">&#9733;</label>
               <?php endfor; ?>
             </div>
+            <label for="review-display-name" class="review-name-label">Name to show on your review (optional)</label>
+            <input type="text" id="review-display-name" name="display_name" maxlength="100" placeholder="e.g. Aina, or leave blank to stay anonymous">
+            <label class="review-anon-check">
+              <input type="checkbox" id="review-is-anonymous" name="is_anonymous" value="1">
+              Post anonymously
+            </label>
             <textarea name="comment" rows="3" placeholder="Tell us about your stay (optional)"></textarea>
 
             <div class="review-photo-section">
@@ -220,6 +227,17 @@
               lightboxBack: 'review-lightbox-back',
               homeUrl: '<?= htmlspecialchars($base) ?>index.php'
             });
+          </script>
+          <script>
+            (function () {
+              var anon = document.getElementById('review-is-anonymous');
+              var nameInput = document.getElementById('review-display-name');
+              if (!anon || !nameInput) return;
+              anon.addEventListener('change', function () {
+                nameInput.disabled = anon.checked;
+                if (anon.checked) nameInput.value = '';
+              });
+            })();
           </script>
         <?php endif; ?>
       </div>

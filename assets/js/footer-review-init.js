@@ -20,3 +20,13 @@ initReviewPhotoWidget({
   lightboxBack: 'footer-lightbox-back',
   homeUrl: FOOTER_REVIEW_HOME_URL
 });
+
+(function () {
+  var anon = document.getElementById('footer-review-anonymous');
+  var nameInput = document.getElementById('footer-review-name');
+  if (!anon || !nameInput) return;
+  anon.addEventListener('change', function () {
+    nameInput.disabled = anon.checked;
+    if (anon.checked) nameInput.value = '';
+  });
+})();

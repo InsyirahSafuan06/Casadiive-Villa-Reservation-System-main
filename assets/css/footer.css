@@ -9,6 +9,30 @@
   display: none !important;
 }
 
+/* 1b. Name field + "post anonymously" checkbox in the mini review form */
+.footer-review-form input[type="text"]:disabled { opacity: .5; }
+
+.footer-review-anon-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+  color: #fff;
+  font-family: 'Raleway', sans-serif;
+  font-weight: 600;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.footer-review-form input[type="checkbox"] {
+  flex: none;
+  width: auto;
+  height: auto;
+  background: none;
+  border-radius: 0;
+  padding: 0;
+}
+
 /* 2. Butang Kawalan Memilih Media */
 .footer-photo-controls { 
   display: flex; 
