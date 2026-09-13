@@ -108,8 +108,8 @@ function initReviewPhotoWidget(ids) {
     if (modelLoading) return modelLoading;
 
     setStatus('Loading…', 'processing');
-    modelLoading = loadScript('https://jsdelivr.net')
-      .then(function () { return loadScript('https://jsdelivr.net'); })
+    modelLoading = loadScript('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.20.0/dist/tf.min.js')
+      .then(function () { return loadScript('https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.min.js'); })
       .then(function () { return window.cocoSsd.load(); })
       .then(function (model) { cocoModel = model; return model; });
     return modelLoading;
