@@ -75,44 +75,75 @@ if (is_file($footerReviewInitJsPath)) {
 
         <!-- Kolom Mini Review Form -->
         <div class="footer-col newsletter">
-          <h4>Write a Review</h4>
-          <p>Already stayed with us? Enter your details to share your experience.</p>
-          
+          <h4 class="footer-review-heading">
+            <span class="footer-review-heading-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+            </span>
+            Write a Review
+          </h4>
+          <p class="footer-review-sub"><strong>Already</strong> stayed with us? Enter your details to share your experience.</p>
+
           <form class="newsletter-form footer-review-form" method="post" action="<?= htmlspecialchars($base) ?>customer/mybooking.php" enctype="multipart/form-data" id="footer-review-form">
             <?= csrf_field() ?>
             <input type="hidden" name="form" value="review">
-            
+
             <div class="footer-review-fields">
-              <label for="footer-review-ref" style="position:absolute;left:-9999px;">Booking Reference</label>
-              <input id="footer-review-ref" type="text" name="ref" placeholder="Booking Reference" required>
-              
-              <label for="footer-review-phone" style="position:absolute;left:-9999px;">Phone Number</label>
-              <input id="footer-review-phone" type="tel" name="phone" placeholder="Phone Number" required>
+              <div class="footer-input-wrap">
+                <span class="footer-input-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                </span>
+                <label for="footer-review-ref" style="position:absolute;left:-9999px;">Booking Reference</label>
+                <input id="footer-review-ref" type="text" name="ref" placeholder="Booking Reference" required>
+              </div>
+
+              <div class="footer-input-wrap">
+                <span class="footer-input-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                </span>
+                <label for="footer-review-phone" style="position:absolute;left:-9999px;">Phone Number</label>
+                <input id="footer-review-phone" type="tel" name="phone" placeholder="Phone Number" required>
+              </div>
             </div>
-            
+
             <div class="footer-review-stars" role="radiogroup" aria-label="Rating">
               <?php for ($i = 5; $i >= 1; $i--): ?>
                 <input type="radio" name="rating" id="footer-rating-<?= $i ?>" value="<?= $i ?>" <?= $i === 5 ? 'checked' : '' ?>>
                 <label for="footer-rating-<?= $i ?>" title="<?= $i ?> stars">★</label>
               <?php endfor; ?>
             </div>
-            
+
             <div class="footer-review-identity">
-              <label for="footer-review-name" style="position:absolute;left:-9999px;">Name to show on your review</label>
-              <input id="footer-review-name" type="text" name="display_name" maxlength="100" placeholder="Name to show on your review (optional)">
+              <div class="footer-input-wrap">
+                <span class="footer-input-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                </span>
+                <label for="footer-review-name" style="position:absolute;left:-9999px;">Name to show on your review</label>
+                <input id="footer-review-name" type="text" name="display_name" maxlength="100" placeholder="Name to show on your review (optional)">
+              </div>
               <label class="footer-review-anon-check">
                 <input type="checkbox" id="footer-review-anonymous" name="is_anonymous" value="1">
                 Post anonymously
               </label>
             </div>
 
-            <textarea name="comment" rows="2" placeholder="Tell us about your stay (optional)"></textarea>
+            <div class="footer-input-wrap footer-input-wrap-textarea">
+              <span class="footer-input-icon footer-input-icon-top" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+              </span>
+              <textarea name="comment" rows="2" placeholder="Tell us about your stay (optional)"></textarea>
+            </div>
 
             <div class="footer-photo-controls">
-              <button type="button" class="footer-photo-btn" id="footer-upload-btn">Upload Image</button>
-              <button type="button" class="footer-photo-btn" id="footer-camera-btn">Open Camera</button>
+              <button type="button" class="footer-photo-btn" id="footer-upload-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                Upload Image
+              </button>
+              <button type="button" class="footer-photo-btn" id="footer-camera-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+                Open Camera
+              </button>
             </div>
-            
+
             <!-- PENEGAPAN FORMAT GAMBAR DI SINI (Hanya terima PNG, JPEG, JPG dari galeri) -->
             <input type="file" id="footer-file-input" name="review_image" accept="image/png, image/jpeg, image/jpg" hidden>
 
@@ -120,7 +151,10 @@ if (is_file($footerReviewInitJsPath)) {
             <button type="button" class="footer-photo-btn footer-photo-btn-outline" id="footer-remove-btn" hidden>Remove Photo</button>
             <p id="footer-verify-status" class="footer-verify-status" hidden></p>
 
-            <button type="submit">Submit Review</button>
+            <button type="submit" class="footer-review-submit-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+              Submit Review
+            </button>
           </form>
         </div>
       </div>

@@ -9,43 +9,149 @@
   display: none !important;
 }
 
-/* 1b. Name field + "post anonymously" checkbox in the mini review form — grouped in
-   their own wrapper with a tighter internal gap so they read as one related unit,
-   separated a little more from the rating stars above and the comment box below.
-   Styled explicitly here (not left to inherit .newsletter-form input from whichever
-   page's stylesheet happens to be loaded) so it looks the same on every page, since
-   footer.css is the last stylesheet loaded and always wins. */
-.footer-review-identity {
+/* ==========================================================================
+   MINI REVIEW WIDGET (footer "Write a Review") — fully self-contained here,
+   not left to inherit generic .newsletter-form/.footer-col rules from whichever
+   page's stylesheet happens to be loaded, so it looks the same everywhere since
+   footer.css is the last stylesheet loaded on every page and always wins.
+   ========================================================================== */
+
+.footer-review-heading {
   display: flex;
-  flex-direction: column;
-  gap: 8px;
+  align-items: center;
+  gap: 14px;
+  font-size: 24px !important;
+  margin-bottom: 6px;
 }
 
-#footer-review-name {
+.footer-review-heading-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border: 2px solid var(--orange, #FE810A);
+  border-radius: 10px;
+  color: var(--orange, #FE810A);
+}
+
+.footer-review-heading-icon svg { width: 20px; height: 20px; }
+
+.footer-review-sub {
+  font-weight: 500 !important;
+  font-size: 14px !important;
+  line-height: 1.5;
+  opacity: .9;
+  margin-bottom: 20px !important;
+}
+
+.footer-review-form {
+  gap: 16px !important;
+}
+
+.footer-review-fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.footer-review-fields .footer-input-wrap { flex: 1 1 160px; }
+
+/* generic icon + text-box shell shared by every field in this widget */
+.footer-input-wrap { position: relative; }
+
+.footer-input-icon {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+  color: rgba(91, 58, 41, .6);
+  pointer-events: none;
+}
+
+.footer-input-icon svg { width: 100%; height: 100%; display: block; }
+
+.footer-input-icon-top { top: 16px; transform: none; }
+
+.footer-review-form input[type="text"],
+.footer-review-form input[type="tel"],
+.footer-review-form textarea {
   display: block;
   width: 100%;
-  height: 50px;
   box-sizing: border-box;
-  background: #fff;
-  border: none;
-  border-radius: 5px;
-  padding: 0 16px;
+  background: var(--cream, #F9F5EF);
+  border: 1px solid rgba(91, 58, 41, .15);
+  border-radius: 14px;
+  padding: 0 18px 0 46px;
   font-family: 'Raleway', sans-serif;
   font-weight: 500;
-  font-size: 12px;
+  font-size: 15px;
   color: rgba(0, 0, 0, .8);
 }
 
-#footer-review-name::placeholder {
-  color: rgba(0, 0, 0, .45);
+.footer-review-form input[type="text"],
+.footer-review-form input[type="tel"] {
+  height: 54px;
 }
 
-#footer-review-name:focus {
+.footer-review-form textarea {
+  padding-top: 16px;
+  padding-bottom: 16px;
+  resize: vertical;
+}
+
+.footer-review-form input::placeholder,
+.footer-review-form textarea::placeholder {
+  color: rgba(0, 0, 0, .4);
+}
+
+.footer-review-form input:focus,
+.footer-review-form textarea:focus {
   outline: 2px solid var(--orange, #FE810A);
 }
 
-#footer-review-name:disabled {
+.footer-review-form input:disabled {
   opacity: .5;
+}
+
+.footer-review-stars {
+  display: flex;
+  flex-direction: row-reverse;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.footer-review-stars input {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  pointer-events: none;
+}
+
+.footer-review-stars label {
+  font-size: 30px;
+  line-height: 1;
+  color: rgba(255, 255, 255, .35);
+  cursor: pointer;
+}
+
+.footer-review-stars input:checked ~ label,
+.footer-review-stars label:hover,
+.footer-review-stars label:hover ~ label {
+  color: var(--orange, #FE810A);
+}
+
+.footer-review-identity {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .footer-review-anon-check {
@@ -56,12 +162,12 @@
   color: #fff;
   font-family: 'Raleway', sans-serif;
   font-weight: 600;
-  font-size: 13px;
+  font-size: 14px;
   cursor: pointer;
 }
 
 /* 22px lands between the tiny native checkbox (~13px) and something oversized —
-   proportioned against the 50px input fields without competing with them. */
+   proportioned against the 54px input fields without competing with them. */
 .footer-review-anon-check input[type="checkbox"] {
   flex: none;
   appearance: none;
@@ -69,9 +175,9 @@
   width: 22px;
   height: 22px;
   margin: 0;
-  background: #fff;
+  background: var(--cream, #F9F5EF);
   border: 1px solid rgba(255, 255, 255, .7);
-  border-radius: 5px;
+  border-radius: 6px;
   cursor: pointer;
   position: relative;
 }
@@ -98,35 +204,76 @@
   outline-offset: 2px;
 }
 
-/* 2. Butang Kawalan Memilih Media */
-.footer-photo-controls { 
-  display: flex; 
-  gap: 8px; 
-  flex-wrap: wrap; 
-  margin-top: 2px; 
-  margin-bottom: 10px;
+/* 2. Butang Kawalan Memilih Media + Submit — pill-ish rounded, icon + label,
+   consistent whichever page loads the widget (overrides the page-level generic
+   ".footer-review-form button" rule since this file loads last). */
+.footer-review-form button {
+  font-family: 'Raleway', sans-serif;
+}
+
+.footer-photo-controls {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 2px;
+  margin-bottom: 4px;
 }
 
 .footer-photo-btn {
-  background: transparent;
+  flex: 1 1 160px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: var(--orange, #FE810A);
   color: #fff;
-  border: 1px solid rgba(255, 255, 255, .5);
-  border-radius: 2.5px;
-  padding: 8px 14px;
-  font-family: 'Raleway', sans-serif;
-  font-weight: 600;
-  font-size: 12px;
+  border: none;
+  border-radius: 12px;
+  padding: 14px 18px;
+  font-weight: 700;
+  font-size: 14px;
   cursor: pointer;
-  transition: background 0.2s ease;
+  transition: filter 0.2s ease;
 }
 
-.footer-photo-btn:hover { 
-  background: rgba(255, 255, 255, .15); 
+.footer-photo-btn svg { width: 18px; height: 18px; flex-shrink: 0; }
+
+.footer-photo-btn:hover {
+  filter: brightness(1.05);
 }
 
-.footer-photo-btn-outline { 
-  border-color: #999; 
-  color: #ccc; 
+.footer-photo-btn-outline {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, .5);
+  color: #fff;
+}
+
+.footer-photo-btn-outline:hover {
+  background: rgba(255, 255, 255, .1);
+  filter: none;
+}
+
+.footer-review-submit-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  background: var(--orange, #FE810A);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  padding: 16px;
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+  transition: filter 0.2s ease;
+}
+
+.footer-review-submit-btn svg { width: 18px; height: 18px; flex-shrink: 0; }
+
+.footer-review-submit-btn:hover {
+  filter: brightness(1.05);
 }
 
 /* 3. Pratonton Imej (Hanya aktif apabila hidden digugurkan oleh JS) */
@@ -250,10 +397,13 @@
   justify-content: center; 
 }
 
-/* Reka bentuk butang di dalam kotak kamera modal supaya teks berwarna gelap */
+/* Reka bentuk butang di dalam kotak kamera modal — fully self-contained (not relying
+   on .footer-photo-btn's own background/border) since that base class now styles the
+   Upload/Camera launch buttons very differently (solid orange, no border). */
 .footer-camera-modal-inner .footer-photo-btn {
+  background: #fff;
   color: #333;
-  border-color: #ccc;
+  border: 1px solid #ccc;
 }
 .footer-camera-modal-inner .footer-photo-btn#footer-camera-capture-btn {
   background: #ff8400;
