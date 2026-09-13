@@ -51,25 +51,27 @@
 .footer-review-anon-check {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   flex: none;
   color: #fff;
   font-family: 'Raleway', sans-serif;
   font-weight: 600;
-  font-size: 12px;
+  font-size: 13px;
   cursor: pointer;
 }
 
+/* 22px lands between the tiny native checkbox (~13px) and something oversized —
+   proportioned against the 50px input fields without competing with them. */
 .footer-review-anon-check input[type="checkbox"] {
   flex: none;
   appearance: none;
   -webkit-appearance: none;
-  width: 18px;
-  height: 18px;
+  width: 22px;
+  height: 22px;
   margin: 0;
   background: #fff;
-  border: 1px solid rgba(255, 255, 255, .5);
-  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, .7);
+  border-radius: 5px;
   cursor: pointer;
   position: relative;
 }
@@ -82,10 +84,10 @@
 .footer-review-anon-check input[type="checkbox"]:checked::after {
   content: '';
   position: absolute;
-  left: 5px;
-  top: 1px;
-  width: 5px;
-  height: 9px;
+  left: 7px;
+  top: 3px;
+  width: 6px;
+  height: 11px;
   border: solid #fff;
   border-width: 0 2px 2px 0;
   transform: rotate(45deg);
