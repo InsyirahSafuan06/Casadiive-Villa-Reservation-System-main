@@ -97,12 +97,14 @@ if (is_file($footerReviewInitJsPath)) {
               <?php endfor; ?>
             </div>
             
-            <label for="footer-review-name" style="position:absolute;left:-9999px;">Name to show on your review</label>
-            <input id="footer-review-name" type="text" name="display_name" maxlength="100" placeholder="Name to show on your review (optional)">
-            <label class="footer-review-anon-check">
-              <input type="checkbox" id="footer-review-anonymous" name="is_anonymous" value="1">
-              Post anonymously
-            </label>
+            <div class="footer-review-identity">
+              <label for="footer-review-name" style="position:absolute;left:-9999px;">Name to show on your review</label>
+              <input id="footer-review-name" type="text" name="display_name" maxlength="100" placeholder="Name to show on your review (optional)">
+              <label class="footer-review-anon-check">
+                <input type="checkbox" id="footer-review-anonymous" name="is_anonymous" value="1">
+                Post anonymously
+              </label>
+            </div>
 
             <textarea name="comment" rows="2" placeholder="Tell us about your stay (optional)"></textarea>
 

@@ -9,10 +9,18 @@
   display: none !important;
 }
 
-/* 1b. Name field + "post anonymously" checkbox in the mini review form.
+/* 1b. Name field + "post anonymously" checkbox in the mini review form — grouped in
+   their own wrapper with a tighter internal gap so they read as one related unit,
+   separated a little more from the rating stars above and the comment box below.
    Styled explicitly here (not left to inherit .newsletter-form input from whichever
    page's stylesheet happens to be loaded) so it looks the same on every page, since
    footer.css is the last stylesheet loaded and always wins. */
+.footer-review-identity {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
 #footer-review-name {
   display: block;
   width: 100%;
@@ -45,7 +53,6 @@
   align-items: center;
   gap: 8px;
   flex: none;
-  padding: 2px 2px 4px;
   color: #fff;
   font-family: 'Raleway', sans-serif;
   font-weight: 600;
@@ -55,11 +62,38 @@
 
 .footer-review-anon-check input[type="checkbox"] {
   flex: none;
-  width: 16px;
-  height: 16px;
+  appearance: none;
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
   margin: 0;
-  accent-color: var(--orange, #FE810A);
+  background: #fff;
+  border: 1px solid rgba(255, 255, 255, .5);
+  border-radius: 4px;
   cursor: pointer;
+  position: relative;
+}
+
+.footer-review-anon-check input[type="checkbox"]:checked {
+  background: var(--orange, #FE810A);
+  border-color: var(--orange, #FE810A);
+}
+
+.footer-review-anon-check input[type="checkbox"]:checked::after {
+  content: '';
+  position: absolute;
+  left: 5px;
+  top: 1px;
+  width: 5px;
+  height: 9px;
+  border: solid #fff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.footer-review-anon-check input[type="checkbox"]:focus-visible {
+  outline: 2px solid var(--orange, #FE810A);
+  outline-offset: 2px;
 }
 
 /* 2. Butang Kawalan Memilih Media */
