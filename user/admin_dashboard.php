@@ -122,11 +122,14 @@ $users = $pdo->query(
 // database/add_review_display_name.sql lepas deploy), dashboard still load dengan section
 // Guest Reviews kosong je — dan bukan seluruh dashboard (bookings/accommodations/staff) fatal error.
 try {
+    // LEFT JOIN sebab footer review widget takde ref/phone — review dari situ tersimpan
+    // dengan booking_id NULL (unverified/tak boleh disahkan), so takde row booking/customer
+    // untuk dipadan. c.full_name jadi NULL untuk review macam tu, dihandle kat view.
     $reviews = $pdo->query(
         "SELECT r.review_id, r.booking_id, r.rating, r.comment, r.display_name, r.image_path, r.review_date, c.full_name
          FROM review r
-         JOIN booking b ON b.booking_id = r.booking_id
-         JOIN customer c ON c.customer_id = b.customer_id
+         LEFT JOIN booking b ON b.booking_id = r.booking_id
+         LEFT JOIN customer c ON c.customer_id = b.customer_id
          ORDER BY r.review_date DESC"
     )->fetchAll();
 } catch (PDOException $e) {

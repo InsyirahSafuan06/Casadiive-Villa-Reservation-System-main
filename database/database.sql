@@ -121,7 +121,7 @@ CREATE TABLE `payment` (
 DROP TABLE IF EXISTS `review`;
 CREATE TABLE `review` (
   review_id                  INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  booking_id                 INT UNSIGNED NOT NULL UNIQUE,
+  booking_id                 INT UNSIGNED NULL UNIQUE COMMENT 'NULL for a review submitted through the footer widget, which asks for no booking reference/phone and so cannot be verified against a real checked-out stay',
   rating                     TINYINT UNSIGNED NOT NULL CHECK (rating BETWEEN 1 AND 5),
   comment                    TEXT,
   display_name               VARCHAR(100) NULL COMMENT 'name the guest chose to show publicly; NULL/empty means the review is shown as Anonymous — never falls back to the booking''s real name',

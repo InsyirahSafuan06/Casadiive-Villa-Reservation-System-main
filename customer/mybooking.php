@@ -48,8 +48,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['form'] ?? '') === 'cancel'
     $phone = $cPhone;
 }
 
-// tetamu cuma boleh bagi review lepas dah checked_out, dan sekali je untuk setiap booking —
-// dua-dua syarat ni kita check dalam query di bawah sebelum cuba INSERT
+// Dua laluan submit review:
+// 1) Widget ringkas kat footer (footer.php) — TAK minta Booking Reference/Phone Number
+//    langsung, so takde cara nak sahkan tetamu tu betul-betul pernah check-out. Guna
+//    laluan ni bermaksud terima risiko review palsu/spam — keputusan sedar, bukan bug.
+//    booking_id disimpan NULL untuk review jenis ni.
+// 2) Form penuh kat page ni sendiri (lepas customer dah cari booking dia) — hantar
+//    ref+phone (hidden input, dah terisi automatik), so kita TETAP sahkan booking tu
+//    wujud dan status dah 'checked_out' sebelum terima, macam asal.
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['form'] ?? '') === 'review') {
     $rRef = filter_var($_POST['ref'] ?? '', FILTER_VALIDATE_INT);
     $rPhone = trim((string) ($_POST['phone'] ?? ''));
@@ -63,13 +69,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['form'] ?? '') === 'review'
     $displayName = $isAnonymous ? '' : trim((string) ($_POST['display_name'] ?? ''));
     $displayName = $displayName !== '' ? mb_substr($displayName, 0, 100) : null;
 
+    $hasBookingRef = $rRef !== false && $rPhone !== '';
+    $bookingIdForReview = null; // tetap NULL kalau laluan unverified (footer widget)
+    $verifiedOk = true;
+
     if (!csrf_verify()) {
         $reviewError = 'Your session expired. Please try again.';
-    } elseif ($rRef === false || $rPhone === '') {
-        $reviewError = 'Invalid booking reference.';
+        $verifiedOk = false;
     } elseif ($rating === false || $rating < 1 || $rating > 5) {
         $reviewError = 'Please choose a rating between 1 and 5 stars.';
-    } else {
+        $verifiedOk = false;
+    } elseif ($hasBookingRef) {
         $stmt = $pdo->prepare(
             "SELECT b.booking_id FROM booking b JOIN customer c ON c.customer_id = b.customer_id
              WHERE b.booking_id = :ref AND c.phone = :phone AND b.booking_status = 'checked_out'"
@@ -77,70 +87,79 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['form'] ?? '') === 'review'
         $stmt->execute(['ref' => $rRef, 'phone' => $rPhone]);
         if (!$stmt->fetch()) {
             $reviewError = 'We could not verify that booking for a review.';
+            $verifiedOk = false;
         } else {
-            // gambar review — customer JS dah tapis kandungan (AI verification client-side)
-            // sebelum submit, so field review_image ni sepatutnya cuma sampai kat sini kalau dah
-            // lulus. Kat server kita cuma sahkan fail tu betul-betul gambar (bukan re-verify
-            // kandungan — takde model AI kat server), sebagai lapisan keselamatan asas je.
-            $imagePath = null;
+            $bookingIdForReview = $rRef;
+        }
+    }
 
-            if (!empty($_FILES['review_image']['name']) && $_FILES['review_image']['error'] === UPLOAD_ERR_OK) {
-                $file = $_FILES['review_image'];
-                $allowedExt = ['jpg', 'jpeg', 'png', 'webp'];
-                $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-                $maxSize = 5 * 1024 * 1024; // 5MB
+    if ($verifiedOk) {
+        // gambar review — customer JS dah tapis kandungan (AI verification client-side)
+        // sebelum submit, so field review_image ni sepatutnya cuma sampai kat sini kalau dah
+        // lulus. Kat server kita cuma sahkan fail tu betul-betul gambar (bukan re-verify
+        // kandungan — takde model AI kat server), sebagai lapisan keselamatan asas je.
+        $imagePath = null;
 
-                if (in_array($ext, $allowedExt, true) && $file['size'] > 0 && $file['size'] <= $maxSize && @getimagesize($file['tmp_name']) !== false) {
-                    $destDir = __DIR__ . '/../assets/uploads/reviews/';
-                    if (!is_dir($destDir)) {
-                        mkdir($destDir, 0755, true);
-                    }
-                    $filename = 'review_' . $rRef . '_' . bin2hex(random_bytes(4)) . '.' . $ext;
+        if (!empty($_FILES['review_image']['name']) && $_FILES['review_image']['error'] === UPLOAD_ERR_OK) {
+            $file = $_FILES['review_image'];
+            $allowedExt = ['jpg', 'jpeg', 'png', 'webp'];
+            $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+            $maxSize = 5 * 1024 * 1024; // 5MB
 
-                    if (move_uploaded_file($file['tmp_name'], $destDir . $filename)) {
-                        $imagePath = 'assets/uploads/reviews/' . $filename;
-                    }
+            if (in_array($ext, $allowedExt, true) && $file['size'] > 0 && $file['size'] <= $maxSize && @getimagesize($file['tmp_name']) !== false) {
+                $destDir = __DIR__ . '/../assets/uploads/reviews/';
+                if (!is_dir($destDir)) {
+                    mkdir($destDir, 0755, true);
+                }
+                $filename = 'review_' . ($bookingIdForReview ?? 'anon') . '_' . bin2hex(random_bytes(4)) . '.' . $ext;
+
+                if (move_uploaded_file($file['tmp_name'], $destDir . $filename)) {
+                    $imagePath = 'assets/uploads/reviews/' . $filename;
                 }
             }
+        }
 
-            try {
-                // table `review` ada UNIQUE constraint kat booking_id, so kalau cuba review
-                // kali kedua untuk booking yang sama, insert ni akan gagal dan masuk catch bawah
-                $stmt = $pdo->prepare(
-                    'INSERT INTO review (booking_id, rating, comment, display_name, image_path)
-                     VALUES (:booking_id, :rating, :comment, :display_name, :image_path)'
-                );
-                $stmt->execute([
-                    'booking_id' => $rRef,
-                    'rating' => $rating,
-                    'comment' => $comment !== '' ? $comment : null,
-                    'display_name' => $displayName,
-                    'image_path' => $imagePath,
-                ]);
-            } catch (PDOException $e) {
-                // SQLSTATE 23000 = integrity constraint violation — ni je yang sepatutnya bermaksud
-                // "dah pernah review" (UNIQUE constraint kat booking_id). Sebarang error lain (contoh:
-                // 42S22 column not found sebab migration belum jalan) kita log betul-betul dan bagitahu
-                // guest mesej generic, bukan claim "dah review" yang salah/mengelirukan.
-                if ($e->getCode() === '23000') {
-                    $reviewError = 'You have already reviewed this booking.';
-                } else {
-                    error_log('Failed to save review: ' . $e->getMessage());
-                    $reviewError = 'Something went wrong saving your review. Please try again later.';
-                }
+        try {
+            // table `review` ada UNIQUE constraint kat booking_id, so kalau cuba review kali
+            // kedua untuk booking yang sama, insert ni akan gagal dan masuk catch bawah. MySQL
+            // tak kira NULL sebagai "sama" dengan NULL lain untuk UNIQUE, so review unverified
+            // (booking_id NULL) tak pernah kena sekat oleh constraint ni — memang sengaja,
+            // sebab takde booking sebenar untuk dedupe dia.
+            $stmt = $pdo->prepare(
+                'INSERT INTO review (booking_id, rating, comment, display_name, image_path)
+                 VALUES (:booking_id, :rating, :comment, :display_name, :image_path)'
+            );
+            $stmt->execute([
+                'booking_id' => $bookingIdForReview,
+                'rating' => $rating,
+                'comment' => $comment !== '' ? $comment : null,
+                'display_name' => $displayName,
+                'image_path' => $imagePath,
+            ]);
+        } catch (PDOException $e) {
+            // SQLSTATE 23000 = integrity constraint violation — ni je yang sepatutnya bermaksud
+            // "dah pernah review" (UNIQUE constraint kat booking_id). Sebarang error lain (contoh:
+            // 42S22 column not found sebab migration belum jalan) kita log betul-betul dan bagitahu
+            // guest mesej generic, bukan claim "dah review" yang salah/mengelirukan.
+            if ($e->getCode() === '23000') {
+                $reviewError = 'You have already reviewed this booking.';
+            } else {
+                error_log('Failed to save review: ' . $e->getMessage());
+                $reviewError = 'Something went wrong saving your review. Please try again later.';
+            }
 
-                if ($imagePath && is_file(__DIR__ . '/../' . $imagePath)) {
-                    // insert gagal — buang gambar yang dah terlanjur di-upload tu, elak fail
-                    // terbiar kat cakera tanpa rekod DB
-                    unlink(__DIR__ . '/../' . $imagePath);
-                }
+            if ($imagePath && is_file(__DIR__ . '/../' . $imagePath)) {
+                // insert gagal — buang gambar yang dah terlanjur di-upload tu, elak fail
+                // terbiar kat cakera tanpa rekod DB
+                unlink(__DIR__ . '/../' . $imagePath);
             }
         }
     }
 
     if (!$reviewError) {
-        // redirect balik ke page ni juga supaya refresh tak submit review dua kali
-        header('Location: mybooking.php?ref=' . $rRef . '&phone=' . urlencode($rPhone));
+        // laluan verified redirect balik ke lookup dia sendiri; laluan unverified (footer,
+        // takde ref/phone) takde page tu nak balik ke, so hantar ke homepage je
+        header('Location: ' . ($hasBookingRef ? 'mybooking.php?ref=' . $rRef . '&phone=' . urlencode($rPhone) : '../index.php'));
         exit;
     }
 

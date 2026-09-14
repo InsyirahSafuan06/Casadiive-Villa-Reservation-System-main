@@ -5,6 +5,31 @@
    mobile rule with the more specific `.nav-links.is-open` selector below.
    ========================================================================== */
 
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.brand-icon {
+  width: 24px;
+  height: 24px;
+  color: var(--orange, #FE810A);
+  flex-shrink: 0;
+}
+
+.btn-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.navbar .btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .nav-toggle {
   display: none;
   width: 40px;
@@ -32,7 +57,7 @@
   width: 100%;
   height: 2px;
   border-radius: 2px;
-  background: #1c1c1c;
+  background: var(--brown, #5B3A29);
   transition: transform .2s ease, opacity .2s ease, top .2s ease;
 }
 
@@ -54,7 +79,25 @@
   transform: rotate(-45deg);
 }
 
+.nav-close {
+  display: none;
+}
+
+.nav-backdrop {
+  display: none;
+}
+
+/* per-link icons are a mobile-dropdown-only treatment — the desktop horizontal
+   menu stays plain text, unchanged from before this redesign */
+.nav-links a svg {
+  display: none;
+}
+
 @media (max-width: 760px) {
+  .navbar {
+    position: relative;
+  }
+
   .navbar .container {
     flex-wrap: wrap;
   }
@@ -73,24 +116,86 @@
     order: 3;
   }
 
+  /* floating dropdown card, overlaying the page rather than pushing it down */
   .nav-links {
     order: 4;
-    flex-basis: 100%;
+    display: none;
   }
 
   .nav-links.is-open {
     display: flex !important;
     flex-direction: column;
-    align-items: flex-start;
-    gap: 4px;
-    width: 100%;
+    align-items: stretch;
+    gap: 6px;
+    position: absolute;
+    top: calc(100% + 10px);
+    left: 12px;
+    right: 12px;
+    z-index: 200;
     background: var(--sand-light, #FFF0D3);
-    padding: 12px 0 20px;
-    border-top: 1px solid rgba(0, 0, 0, .08);
+    border-radius: 20px;
+    box-shadow: 0 20px 45px rgba(0, 0, 0, .22);
+    padding: 18px 14px 20px;
   }
 
+  .nav-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    align-self: flex-end;
+    width: 32px;
+    height: 32px;
+    margin-bottom: 4px;
+    background: transparent;
+    border: none;
+    color: var(--brown, #5B3A29);
+    cursor: pointer;
+  }
+
+  .nav-close svg { width: 20px; height: 20px; }
+
   .nav-links.is-open a {
+    display: flex;
+    align-items: center;
+    gap: 14px;
     width: 100%;
-    padding: 10px 4px;
+    padding: 13px 16px;
+    border-radius: 14px;
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--brown, #5B3A29);
+  }
+
+  .nav-links.is-open a svg {
+    display: block;
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+  }
+
+  .nav-links.is-open a:hover {
+    background: rgba(91, 58, 41, .06);
+  }
+
+  .nav-links.is-open a[aria-current="page"] {
+    background: rgba(254, 129, 10, .15);
+    color: var(--orange, #FE810A);
+    font-weight: 600;
+  }
+
+  /* transparent tap-outside-to-close layer, sits under the panel but over the page.
+     [hidden] rule must come after (or be at least as specific as) the display:block
+     one below, otherwise this stays visible even while the hidden attribute is set —
+     same gotcha as .chatbot-panel/.footer-camera-modal elsewhere in this codebase. */
+  .nav-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 150;
+    background: transparent;
+  }
+
+  .nav-backdrop[hidden] {
+    display: none;
   }
 }

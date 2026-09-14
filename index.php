@@ -9,6 +9,10 @@ require_once __DIR__ . '/includes/db.php'; // sambung ke database dulu, dapat $p
 // r.display_name ialah nama yang guest PILIH untuk tunjuk secara terbuka — bukan nama sebenar
 // dalam booking dia (c.full_name). Kosong/anonymous bermaksud kita papar "Anonymous" je.
 //
+// LEFT JOIN (bukan JOIN) sebab footer review widget takde ref/phone langsung — review dari
+// situ tersimpan dengan booking_id NULL (unverified), so takde row booking/customer untuk
+// dipadan. c.location jadi NULL untuk review macam tu, dah dihandle guna if() kat view.
+//
 // Dibalut try/catch supaya kalau database belum kena migrate (contoh: lupa jalankan
 // database/add_review_display_name.sql lepas deploy), homepage still load — cuma
 // testimonials section jadi kosong — dan bukan seluruh page fatal error.
@@ -16,8 +20,8 @@ try {
     $reviews = $pdo->query(
         "SELECT r.rating, r.comment, r.image_path, r.review_date, r.display_name, c.location
          FROM review r
-         JOIN booking b ON b.booking_id = r.booking_id
-         JOIN customer c ON c.customer_id = b.customer_id
+         LEFT JOIN booking b ON b.booking_id = r.booking_id
+         LEFT JOIN customer c ON c.customer_id = b.customer_id
          ORDER BY r.review_date DESC
          LIMIT 6"
     )->fetchAll();

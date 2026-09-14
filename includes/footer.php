@@ -81,29 +81,11 @@ if (is_file($footerReviewInitJsPath)) {
             </span>
             Write a Review
           </h4>
-          <p class="footer-review-sub"><strong>Already</strong> stayed with us? Enter your details to share your experience.</p>
+          <p class="footer-review-sub"><strong>Enjoyed</strong> your stay? Share your experience with future guests.</p>
 
           <form class="newsletter-form footer-review-form" method="post" action="<?= htmlspecialchars($base) ?>customer/mybooking.php" enctype="multipart/form-data" id="footer-review-form">
             <?= csrf_field() ?>
             <input type="hidden" name="form" value="review">
-
-            <div class="footer-review-fields">
-              <div class="footer-input-wrap">
-                <span class="footer-input-icon" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-                </span>
-                <label for="footer-review-ref" style="position:absolute;left:-9999px;">Booking Reference</label>
-                <input id="footer-review-ref" type="text" name="ref" placeholder="Booking Reference" required>
-              </div>
-
-              <div class="footer-input-wrap">
-                <span class="footer-input-icon" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
-                </span>
-                <label for="footer-review-phone" style="position:absolute;left:-9999px;">Phone Number</label>
-                <input id="footer-review-phone" type="tel" name="phone" placeholder="Phone Number" required>
-              </div>
-            </div>
 
             <div class="footer-review-stars" role="radiogroup" aria-label="Rating">
               <?php for ($i = 5; $i >= 1; $i--): ?>
