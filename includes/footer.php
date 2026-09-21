@@ -34,7 +34,7 @@ if (is_file($footerReviewInitJsPath)) {
         
         <!-- Kolom Info Utama -->
         <div class="footer-col footer-brand">
-          <div class="brand">Casadive Villa</div>
+          <img src="<?= htmlspecialchars($base) ?>assets/images/logo-white.png" alt="Casadive Villa" class="footer-logo">
           <p>Casadive villa offers a relaxing beachfront stay with modern villas and campsite. Your perfect gateway awaits.</p>
         </div>
 
@@ -55,10 +55,10 @@ if (is_file($footerReviewInitJsPath)) {
         <div class="footer-col">
           <h4>Company</h4>
           <ul>
-            <li><a href="#privacy">Privacy policy</a></li>
-            <li><a href="#refund">Refund policy</a></li>
-            <li><a href="#faq">F.A.Q</a></li>
-            <li><a href="#about">About Us</a></li>
+            <li><a href="<?= htmlspecialchars($base) ?>customer/privacy_policy.php">Privacy policy</a></li>
+            <li><a href="<?= htmlspecialchars($base) ?>customer/refund_policy.php">Refund policy</a></li>
+            <li><a href="<?= htmlspecialchars($base) ?>customer/faq.php">F.A.Q</a></li>
+            <li><a href="<?= htmlspecialchars($base) ?>customer/about_us.php">About Us</a></li>
           </ul>
         </div>
 
@@ -66,10 +66,10 @@ if (is_file($footerReviewInitJsPath)) {
         <div class="footer-col">
           <h4>Social media</h4>
           <ul>
-            <li><a href="#facebook">Facebook</a></li>
-            <li><a href="#tiktok">TikTok</a></li>
-            <li><a href="#instagram">Instagram</a></li>
-            <li><a href="#whatsapp">WhatsApp</a></li>
+            <li><a href="https://www.facebook.com/Casadive%20Villa" target="_blank" rel="noopener">Facebook</a></li>
+            <li><a href="https://www.tiktok.com/@casadive.villa" target="_blank" rel="noopener">TikTok</a></li>
+            <li><a href="https://www.instagram.com/casadivevilla" target="_blank" rel="noopener">Instagram</a></li>
+            <li><a href="https://wa.me/60103851892" target="_blank" rel="noopener">WhatsApp</a></li>
           </ul>
         </div>
 

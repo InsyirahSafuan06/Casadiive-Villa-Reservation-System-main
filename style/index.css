@@ -149,10 +149,16 @@
   }
 
   .hero-eyebrow {
+      display: inline-block;
       font-family: 'Dancing Script', cursive;
-      font-weight: 600;
-      font-size: 44px;
+      font-weight: 700;
+      font-size: 50px;
       color: var(--orange);
+      text-shadow: 0 2px 12px rgba(0, 0, 0, .6), 0 1px 3px rgba(0, 0, 0, .7);
+      background: rgba(0, 0, 0, .3);
+      padding: 6px 22px;
+      border-radius: 999px;
+      backdrop-filter: blur(2px);
   }
 
   .hero-title {
@@ -805,6 +811,13 @@
       border-radius: 20px;
       box-shadow: 0 20px 50px rgba(0, 0, 0, .28);
       flex-direction: column;
+      /* Panel sendiri TAK scroll — cuma .chatbot-log (bahagian mesej) je yang scroll, kekal
+         di antara header dan (quick-replies + kotak taip) yang keduanya flex-shrink:0. Dulu
+         cuba buat seluruh panel scroll dengan header/kotak-taip "sticky", tapi tu buat
+         quick-replies (yang sepatutnya kekal SATU tempat, bawah sekali) jadi hanyut ikut
+         mesej — nampak macam bertindih/tak kemas bila conversation dah panjang. Punca
+         sebenar overflow dulu ialah .chatbot-log ada min-height yang terlalu besar (tengok
+         nota kat rule tu) — dah dikurangkan, so overflow:hidden di sini dah selamat balik. */
       overflow: hidden;
       display: none;
   }
@@ -888,7 +901,13 @@
       display: flex;
       flex-direction: column;
       gap: 4px;
-      min-height: 160px;
+      /* rendah sengaja (bukan 160px macam dulu) — min-height yang besar la yang punca
+         sebenar quick-replies/kotak-taip "hilang" dulu: bila header + quick-replies + kotak
+         taip + lantai minimum log ni jumlahnya lagi tinggi dari max-height panel, flexbox
+         terpaksa overflow, dan panel overflow:hidden potong bahagian bawah tu senyap-senyap.
+         Log kena boleh susut hingga sekecil mana pun yang perlu supaya jiran dia
+         (quick-replies, kotak taip) SENTIASA muat dalam panel, tak pernah terpotong. */
+      min-height: 40px;
   }
 
   .chat-bubble {

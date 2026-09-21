@@ -15,6 +15,7 @@ $old = [
     'full_name' => '',
     'phone' => '',
     'email' => '',
+    'ic_passport' => '',
     'plate_num' => '',
     'location' => '',
     'check_in' => '',
@@ -22,6 +23,10 @@ $old = [
     'total_guest' => '1',
     'accommodation_id' => '',
     'special_request' => '',
+    'addon_bbq' => false,
+    'addon_mattress' => false,
+    'agree_terms' => false,
+    'whatsapp_optin' => false,
 ];
 
 // pelanggan cuma boleh pilih pakej yang admin dah tandakan "available"
@@ -82,6 +87,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $old['full_name'] = trim((string) ($_POST['full_name'] ?? ''));
     $old['phone'] = trim((string) ($_POST['phone'] ?? ''));
     $old['email'] = trim((string) ($_POST['email'] ?? ''));
+    $old['ic_passport'] = trim((string) ($_POST['ic_passport'] ?? ''));
     $old['plate_num'] = trim((string) ($_POST['plate_num'] ?? ''));
     $old['location'] = trim((string) ($_POST['location'] ?? ''));
     $old['check_in'] = trim((string) ($_POST['check_in'] ?? ''));
@@ -89,6 +95,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $old['total_guest'] = trim((string) ($_POST['total_guest'] ?? '1'));
     $old['accommodation_id'] = trim((string) ($_POST['accommodation_id'] ?? ''));
     $old['special_request'] = trim((string) ($_POST['special_request'] ?? ''));
+    $old['addon_bbq'] = isset($_POST['addon_bbq']);
+    $old['addon_mattress'] = isset($_POST['addon_mattress']);
+    $old['agree_terms'] = isset($_POST['agree_terms']);
+    $old['whatsapp_optin'] = isset($_POST['whatsapp_optin']);
 
     if (!csrf_verify()) {
         $errors[] = 'Your session expired. Please review your details and submit again.';
@@ -103,6 +113,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     if ($old['email'] === '' || !filter_var($old['email'], FILTER_VALIDATE_EMAIL)) {
         $errors[] = 'A valid email address is required so we can send your booking confirmation and check-in reminder.';
+    }
+    if ($old['ic_passport'] === '') {
+        $errors[] = 'IC / Passport Number is required.';
+    }
+    if (!$old['agree_terms']) {
+        $errors[] = 'Please agree to the Terms & Conditions to continue.';
     }
 
     // pastikan tarikh check-in/out betul format dan check-out kena lepas check-in
@@ -153,7 +169,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $weekdayPrice = (float) $selectedAccommodation['price'];
         $weekendPrice = $selectedAccommodation['price_weekend'] !== null ? (float) $selectedAccommodation['price_weekend'] : null;
         $stay = compute_stay_price($weekdayPrice, $weekendPrice, $checkIn, $checkOut); // kira jumlah harga ikut malam weekday/weekend
-        $totalAmount = $stay['total'];
+        $nights = $stay['weekday_nights'] + $stay['weekend_nights'];
+        // diskaun tak boleh lebih dari harga bilik sendiri (elak total jadi negatif kalau
+        // package murah + diskaun besar — takkan berlaku dengan harga sebenar, tapi selamat je jaga-jaga)
+        $discountAmount = min($stay['total'], booking_long_stay_discount($nights));
+        $addonAmount = booking_addon_total($old['addon_bbq'], $old['addon_mattress']);
+        $totalAmount = $stay['total'] + $addonAmount - $discountAmount;
         $depositAmount = 1.00; // deposit tetap RM1 untuk confirm mana-mana tempahan
 
         try {
@@ -162,7 +183,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $pdo->beginTransaction();
 
             $stmt = $pdo->prepare(
-                'INSERT INTO customer (full_name, phone, email, plate_num, location) VALUES (:full_name, :phone, :email, :plate_num, :location)'
+                'INSERT INTO customer (full_name, phone, email, plate_num, location, ic_passport, whatsapp_optin)
+                 VALUES (:full_name, :phone, :email, :plate_num, :location, :ic_passport, :whatsapp_optin)'
             );
             $stmt->execute([
                 'full_name' => $old['full_name'],
@@ -170,12 +192,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'email' => $old['email'],
                 'plate_num' => $old['plate_num'] !== '' ? $old['plate_num'] : null,
                 'location' => $old['location'] !== '' ? $old['location'] : null,
+                'ic_passport' => $old['ic_passport'],
+                'whatsapp_optin' => $old['whatsapp_optin'] ? 1 : 0,
             ]);
             $customerId = (int) $pdo->lastInsertId(); // id customer baru yang kita baru insert
 
             $stmt = $pdo->prepare(
-                'INSERT INTO booking (customer_id, check_in, check_out, total_guest, deposit_amount, total_amount, booking_status, special_request)
-                 VALUES (:customer_id, :check_in, :check_out, :total_guest, :deposit_amount, :total_amount, "pending", :special_request)'
+                'INSERT INTO booking (customer_id, check_in, check_out, total_guest, deposit_amount, total_amount, booking_status, special_request, addon_bbq, addon_mattress, discount_amount)
+                 VALUES (:customer_id, :check_in, :check_out, :total_guest, :deposit_amount, :total_amount, "pending", :special_request, :addon_bbq, :addon_mattress, :discount_amount)'
             );
             $stmt->execute([
                 'customer_id' => $customerId,
@@ -185,6 +209,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'deposit_amount' => $depositAmount,
                 'total_amount' => $totalAmount,
                 'special_request' => $old['special_request'] !== '' ? $old['special_request'] : null,
+                'addon_bbq' => $old['addon_bbq'] ? 1 : 0,
+                'addon_mattress' => $old['addon_mattress'] ? 1 : 0,
+                'discount_amount' => $discountAmount,
             ]);
             $bookingId = (int) $pdo->lastInsertId(); // id booking baru, kita perlukan untuk booking_item & redirect
 
@@ -195,7 +222,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->execute([
                 'booking_id' => $bookingId,
                 'accommodation_id' => $accommodationId,
-                'price' => $totalAmount,
+                // room cost je — bukan $totalAmount, sebab tu dah termasuk add-on. Kalau
+                // add-on masuk sekali kat sini, baris resit accommodation akan tunjuk jumlah
+                // yang tak sepadan dengan pengiraan rate (RM/malam x malam) dia sendiri.
+                'price' => $stay['total'],
             ]);
 
             $pdo->commit(); // semua ok, confirm simpan

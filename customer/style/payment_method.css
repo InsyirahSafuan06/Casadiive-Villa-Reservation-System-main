@@ -130,18 +130,47 @@ button{ font-family:inherit; cursor:pointer; }
   padding: 40px 0 30px;
   text-align:center;
 }
+.page-title-heading{
+  display:inline-flex;
+  align-items:center;
+  gap: 18px;
+  text-align:left;
+}
+.page-title-icon{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-shrink:0;
+  width: 56px;
+  height: 56px;
+  border: 2px solid var(--orange-deep);
+  border-radius: 14px;
+  color: var(--orange-deep);
+}
+.page-title-icon svg{ width:26px; height:26px; }
 .page-title h1{
   font-family:'Mulish', sans-serif;
-  font-weight: 800;
-  font-size: clamp(28px, 4vw, 42px);
+  font-weight: 700;
+  font-size: clamp(24px, 3vw, 34px);
   color: var(--brown-heading);
-  margin-bottom: 12px;
+  margin-bottom: 6px;
 }
 .page-title p{
   font-family:'Raleway', sans-serif;
   font-weight:600;
-  font-size: 18px;
-  color:#000;
+  font-size: 15px;
+  color:#666;
+}
+.summary-heading{
+  display:flex;
+  align-items:center;
+  gap: 10px;
+}
+.summary-heading svg{
+  width: 20px;
+  height: 20px;
+  flex-shrink:0;
+  color: var(--orange-deep);
 }
 
 /* ---------- PAYMENT CARD ---------- */
@@ -315,7 +344,10 @@ button{ font-family:inherit; cursor:pointer; }
 .confirm-actions .pay-btn{ flex: 1 1 220px; margin:0; }
 
 .pay-btn{
-  display:block;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap: 10px;
   width: 100%;
   max-width: 545px;
   margin: 0 auto;
@@ -323,12 +355,13 @@ button{ font-family:inherit; cursor:pointer; }
   color:#fff;
   border: none;
   border-radius: 10px;
-  padding: 22px;
+  padding: 20px;
   text-align:center;
   font-family:'Poppins', sans-serif;
-  font-weight:400;
-  font-size: 28px;
+  font-weight:600;
+  font-size: 17px;
 }
+.pay-btn svg{ width:20px; height:20px; flex-shrink:0; }
 .pay-btn:hover{ filter:brightness(1.06); }
 .pay-btn-outline{
   background:transparent;

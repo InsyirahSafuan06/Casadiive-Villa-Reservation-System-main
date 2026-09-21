@@ -4,15 +4,15 @@
 -- System.drawio.pdf)
 -- ============================================================
 
-CREATE DATABASE IF NOT EXISTS casadive_villa_reservation
+CREATE DATABASE IF NOT EXISTS sabrisae_casadivevilla
   CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
-USE casadive_villa_reservation;
+USE sabrisae_casadivevilla;
 
 SET FOREIGN_KEY_CHECKS = 0;
 
 -- ------------------------------------------------------------
--- User (staff / admin accounts)
+-- User (staff / manager accounts)
 -- ------------------------------------------------------------
 DROP TABLE IF EXISTS `user`;
 CREATE TABLE `user` (
@@ -22,7 +22,7 @@ CREATE TABLE `user` (
   fullname        VARCHAR(100) NOT NULL,
   email           VARCHAR(150) NOT NULL UNIQUE,
   phone           VARCHAR(20),
-  role            ENUM('admin','staff') NOT NULL DEFAULT 'staff',
+  role            ENUM('manager','staff') NOT NULL DEFAULT 'staff',
   profile_picture VARCHAR(255),
   status          ENUM('active','inactive','suspended') NOT NULL DEFAULT 'active',
   created_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -34,12 +34,14 @@ CREATE TABLE `user` (
 -- ------------------------------------------------------------
 DROP TABLE IF EXISTS `customer`;
 CREATE TABLE `customer` (
-  customer_id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  full_name   VARCHAR(100) NOT NULL,
-  phone       VARCHAR(20) NOT NULL,
-  email       VARCHAR(150),
-  plate_num   VARCHAR(20),
-  location    VARCHAR(100) NULL COMMENT 'optional — customer city/country, shown under their name in testimonials',
+  customer_id     INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  full_name       VARCHAR(100) NOT NULL,
+  phone           VARCHAR(20) NOT NULL,
+  email           VARCHAR(150),
+  plate_num       VARCHAR(20),
+  location        VARCHAR(100) NULL COMMENT 'optional — customer city/country, shown under their name in testimonials',
+  ic_passport     VARCHAR(30) NULL COMMENT 'IC or passport number, collected on the booking form for guest verification',
+  whatsapp_optin  TINYINT(1) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'guest opted in to receive booking updates via WhatsApp',
   INDEX idx_customer_phone (phone)
 ) ENGINE=InnoDB;
 
@@ -78,6 +80,9 @@ CREATE TABLE `booking` (
   total_amount   DECIMAL(10,2) NOT NULL DEFAULT 0,
   booking_status ENUM('pending','confirmed','checked_in','checked_out','cancelled') NOT NULL DEFAULT 'pending',
   special_request TEXT NULL,
+  addon_bbq       TINYINT(1) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'BBQ set add-on selected — price already folded into total_amount at booking time',
+  addon_mattress  TINYINT(1) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'extra mattress add-on selected — price already folded into total_amount at booking time',
+  discount_amount DECIMAL(10,2) NOT NULL DEFAULT 0 COMMENT 'long-stay discount already subtracted from total_amount at booking time (see LONG_STAY_DISCOUNT_* in includes/helpers.php)',
   CONSTRAINT fk_booking_customer FOREIGN KEY (customer_id)
     REFERENCES customer(customer_id) ON DELETE RESTRICT ON UPDATE CASCADE
 ) ENGINE=InnoDB;
@@ -158,7 +163,7 @@ SET FOREIGN_KEY_CHECKS = 1;
 -- Passwords are 'Admin@12345' / 'Staff@12345', stored as bcrypt hashes (password_hash() in PHP).
 -- Verify with password_verify($input, $hash) — never store or compare plaintext.
 INSERT INTO `user` (username, password, fullname, email, phone, role, status) VALUES
-('admin', '$2y$10$rBP.oWw4UJ.BkELLXJy2eOBztVZiuY.DUCtvkifE4cDTAVQi7sGzC', 'System Admin', 'admin@casadivevilla.com', '0123456789', 'admin', 'active'),
+('admin', '$2y$10$rBP.oWw4UJ.BkELLXJy2eOBztVZiuY.DUCtvkifE4cDTAVQi7sGzC', 'System Manager', 'admin@casadivevilla.com', '0123456789', 'manager', 'active'),
 ('staff', '$2y$10$yfE.LeII4j/qo7r022Ld6elviifDOMu5.oVupuJUNr.dxn8HAvkHi', 'Front Desk Staff', 'staff@casadivevilla.com', '0123456780', 'staff', 'active');
 
 INSERT INTO `accommodation`

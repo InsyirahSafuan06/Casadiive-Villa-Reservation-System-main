@@ -20,8 +20,15 @@
 
   <!-- PAGE TITLE -->
   <div class="container page-title">
-    <h1>Booking Details</h1>
-    <p>Please fill in your details to continue with your reservations.</p>
+    <div class="page-title-heading">
+      <span class="page-title-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+      </span>
+      <div>
+        <h1>Booking Details</h1>
+        <p>Please fill in your details correctly for reservation.</p>
+      </div>
+    </div>
   </div>
 
   <!-- POLICY NOTICE -->
@@ -71,6 +78,11 @@
             </div>
 
             <div class="form-field">
+              <label for="ic-passport">IC / Passport Number</label>
+              <input type="text" id="ic-passport" name="ic_passport" placeholder="e.g. 010101-01-1234" value="<?= htmlspecialchars($old['ic_passport']) ?>" required>
+            </div>
+
+            <div class="form-field">
               <label for="plate">Car Plate Number</label>
               <input type="text" id="plate" name="plate_num" placeholder="Enter your car plate number" value="<?= htmlspecialchars($old['plate_num']) ?>">
             </div>
@@ -117,13 +129,30 @@
             </div>
 
             <div class="form-field">
+              <label>Add-ons (optional)</label>
+              <div class="addon-options">
+                <label class="addon-option">
+                  <input type="checkbox" id="addon-bbq" name="addon_bbq" <?= $old['addon_bbq'] ? 'checked' : '' ?>>
+                  BBQ Set <span class="addon-price">+RM <?= number_format(ADDON_BBQ_PRICE, 2) ?></span>
+                </label>
+                <label class="addon-option">
+                  <input type="checkbox" id="addon-mattress" name="addon_mattress" <?= $old['addon_mattress'] ? 'checked' : '' ?>>
+                  Extra Mattress <span class="addon-price">+RM <?= number_format(ADDON_MATTRESS_PRICE, 2) ?></span>
+                </label>
+              </div>
+            </div>
+
+            <div class="form-field">
               <label for="request">Special Request</label>
               <textarea id="request" name="special_request" rows="4" placeholder="Any special request? (optional)"><?= htmlspecialchars($old['special_request']) ?></textarea>
             </div>
           </div>
 
           <aside class="summary-card" aria-live="polite">
-            <h2 class="summary-title">Booking Summary</h2>
+            <h2 class="summary-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+              Booking Summary
+            </h2>
 
             <div class="summary-package">
               <div class="summary-thumb" id="summary-thumb">
@@ -145,6 +174,8 @@
               <div class="summary-row"><span>Number of guests</span><span id="s-guests">1</span></div>
               <div class="summary-row"><span>Nights</span><span id="s-nights">1</span></div>
               <div class="summary-row"><span>Rate</span><span id="s-price">RM 0.00</span></div>
+              <div class="summary-row"><span>Add-ons</span><span id="s-addons">RM 0.00</span></div>
+              <div class="summary-row" id="s-discount-row" hidden><span>Long Stay Discount</span><span id="s-discount">-RM 0.00</span></div>
               <div class="summary-row"><span>Deposit</span><span id="s-deposit">RM 0.00</span></div>
               <div class="summary-row total"><span>Total Price</span><span id="s-total">RM 0.00</span></div>
             </div>
@@ -152,9 +183,26 @@
 
         </div>
 
+        <div class="form-checks">
+          <label class="form-check">
+            <input type="checkbox" name="agree_terms" <?= $old['agree_terms'] ? 'checked' : '' ?> required>
+            I agree to the Terms &amp; Conditions
+          </label>
+          <label class="form-check">
+            <input type="checkbox" name="whatsapp_optin" <?= $old['whatsapp_optin'] ? 'checked' : '' ?>>
+            Receive updates via WhatsApp
+          </label>
+        </div>
+
         <div class="form-actions">
-          <a href="villa.php" class="proceed-btn proceed-btn-outline">Back to Packages</a>
-          <button type="submit" class="proceed-btn">Proceed to Payment</button>
+          <a href="villa.php" class="proceed-btn proceed-btn-outline">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+            Back to Packages
+          </a>
+          <button type="submit" class="proceed-btn">
+            Proceed to Payment
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+          </button>
         </div>
       </form>
     </div>
@@ -165,6 +213,15 @@
 <script>
   const form = document.getElementById('booking-form');
   const accommodationSelect = document.getElementById('accommodation');
+  const addonBbq = document.getElementById('addon-bbq');
+  const addonMattress = document.getElementById('addon-mattress');
+  // sama nilai macam ADDON_BBQ_PRICE / ADDON_MATTRESS_PRICE / LONG_STAY_DISCOUNT_* dalam
+  // includes/helpers.php — dicetak terus dari PHP supaya harga ni tak sekali-kali "double
+  // maintain" dua tempat
+  const ADDON_BBQ_PRICE = <?= json_encode(ADDON_BBQ_PRICE) ?>;
+  const ADDON_MATTRESS_PRICE = <?= json_encode(ADDON_MATTRESS_PRICE) ?>;
+  const LONG_STAY_DISCOUNT_MIN_NIGHTS = <?= json_encode(LONG_STAY_DISCOUNT_MIN_NIGHTS) ?>;
+  const LONG_STAY_DISCOUNT_AMOUNT = <?= json_encode(LONG_STAY_DISCOUNT_AMOUNT) ?>;
 
   // ni sama je logic macam compute_stay_price() dalam includes/helpers.php — kita duplicate
   // kat sini sebab nak update ringkasan harga secara live dekat browser, tak payah refresh page.
@@ -235,9 +292,19 @@
       const checkInRate = (checkInDay === 5 || checkInDay === 6) ? weekendPrice : weekdayPrice;
       priceLabel = `RM ${checkInRate.toFixed(2)} / night`;
     }
+    const addonTotal = (addonBbq.checked ? ADDON_BBQ_PRICE : 0) + (addonMattress.checked ? ADDON_MATTRESS_PRICE : 0);
+    // sama syarat macam booking_long_stay_discount() PHP — RM tetap, capped kat harga bilik
+    // sendiri supaya tak jadi negatif, cuma tunjuk baris ni bila package + tarikh betul-betul dipilih
+    const discount = (hasPackage && totalNights >= LONG_STAY_DISCOUNT_MIN_NIGHTS)
+      ? Math.min(stay.total, LONG_STAY_DISCOUNT_AMOUNT)
+      : 0;
+
     document.getElementById('s-price').textContent = priceLabel;
+    document.getElementById('s-addons').textContent = `RM ${addonTotal.toFixed(2)}`;
+    document.getElementById('s-discount-row').hidden = discount <= 0;
+    document.getElementById('s-discount').textContent = `-RM ${discount.toFixed(2)}`;
     document.getElementById('s-deposit').textContent = `RM ${deposit.toFixed(2)}`;
-    document.getElementById('s-total').textContent = `RM ${(stay.total + deposit).toFixed(2)}`;
+    document.getElementById('s-total').textContent = `RM ${(stay.total + addonTotal + deposit - discount).toFixed(2)}`;
   }
 
   // kalau datang dari page lain dengan ?accommodation= atau ?type= kat URL, auto-pilihkan pakej tu

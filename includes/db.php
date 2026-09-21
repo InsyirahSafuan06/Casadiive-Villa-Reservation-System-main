@@ -30,7 +30,7 @@ try {
     // default (root, tiada password, nama database ikut CREATE DATABASE dalam database.sql)
     // sebelum give up terus, supaya dev/test local jalan terus tanpa kena tukar file ni.
     try {
-        $pdo = new PDO('mysql:host=localhost;dbname=casadive_villa_reservation;charset=utf8mb4', 'root', '', $pdoOptions);
+        $pdo = new PDO('mysql:host=localhost;dbname=sabrisae_casadivevilla;charset=utf8mb4', 'root', '', $pdoOptions);
     } catch (PDOException $e2) {
         // dua-dua percubaan gagal — kita stop terus dan bagitahu pengguna dengan mesej yang
         // jelas, daripada biar sistem crash pelik-pelik

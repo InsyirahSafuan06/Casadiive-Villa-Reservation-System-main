@@ -52,6 +52,10 @@
     color: var(--orange);
     white-space:nowrap;
   }
+  .login-navbar-logo{
+    height: 48px;
+    width: auto;
+  }
   .btn{
     display:inline-flex;
     align-items:center;

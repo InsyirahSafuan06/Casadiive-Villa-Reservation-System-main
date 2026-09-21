@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Admin Sign In — Casadive Villa</title>
+<title>Manager Sign In — Casadive Villa</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600;700&family=Poppins:wght@500;700&family=Raleway:wght@500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="<?= htmlspecialchars($loginCssHref) ?>">
@@ -13,7 +13,7 @@
   <!-- NAVBAR -->
   <header class="navbar">
     <div class="container">
-      <div class="brand">Casadive Villa</div>
+      <img src="<?= htmlspecialchars($base) ?>assets/images/logo.png" alt="Casadive Villa" class="login-navbar-logo">
       <a href="../index.php" class="btn btn-primary">Back</a>
     </div>
   </header>
@@ -21,7 +21,7 @@
   <!-- LOGIN -->
   <section class="login-hero">
     <div class="login-card">
-      <h1 class="login-title">Admin Sign In</h1>
+      <h1 class="login-title">Manager Sign In</h1>
       <p class="login-sub">Secure access to reservations, villas, campsite, and reports.</p>
 
       <?php if ($error): ?>

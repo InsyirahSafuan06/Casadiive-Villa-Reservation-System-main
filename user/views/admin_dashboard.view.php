@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Admin Dashboard — Casadive Villa</title>
+<title>Manager Dashboard — Casadive Villa</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600;700&family=Mulish:wght@700;800&family=Poppins:wght@400;500;600&family=Raleway:wght@500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style/dashboard.css">
@@ -24,7 +24,7 @@
 
   <main class="dash-main">
     <div class="container">
-      <h1 class="dash-heading">Admin Dashboard</h1>
+      <h1 class="dash-heading">Manager Dashboard</h1>
       <p class="dash-subheading">Overview of bookings, accommodations, and staff accounts.</p>
 
       <?php if ($updated): ?>
@@ -66,7 +66,7 @@
           <p class="stat-value">RM <?= number_format($stats['revenue'], 2) ?></p>
         </div>
         <div class="stat-tile">
-          <p class="stat-label">Staff &amp; Admin Accounts</p>
+          <p class="stat-label">Staff &amp; Manager Accounts</p>
           <p class="stat-value"><?= $stats['total_users'] ?></p>
         </div>
       </div>
@@ -284,7 +284,7 @@
 
       <section class="dash-section">
         <h2 class="section-heading">
-          Staff &amp; Admin Accounts
+          Staff &amp; Manager Accounts
           <a href="manage_account.php" class="btn btn-md btn-primary">+ Add Staff Account</a>
         </h2>
         <table>

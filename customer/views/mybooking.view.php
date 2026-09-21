@@ -2,8 +2,17 @@
 
   <!-- PAGE TITLE -->
   <div class="container page-title">
+    <svg class="mybooking-illustration" viewBox="0 0 160 100" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <circle cx="118" cy="20" r="10" fill="currentColor" stroke="none" opacity=".55"></circle>
+      <path d="M128 16 134 13M130 22 137 22" opacity=".55"></path>
+      <path d="M45 55 80 25 115 55"></path>
+      <path d="M55 55V85H105V55"></path>
+      <rect x="70" y="38" width="9" height="9" rx="1"></rect>
+      <rect x="82" y="38" width="9" height="9" rx="1"></rect>
+      <path d="M20 88c12-8 20-8 32 0s20 8 32 0 20-8 32 0 20 8 32 0" opacity=".7"></path>
+    </svg>
     <h1>MyBooking</h1>
-    <p>Enter your booking reference and the phone number you booked with to view or print your receipt.</p>
+    <p>Enter your phone number you used to book with us to view or print your receipt.</p>
   </div>
 
   <?php if ($booking): ?>
@@ -83,6 +92,24 @@
                 <span>RM <?= number_format((float) $item['price'], 2) ?></span>
               </div>
             <?php endforeach; ?>
+            <?php if ($booking['addon_bbq']): ?>
+              <div class="receipt-row">
+                <span>Add-on: BBQ Set</span>
+                <span>RM <?= number_format(ADDON_BBQ_PRICE, 2) ?></span>
+              </div>
+            <?php endif; ?>
+            <?php if ($booking['addon_mattress']): ?>
+              <div class="receipt-row">
+                <span>Add-on: Extra Mattress</span>
+                <span>RM <?= number_format(ADDON_MATTRESS_PRICE, 2) ?></span>
+              </div>
+            <?php endif; ?>
+            <?php if ((float) $booking['discount_amount'] > 0): ?>
+              <div class="receipt-row">
+                <span>Long Stay Discount</span>
+                <span>-RM <?= number_format((float) $booking['discount_amount'], 2) ?></span>
+              </div>
+            <?php endif; ?>
             <div class="receipt-row">
               <span>Booking Deposit</span>
               <span>RM <?= number_format((float) $booking['deposit_amount'], 2) ?></span>
@@ -257,17 +284,21 @@
 
         <form method="get">
           <div class="form-field">
-            <label for="ref">Booking Reference</label>
-            <input type="text" id="ref" name="ref" placeholder="e.g. CDV12" value="<?= htmlspecialchars($ref) ?>" required>
-          </div>
-          <div class="form-field">
-            <label for="phone">Phone Number</label>
+            <label for="phone">
+              <span class="form-field-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2" width="10" height="20" rx="2" ry="2"></rect><line x1="11" y1="18" x2="13" y2="18"></line></svg>
+              </span>
+              Phone Number
+            </label>
             <input type="tel" id="phone" name="phone" placeholder="The phone number used to book" value="<?= htmlspecialchars($phone) ?>" required>
           </div>
-          <button type="submit" class="lookup-submit">View My Booking</button>
+          <button type="submit" class="lookup-submit">
+            View My Booking
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+          </button>
         </form>
 
-        <p class="lookup-hint">Your booking reference was shown after you completed a booking. Don't have one yet? <a href="villa.php" style="color:var(--orange-deep);font-weight:600;">Browse packages</a>.</p>
+        <p class="lookup-hint">Your booking details will be shown after you enter the correct phone number. Don't have one yet? <a href="villa.php" style="color:var(--orange-deep);font-weight:600;">Browse packages</a>.</p>
       </div>
     </div>
   </section>

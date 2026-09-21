@@ -7,7 +7,7 @@ require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/helpers.php';
 require_once __DIR__ . '/../includes/email_notify.php';
-require_login(['staff', 'admin']); // page ni staff dan admin dua-dua boleh masuk
+require_login(['staff', 'manager']); // page ni staff dan manager dua-dua boleh masuk
 
 $user = current_user();
 $validStatuses = ['pending', 'confirmed', 'checked_in', 'checked_out', 'cancelled'];

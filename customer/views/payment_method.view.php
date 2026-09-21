@@ -19,8 +19,15 @@
   </div>
 
   <div class="container page-title">
-    <h1>Payment Confirmation</h1>
-    <p>Please confirm your payment details before proceeding.</p>
+    <div class="page-title-heading">
+      <span class="page-title-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+      </span>
+      <div>
+        <h1>Payment Confirmation</h1>
+        <p>Please confirm your payment details before proceeding.</p>
+      </div>
+    </div>
   </div>
 
   <section class="payment-section">
@@ -60,7 +67,10 @@
           <input type="hidden" name="method" value="<?= htmlspecialchars($method) ?>">
 
           <div class="booking-summary">
-            <h2 class="summary-heading">Booking Summary</h2>
+            <h2 class="summary-heading">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+              Booking Summary
+            </h2>
 
             <div class="summary-row">
               <span class="summary-label"><?= htmlspecialchars(implode(', ', array_column($items, 'accommodation_name')) ?: '—') ?></span>
@@ -98,7 +108,10 @@
 
           <?php if ($method === 'qr'): ?>
             <div class="qr-payment-block">
-              <h2 class="summary-heading">Scan &amp; Pay</h2>
+              <h2 class="summary-heading">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="3" width="7" height="7" rx="1"></rect><rect x="3" y="14" width="7" height="7" rx="1"></rect><path d="M14 14h3v3h-3zM20 14v3M14 20h3M20 20v.01"></path></svg>
+                Scan &amp; Pay
+              </h2>
 
               <div class="qr-code-frame" id="qr-code-frame">
                 <img src="<?= htmlspecialchars($base) ?>assets/images/qr-payment.jpg" alt="Touch 'n Go eWallet payment QR code" id="qr-code-img">
@@ -151,8 +164,19 @@
           </label>
 
           <div class="confirm-actions">
-            <button type="submit" class="pay-btn"><?= $method === 'qr' ? 'Submit Payment Proof' : 'Confirm Payment' ?></button>
-            <a href="payment.php?booking_id=<?= $bookingId ?>" class="pay-btn pay-btn-outline">Cancel &amp; Go Back</a>
+            <button type="submit" class="pay-btn">
+              <?php if ($method === 'qr'): ?>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4M12 4 7 9M12 4l5 5"></path><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"></path></svg>
+                Submit Payment Proof
+              <?php else: ?>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+                Confirm Payment
+              <?php endif; ?>
+            </button>
+            <a href="payment.php?booking_id=<?= $bookingId ?>" class="pay-btn pay-btn-outline">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+              Cancel &amp; Go Back
+            </a>
           </div>
         </form>
 

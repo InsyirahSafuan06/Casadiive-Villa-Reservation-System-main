@@ -5,29 +5,18 @@
    mobile rule with the more specific `.nav-links.is-open` selector below.
    ========================================================================== */
 
-.brand {
+/* Logo (replaces the old text ".brand") — self-contained here rather than in each
+   page's own stylesheet, so it's sized the same everywhere this shared header renders. */
+.nav-logo-link {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-}
-
-.brand-icon {
-  width: 24px;
-  height: 24px;
-  color: var(--orange, #FE810A);
   flex-shrink: 0;
 }
 
-.btn-icon {
-  width: 18px;
-  height: 18px;
-  flex-shrink: 0;
-}
-
-.navbar .btn-primary {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
+.nav-logo {
+  height: 44px;
+  width: auto;
+  display: block;
 }
 
 .nav-toggle {
@@ -102,7 +91,7 @@
     flex-wrap: wrap;
   }
 
-  .navbar .brand {
+  .navbar .nav-logo-link {
     order: 1;
   }
 
@@ -191,7 +180,17 @@
     display: block;
     position: fixed;
     inset: 0;
-    z-index: 150;
+    /* MUST stay below .navbar's own z-index (100, set in each page's own CSS) — .nav-backdrop
+       is a SIBLING of <header class="navbar">, not nested inside it, so at the root stacking
+       context it competes against the navbar as a whole. .navbar has position:sticky WITH an
+       explicit z-index, which makes it its OWN stacking context — the dropdown menu's z-index
+       (200) only gets compared against OTHER CHILDREN of .navbar, never against this backdrop
+       directly. With this at 150 > navbar's 100, the (invisible, transparent) backdrop was
+       rendering on top of the entire navbar, dropdown included, silently swallowing every tap
+       on a menu link before it could reach the <a> underneath — menu would visibly close
+       (the backdrop's own click handler) but navigation never happened. Keep this below 100.
+    */
+    z-index: 90;
     background: transparent;
   }
 

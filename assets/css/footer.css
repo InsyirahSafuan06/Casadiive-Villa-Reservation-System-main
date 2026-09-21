@@ -9,6 +9,13 @@
   display: none !important;
 }
 
+/* 1c. Logo (footer-brand column) — white wordmark since the footer background is dark. */
+.footer-logo {
+  height: 54px;
+  width: auto;
+  margin-bottom: 14px;
+}
+
 /* ==========================================================================
    MINI REVIEW WIDGET (footer "Write a Review") — fully self-contained here,
    not left to inherit generic .newsletter-form/.footer-col rules from whichever

@@ -1,14 +1,14 @@
 <?php
 /**
  * Halaman pengurusan akaun.
- * Admin boleh cipta, sunting, atau padam akaun staf dan admin dari halaman ini.
+ * Manager boleh cipta, sunting, atau padam akaun staf dan manager dari halaman ini.
  */
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/auth.php';
-require_login(['admin']); // cuma admin boleh urus akaun staff/admin
+require_login(['manager']); // cuma manager boleh urus akaun staff/manager
 
 $currentUser = current_user();
-$validRoles = ['admin', 'staff'];
+$validRoles = ['manager', 'staff'];
 $validStatuses = ['active', 'inactive', 'suspended'];
 
 // ?id=123 kat URL bermaksud kita nak edit akaun sedia ada, takde id maksudnya create baru
@@ -23,7 +23,7 @@ if ($editId) {
         exit;
     }
 }
-$isSelfEdit = $editing && (int) $editing['user_id'] === (int) $currentUser['user_id']; // admin edit akaun dia sendiri ke tak
+$isSelfEdit = $editing && (int) $editing['user_id'] === (int) $currentUser['user_id']; // manager edit akaun dia sendiri ke tak
 
 $errors = [];
 $old = [
@@ -50,12 +50,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $errors[] = 'Account not found.';
         } elseif ($targetId === (int) $currentUser['user_id']) {
             $errors[] = 'You cannot delete your own account.';
-        } elseif ($target['role'] === 'admin' && $target['status'] === 'active') {
-            // safety net — jangan biar sistem jadi sifar admin aktif, nanti semua orang
+        } elseif ($target['role'] === 'manager' && $target['status'] === 'active') {
+            // safety net — jangan biar sistem jadi sifar manager aktif, nanti semua orang
             // terkunci dari dashboard ni selama-lamanya, takde sesiapa boleh masuk balik
-            $activeAdmins = (int) $pdo->query("SELECT COUNT(*) FROM user WHERE role = 'admin' AND status = 'active'")->fetchColumn();
-            if ($activeAdmins <= 1) {
-                $errors[] = 'At least one active admin account must remain.';
+            $activeManagers = (int) $pdo->query("SELECT COUNT(*) FROM user WHERE role = 'manager' AND status = 'active'")->fetchColumn();
+            if ($activeManagers <= 1) {
+                $errors[] = 'At least one active manager account must remain.';
             }
         }
 
@@ -74,7 +74,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($isSelfEdit) {
             // jangan sekali percaya browser untuk role/status akaun sendiri — walaupun
             // field-field ni diubah paksa kat browser, kita ignore je, tak boleh naik/turun
-            // atau off-kan akaun sendiri; kena admin lain yang buat
+            // atau off-kan akaun sendiri; kena manager lain yang buat
             $old['role'] = $editing['role'];
             $old['status'] = $editing['status'];
         } else {
@@ -117,14 +117,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-        // safety net "kekalkan sekurang-kurangnya satu admin aktif" sama macam bahagian delete
-        // atas tadi, tapi ni untuk kes turunkan/off-kan admin terakhir masa edit
-        if (!$errors && $editing && $editing['role'] === 'admin' && $editing['status'] === 'active') {
-            $willStillBeActiveAdmin = $old['role'] === 'admin' && $old['status'] === 'active';
-            if (!$willStillBeActiveAdmin) {
-                $activeAdmins = (int) $pdo->query("SELECT COUNT(*) FROM user WHERE role = 'admin' AND status = 'active'")->fetchColumn();
-                if ($activeAdmins <= 1) {
-                    $errors[] = 'At least one active admin account must remain — change another admin first.';
+        // safety net "kekalkan sekurang-kurangnya satu manager aktif" sama macam bahagian delete
+        // atas tadi, tapi ni untuk kes turunkan/off-kan manager terakhir masa edit
+        if (!$errors && $editing && $editing['role'] === 'manager' && $editing['status'] === 'active') {
+            $willStillBeActiveManager = $old['role'] === 'manager' && $old['status'] === 'active';
+            if (!$willStillBeActiveManager) {
+                $activeManagers = (int) $pdo->query("SELECT COUNT(*) FROM user WHERE role = 'manager' AND status = 'active'")->fetchColumn();
+                if ($activeManagers <= 1) {
+                    $errors[] = 'At least one active manager account must remain — change another manager first.';
                 }
             }
         }

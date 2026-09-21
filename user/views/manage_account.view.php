@@ -24,7 +24,7 @@
   <main class="dash-main">
     <div class="container">
       <h1 class="dash-heading"><?= $editing ? 'Edit Account' : 'Add Staff Account' ?></h1>
-      <p class="dash-subheading"><?= $editing ? 'Update account details, role, status, or reset the password.' : 'Create a login for a new staff member (or admin).' ?></p>
+      <p class="dash-subheading"><?= $editing ? 'Update account details, role, status, or reset the password.' : 'Create a login for a new staff member (or manager).' ?></p>
 
       <?php if ($errors): ?>
         <div style="background:#fdecea;border:1px solid #f5c2c0;color:#9a3226;border-radius:8px;padding:16px 20px;margin-bottom:28px;font-family:'Raleway',sans-serif;font-weight:600;max-width:560px;">
@@ -69,7 +69,7 @@
           <?php if ($isSelfEdit): ?>
             <p style="background:var(--sand-light,#FFF0D3);border-radius:8px;padding:12px 16px;font-size:13px;color:var(--brown-price);">
               You're editing your own account — role (<strong><?= htmlspecialchars(ucfirst($old['role'])) ?></strong>) and status
-              (<strong><?= htmlspecialchars(ucfirst($old['status'])) ?></strong>) can't be changed here. Ask another admin if that's needed.
+              (<strong><?= htmlspecialchars(ucfirst($old['status'])) ?></strong>) can't be changed here. Ask another manager if that's needed.
             </p>
           <?php else: ?>
           <div class="form-row-2">

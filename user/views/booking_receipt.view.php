@@ -76,6 +76,24 @@
                 <span>RM <?= number_format((float) $item['price'], 2) ?></span>
               </div>
             <?php endforeach; ?>
+            <?php if ($booking['addon_bbq']): ?>
+              <div class="receipt-row">
+                <span>Add-on: BBQ Set</span>
+                <span>RM <?= number_format(ADDON_BBQ_PRICE, 2) ?></span>
+              </div>
+            <?php endif; ?>
+            <?php if ($booking['addon_mattress']): ?>
+              <div class="receipt-row">
+                <span>Add-on: Extra Mattress</span>
+                <span>RM <?= number_format(ADDON_MATTRESS_PRICE, 2) ?></span>
+              </div>
+            <?php endif; ?>
+            <?php if ((float) $booking['discount_amount'] > 0): ?>
+              <div class="receipt-row">
+                <span>Long Stay Discount</span>
+                <span>-RM <?= number_format((float) $booking['discount_amount'], 2) ?></span>
+              </div>
+            <?php endif; ?>
             <div class="receipt-row">
               <span>Booking Deposit</span>
               <span>RM <?= number_format((float) $booking['deposit_amount'], 2) ?></span>

@@ -62,15 +62,9 @@ if (is_file($navJsPath)) {
   <!-- NAVBAR -->
   <header class="navbar">
     <div class="container">
-      <div class="brand">
-        Casadive Villa
-        <svg class="brand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M12 22v-9"></path>
-          <path d="M12 13c0-4 2-7 6-8-1 4-3 7-6 8z"></path>
-          <path d="M12 13c0-4-2-7-6-8 1 4 3 7 6 8z"></path>
-          <path d="M4 22c2-1.5 4-1.5 8 0s6-1.5 8 0"></path>
-        </svg>
-      </div>
+      <a href="<?= $base ?>index.php" class="nav-logo-link">
+        <img src="<?= $base ?>assets/images/logo.png" alt="Casadive Villa" class="nav-logo">
+      </a>
       <nav class="nav-links" id="navLinks" aria-label="Primary">
         <button type="button" class="nav-close" id="navClose" aria-label="Close menu">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
@@ -101,15 +95,9 @@ if (is_file($navJsPath)) {
         </a>
       </nav>
       <?php if ($loggedInUser): ?>
-        <a href="<?= $base ?>user/<?= $loggedInUser['role'] === 'admin' ? 'admin_dashboard.php' : 'staff_dashboard.php' ?>" class="btn btn-primary">
-          <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-          Dashboard
-        </a>
+        <a href="<?= $base ?>user/<?= $loggedInUser['role'] === 'manager' ? 'admin_dashboard.php' : 'staff_dashboard.php' ?>" class="btn btn-primary">Dashboard</a>
       <?php else: ?>
-        <a href="<?= $base ?>user/login.php" class="btn btn-primary">
-          <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-          Sign In
-        </a>
+        <a href="<?= $base ?>user/login.php" class="btn btn-primary">Sign In</a>
       <?php endif; ?>
       <button type="button" class="nav-toggle" id="navToggle" aria-label="Toggle menu" aria-expanded="false" aria-controls="navLinks">
         <span class="nav-toggle-bars"><span></span><span></span><span></span></span>

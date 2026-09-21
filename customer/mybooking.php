@@ -167,9 +167,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['form'] ?? '') === 'review'
     $phone = $rPhone;
 }
 
-// booking dicari guna "no rujukan + no phone" yang digunakan masa booking — ni jadi macam
-// "password" ringkas supaya tetamu tak boleh tengok booking orang lain just dengan teka ID
-$lookupAttempted = $ref !== '' || $phone !== '';
+// booking dicari guna phone number SAHAJA (booking reference dah dibuang dari borang ini
+// atas permintaan) — kalau satu nombor telefon ada lebih dari satu booking, kita papar yang
+// PALING BARU je (ORDER BY booking_id DESC LIMIT 1), sebab UI ni cuma reka untuk satu
+// lookup -> satu resit, bukan senarai untuk pelanggan pilih.
+//
+// PENTING (nota keselamatan): sebelum ni sistem guna "ref + phone" sebagai pasangan macam
+// "password" ringkas — sesiapa yang just tahu/teka nombor telefon seseorang tak boleh tengok
+// booking dia sebab kena tahu ref yang betul jugak. Sekarang phone SAHAJA dah cukup untuk
+// tengok booking terkini seseorang — kurang selamat berbanding dulu, tapi ini keputusan
+// sedar (customer minta buang field ref), bukan oversight.
+$lookupAttempted = $phone !== '';
 $lookupError = null;
 $booking = null;
 $items = [];
@@ -178,22 +186,22 @@ $latestPaymentStatus = null;
 $amountPaid = 0.0;
 
 if ($lookupAttempted) {
-    $refId = parse_booking_ref($ref);
-
-    if ($refId === false || $phone === '') {
-        $lookupError = 'Please enter a valid booking reference and the phone number used to book.';
+    if ($phone === '') {
+        $lookupError = 'Please enter the phone number used to book.';
     } else {
         $stmt = $pdo->prepare(
             'SELECT b.*, c.full_name, c.phone, c.plate_num
              FROM booking b
              JOIN customer c ON c.customer_id = b.customer_id
-             WHERE b.booking_id = :ref AND c.phone = :phone'
+             WHERE c.phone = :phone
+             ORDER BY b.booking_id DESC
+             LIMIT 1'
         );
-        $stmt->execute(['ref' => $refId, 'phone' => $phone]);
+        $stmt->execute(['phone' => $phone]);
         $booking = $stmt->fetch();
 
         if (!$booking) {
-            $lookupError = 'No booking found for that reference number and phone number. Please double-check and try again.';
+            $lookupError = 'No booking found for that phone number. Please double-check and try again.';
         } else {
             $stmt = $pdo->prepare(
                 'SELECT bi.quantity, bi.price, a.accommodation_name, a.accommodation_type,

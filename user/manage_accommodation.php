@@ -1,11 +1,11 @@
 <?php
 /**
  * Halaman pengurusan penginapan.
- * Admin boleh tambah, kemas kini, atau buang pakej vila dan khemah dari halaman ini.
+ * Manager boleh tambah, kemas kini, atau buang pakej vila dan khemah dari halaman ini.
  */
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/auth.php';
-require_login(['admin']);
+require_login(['manager']);
 
 $currentUser = current_user();
 $validTypes = ['Villa', 'Campsite'];

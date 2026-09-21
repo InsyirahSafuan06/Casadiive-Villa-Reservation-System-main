@@ -43,9 +43,16 @@
 
   /* ---------- PAGE TITLE ---------- */
   .page-title{ padding: 60px 0 30px; text-align:center; }
+  .mybooking-illustration{
+    width: 140px;
+    height: auto;
+    color: var(--brown-price);
+    margin: 0 auto 8px;
+    display:block;
+  }
   .page-title h1{
     font-family:'Mulish', sans-serif;
-    font-weight:600;
+    font-weight:800;
     font-size: clamp(32px, 4.5vw, 55px);
     color: var(--brown-price);
     margin-bottom: 14px;
@@ -81,13 +88,27 @@
   }
   .form-field{ margin-bottom: 22px; }
   .form-field label{
-    display:block;
+    display:flex;
+    align-items:center;
+    gap: 12px;
     font-family:'Raleway', sans-serif;
-    font-weight:600;
-    font-size: 15px;
+    font-weight:700;
+    font-size: 16px;
     color: var(--brown-price);
-    margin-bottom: 10px;
+    margin-bottom: 14px;
   }
+  .form-field-icon{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex-shrink:0;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--sand-light, #FFF0D3);
+    color: var(--brown-price);
+  }
+  .form-field-icon svg{ width:18px; height:18px; }
   .form-field input{
     width:100%;
     border: 1px solid var(--brown-price);
@@ -100,6 +121,10 @@
   }
   .form-field input:focus{ outline: 2px solid var(--orange); }
   .lookup-submit{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap: 10px;
     width:100%;
     background: var(--orange-deep);
     color:#fff;
@@ -110,6 +135,7 @@
     font-weight:600;
     font-size: 16px;
   }
+  .lookup-submit svg{ width:18px; height:18px; flex-shrink:0; }
   .lookup-submit:hover{ filter:brightness(1.06); }
   .lookup-hint{
     font-family:'Raleway', sans-serif;

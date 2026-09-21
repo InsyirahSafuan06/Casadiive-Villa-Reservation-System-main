@@ -5,6 +5,30 @@
  */
 declare(strict_types=1);
 
+// Harga add-on tetap (bukan dari DB) — sama macam deposit RM1, senang je so tak perlukan
+// jadual/pengurusan admin berasingan buat masa ni. Tukar nilai kat SINI je kalau harga berubah;
+// booking yang dah wujud takkan terjejas sebab harga dah "dibekukan" dalam booking.total_amount.
+const ADDON_BBQ_PRICE = 20.00;
+const ADDON_MATTRESS_PRICE = 10.00;
+
+/** Jumlah harga add-on yang dipilih — dipanggil masa booking dicipta DAN masa papar resit. */
+function booking_addon_total(bool $bbq, bool $mattress): float
+{
+    return ($bbq ? ADDON_BBQ_PRICE : 0.0) + ($mattress ? ADDON_MATTRESS_PRICE : 0.0);
+}
+
+// Diskaun automatik untuk tempahan lama (3 malam ke atas) — RM tetap, bukan peratus, sama
+// prinsip macam harga add-on kat atas: tukar nilai kat SINI je, booking yang dah wujud takkan
+// terjejas sebab jumlah diskaun dah "dibekukan" dalam booking.discount_amount masa tempahan dibuat.
+const LONG_STAY_DISCOUNT_MIN_NIGHTS = 3;
+const LONG_STAY_DISCOUNT_AMOUNT = 50.00;
+
+/** Jumlah diskaun untuk tempahan sepanjang $nights malam — 0 kalau tak capai ambang. */
+function booking_long_stay_discount(int $nights): float
+{
+    return $nights >= LONG_STAY_DISCOUNT_MIN_NIGHTS ? LONG_STAY_DISCOUNT_AMOUNT : 0.0;
+}
+
 /** Tukar nilai enum snake_case seperti 'checked_in' kepada 'Checked In' untuk paparan. */
 function format_status(string $status): string
 {

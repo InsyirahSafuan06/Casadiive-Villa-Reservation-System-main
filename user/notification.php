@@ -2,14 +2,14 @@
 /**
  * Penghantar notifikasi WhatsApp.
  * Bina mesej pra-isi untuk tempahan yang diberikan dan buka melalui pautan
- * wa.me — admin semak dalam WhatsApp Web/App dan tekan Hantar sendiri.
+ * wa.me — manager semak dalam WhatsApp Web/App dan tekan Hantar sendiri.
  * (Menghantar secara automatik tanpa langkah manual itu memerlukan WhatsApp
  * Business Cloud API, yang perlukan akaun Meta Business, token akses kekal,
  * dan templat mesej yang diluluskan terlebih dahulu — belum disediakan di sini.)
  */
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/auth.php';
-require_login(['admin']);
+require_login(['manager']);
 
 // Semak ID tempahan
 $booking_id = filter_input(INPUT_GET, 'booking_id', FILTER_VALIDATE_INT);
@@ -147,9 +147,9 @@ If you have any questions or wish to make a new booking, feel free to contact us
 }
 
 
-// Simpan rekod notifikasi. Status direkod sebagai "sent" sebaik sahaja admin buka
+// Simpan rekod notifikasi. Status direkod sebagai "sent" sebaik sahaja manager buka
 // pautan ini — tiada cara untuk sahkan dari server sama ada mereka betul-betul tekan Hantar
-// dalam WhatsApp selepas itu, kerana langkah terakhir itu berlaku sepenuhnya pada peranti admin sendiri.
+// dalam WhatsApp selepas itu, kerana langkah terakhir itu berlaku sepenuhnya pada peranti manager sendiri.
 $insert = $pdo->prepare("
 INSERT INTO notification_status
 (booking_id, customer_id, sent_date, status, notification_type, channel)
@@ -162,7 +162,7 @@ $insert->execute([
     $type
 ]);
 
-// Buka WhatsApp dengan mesej pra-isi, sedia untuk admin semak dan hantar.
+// Buka WhatsApp dengan mesej pra-isi, sedia untuk manager semak dan hantar.
 $link = "https://wa.me/".$phone."?text=".urlencode($message);
 
 header("Location: ".$link);

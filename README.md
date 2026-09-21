@@ -6,8 +6,10 @@ villa rooms and beach campsite packages. Built against the user scope in
 Administrator, Staff, and Customer each get the duties defined there.
 
 A working PHP/MySQL app: public pages, a booking form that writes real
-bookings to the database, and role-gated Admin/Staff dashboards with account
-and accommodation management.
+bookings to the database, and role-gated Manager/Staff dashboards with account
+and accommodation management. (The proposal's "Administrator" role is called
+"Manager" in the running app — same role, friendlier name, since Admin/Staff
+read as too similar.)
 
 ## Project structure
 
@@ -38,14 +40,14 @@ and accommodation management.
 │   ├── chatbot_recommend.php / chatbot_booking_status.php  JSON endpoints for the AI Assistant (no view — pure API)
 │   ├── views/                   One `<name>.view.php` per logic file above
 │   └── style/                    CSS for the pages above
-├── user/                        Admin/staff-facing pages — logic files only, views/ holds their templates
+├── user/                        Manager/staff-facing pages — logic files only, views/ holds their templates
 │   ├── login.php                 Real session-based auth against the `user` table
 │   ├── logout.php
-│   ├── admin_dashboard.php       role=admin only: bookings, accommodations, reviews, accounts
-│   ├── manage_account.php        role=admin only: create/edit/delete staff & admin accounts
-│   ├── manage_accommodation.php  role=admin only: create/edit/delete Villa & Campsite packages
-│   ├── staff_dashboard.php       role=staff or admin: bookings, accommodation status, payments
-│   ├── booking_receipt.php       role=admin or staff: view/print any booking's receipt
+│   ├── admin_dashboard.php       role=manager only: bookings, accommodations, reviews, accounts (filename kept as-is; the role itself is "manager")
+│   ├── manage_account.php        role=manager only: create/edit/delete staff & manager accounts
+│   ├── manage_accommodation.php  role=manager only: create/edit/delete Villa & Campsite packages
+│   ├── staff_dashboard.php       role=staff or manager: bookings, accommodation status, payments
+│   ├── booking_receipt.php       role=manager or staff: view/print any booking's receipt
 │   ├── notification.php          Builds a wa.me link, no view (redirect only)
 │   ├── views/                   One `<name>.view.php` per logic file above
 │   └── style/
@@ -86,12 +88,13 @@ pages under `customer/` and `user/` link back to it with `../`.
    ```
    mysql -u root < database/database.sql
    ```
-   This creates the `casadive_villa_reservation` database, seeds 8
+   This creates the `sabrisae_casadivevilla` database (same name used on
+   production, so `database.sql` works unchanged for either), seeds 8
    Villa/Campsite accommodation packages, and creates two login accounts:
 
    | Username | Password | Role |
    |---|---|---|
-   | `admin` | `Admin@12345` | admin |
+   | `admin` | `Admin@12345` | manager |
    | `staff` | `Staff@12345` | staff |
 
    Both passwords are stored as bcrypt hashes — change them before any real
@@ -101,17 +104,19 @@ pages under `customer/` and `user/` link back to it with `../`.
 
 ## User scope (per the proposal) and what's built
 
-**Administrator** — `user/admin_dashboard.php`, `manage_account.php`, `manage_accommodation.php`
+**Administrator** (role name in the app: **manager**) — `user/admin_dashboard.php`, `manage_account.php`, `manage_accommodation.php`
 - Add/update/delete Villa & Campsite packages (price, capacity, status) — `manage_accommodation.php`
 - Manage bookings and their status — inline on the dashboard
 - Monitor payment status per booking (read-only column, sourced from `payment`)
-- Manage staff **and admin** accounts, including changing her own username/
+- Manage staff **and manager** accounts, including changing her own username/
   password (a "My Account" shortcut in the topbar) — `manage_account.php`
 - Manage customer records — implicit via the bookings list (customer rows are
   created through the booking flow, no separate customer accounts)
-- Business analytics dashboard (Power BI) — **not built**; out of scope for
-  this environment (no Power BI licence/embed target). The stat tiles on the
-  dashboards are the closest equivalent.
+- Business analytics dashboard (Power BI) — a read-only reporting API
+  (`api/bookings.php`, `occupancy.php`, `payments.php`, `reviews.php`,
+  key-authenticated via `includes/api_auth.php`) that Power BI's Web connector
+  can pull from directly; the stat tiles on the dashboards remain the
+  in-app equivalent.
 
 **Staff** — `user/staff_dashboard.php`, `booking_receipt.php`
 - View/manage bookings, update status through the full proposal lifecycle:
@@ -121,7 +126,7 @@ pages under `customer/` and `user/` link back to it with `../`.
   booking and in a running Recent Payments list
 - Update room availability / record maintenance status — a status-only
   toggle per accommodation (no name/price/capacity edit access — that's
-  admin-only)
+  manager-only)
 - Generate booking confirmations and receipts — `booking_receipt.php`
   (print-ready, same layout as the customer-facing one)
 - View customer booking information — the bookings table
@@ -150,23 +155,23 @@ pages under `customer/` and `user/` link back to it with `../`.
 - **Auth**: `user/login.php` checks credentials against `user.password`
   (bcrypt) via `password_verify()`, then stores a session in
   `$_SESSION['user']`. `includes/auth.php`'s `require_login($roles)` guards
-  every admin/staff page and redirects/403s as appropriate.
+  every manager/staff page and redirects/403s as appropriate.
 - **CSRF**: every state-changing POST (login, booking submission, status
   updates, account/accommodation create-edit-delete, payment recording)
   carries a per-session token via `csrf_field()`/`csrf_verify()`.
 - **Account management**: `admin_dashboard.php` links to
   `manage_account.php` (add/edit/delete) and `manage_accommodation.php`
-  (add/edit/delete) — both `require_login(['admin'])`-gated; staff has no
+  (add/edit/delete) — both `require_login(['manager'])`-gated; staff has no
   such link. Guardrails, enforced server-side (not just hidden in the UI):
   you can't delete your own account, can't delete/demote/deactivate the
-  last remaining active admin, and editing your **own** account never
+  last remaining active manager, and editing your **own** account never
   accepts a role/status change even if the fields are tampered with —
-  another admin has to do that.
+  another manager has to do that.
 - **MyBooking**: `customer/mybooking.php` looks a booking up by reference +
   phone and renders a receipt (guest/stay details, special request, price
   breakdown, deposit vs. balance due) with a `window.print()` button and
   print-specific CSS. `user/booking_receipt.php` is the same receipt for
-  logged-in staff/admin, viewable by booking ID with no phone check needed.
+  logged-in staff/manager, viewable by booking ID with no phone check needed.
 
 ## Database
 

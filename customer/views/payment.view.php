@@ -19,8 +19,15 @@
   </div>
 
   <div class="container page-title">
-    <h1>Payment</h1>
-    <p>Choose how you'd like to pay to confirm the booking.</p>
+    <div class="page-title-heading">
+      <span class="page-title-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+      </span>
+      <div>
+        <h1>Payment</h1>
+        <p>Choose how you'd like to pay to confirm the booking.</p>
+      </div>
+    </div>
   </div>
 
   <section class="payment-section">
@@ -62,10 +69,12 @@
           <div class="method-options">
             <label class="method-option is-selected">
               <input type="radio" name="method" value="toyyibpay" checked>
+              <svg class="method-option-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
               <span>Online Banking</span>
             </label>
             <label class="method-option">
               <input type="radio" name="method" value="qr">
+              <svg class="method-option-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="3" width="7" height="7" rx="1"></rect><rect x="3" y="14" width="7" height="7" rx="1"></rect><path d="M14 14h3v3h-3zM20 14v3M14 20h3M20 20v.01"></path></svg>
               <span>QR Payment</span>
             </label>
           </div>
@@ -78,7 +87,10 @@
             <p class="method-hint">Scan the QR code with your banking app or eWallet to pay, then upload your payment receipt on the next step.</p>
           </div>
 
-          <button type="submit" class="pay-btn">Pay</button>
+          <button type="submit" class="pay-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+            Pay
+          </button>
           <a href="mybooking.php?ref=<?= $bookingId ?>&phone=<?= urlencode($booking['phone']) ?>" class="pay-btn pay-btn-outline" style="margin-top:14px;">Back to Booking</a>
         </form>
 

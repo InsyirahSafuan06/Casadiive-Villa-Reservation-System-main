@@ -1,13 +1,13 @@
 <?php
 /**
- * Halaman dashboard admin.
+ * Halaman dashboard manager.
  * Fail ini memberikan pentadbir ringkasan tempahan, akaun, dan pengurusan penginapan.
  */
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/helpers.php';
 require_once __DIR__ . '/../includes/email_notify.php';
-require_login(['admin']); // page ni cuma untuk admin, staff biasa tak boleh masuk
+require_login(['manager']); // page ni cuma untuk manager, staff biasa tak boleh masuk
 
 $user = current_user();
 $validStatuses = ['pending', 'confirmed', 'checked_in', 'checked_out', 'cancelled'];
@@ -36,7 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'updat
     header('Location: admin_dashboard.php?updated=1');
     exit;
 }
-// admin je yang boleh padam review (page ni dah require_login(['admin']) kat atas, so takde
+// manager je yang boleh padam review (page ni dah require_login(['manager']) kat atas, so takde
 // laluan lain customer/staff boleh sampai sini) — buang gambar dari cakera sekali kalau ada,
 // elak fail terbiar tanpa rekod DB
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'delete_review') {

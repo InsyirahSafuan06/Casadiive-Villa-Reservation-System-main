@@ -1,6 +1,6 @@
 <?php
 /**
- * Halaman log masuk untuk pengguna staf dan admin.
+ * Halaman log masuk untuk pengguna staf dan manager.
  * Halaman ini mengendalikan pengesahan dan ubah hala pengguna ke dashboard mereka selepas berjaya log masuk.
  */
 require_once __DIR__ . '/../includes/db.php';
@@ -9,7 +9,7 @@ require_once __DIR__ . '/../includes/auth.php';
 // dah login ke? kalau ya, takyah tunjuk borang, terus hantar ke dashboard yang betul
 $existingUser = current_user();
 if ($existingUser) {
-    header('Location: ' . ($existingUser['role'] === 'admin' ? 'admin_dashboard.php' : 'staff_dashboard.php'));
+    header('Location: ' . ($existingUser['role'] === 'manager' ? 'admin_dashboard.php' : 'staff_dashboard.php'));
     exit;
 }
 
@@ -28,7 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $user = $oldUsername !== '' && $password !== '' ? attempt_login($pdo, $oldUsername, $password) : false;
 
         if ($user) {
-            header('Location: ' . ($user['role'] === 'admin' ? 'admin_dashboard.php' : 'staff_dashboard.php'));
+            header('Location: ' . ($user['role'] === 'manager' ? 'admin_dashboard.php' : 'staff_dashboard.php'));
             exit;
         }
 
