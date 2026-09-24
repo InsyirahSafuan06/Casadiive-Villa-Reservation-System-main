@@ -217,6 +217,27 @@
     border-radius: 50px;
     text-transform: capitalize;
   }
+  .addon-badges{
+    display:flex;
+    flex-wrap:wrap;
+    gap:4px;
+    margin-top:4px;
+  }
+  .addon-badge{
+    display:inline-block;
+    font-size:10px;
+    font-weight:700;
+    padding:2px 7px;
+    border-radius:50px;
+    background:#F4E5C7;
+    color:#5B3A29;
+    text-transform:uppercase;
+    letter-spacing:.02em;
+  }
+  .addon-badge-discount{
+    background:#FE810A;
+    color:#fff;
+  }
   .status-pending{ background:#fff3cd; color:#8a6400; }
   .status-confirmed{ background:#d8ecff; color:#164a7a; }
   .status-checked_in{ background:#e0e8ff; color:#2a3a9a; }

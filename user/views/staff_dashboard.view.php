@@ -88,7 +88,16 @@
                 <td><?= htmlspecialchars($b['check_in']) ?></td>
                 <td><?= htmlspecialchars($b['check_out']) ?></td>
                 <td><?= (int) $b['total_guest'] ?></td>
-                <td><?= number_format((float) $b['total_amount'], 2) ?></td>
+                <td>
+                  <?= number_format((float) $b['total_amount'], 2) ?>
+                  <?php if ($b['addon_bbq'] || $b['addon_mattress'] || (float) $b['discount_amount'] > 0): ?>
+                    <div class="addon-badges">
+                      <?php if ($b['addon_bbq']): ?><span class="addon-badge">BBQ</span><?php endif; ?>
+                      <?php if ($b['addon_mattress']): ?><span class="addon-badge">Mattress</span><?php endif; ?>
+                      <?php if ((float) $b['discount_amount'] > 0): ?><span class="addon-badge addon-badge-discount">-RM<?= number_format((float) $b['discount_amount'], 2) ?></span><?php endif; ?>
+                    </div>
+                  <?php endif; ?>
+                </td>
                 <td><span class="status-badge status-<?= htmlspecialchars($b['booking_status']) ?>"><?= htmlspecialchars(format_status($b['booking_status'])) ?></span></td>
                 <td>
                   <?php if (payment_needs_refund($b['booking_status'], $b['latest_payment_status'])): ?>

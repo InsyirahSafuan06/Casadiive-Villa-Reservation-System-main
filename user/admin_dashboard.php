@@ -85,7 +85,7 @@ $stats = [
 // guna GROUP_CONCAT/subquery, supaya table kat bawah takyah query lagi untuk setiap baris
 $bookings = $pdo->query(
     "SELECT b.booking_id, c.full_name, c.phone, b.check_in, b.check_out, b.total_guest,
-            b.total_amount, b.deposit_amount, b.booking_status,
+            b.total_amount, b.deposit_amount, b.booking_status, b.addon_bbq, b.addon_mattress, b.discount_amount,
             GROUP_CONCAT(a.accommodation_name SEPARATOR ', ') AS accommodations,
             (SELECT p.payment_status FROM payment p WHERE p.booking_id = b.booking_id ORDER BY p.payment_id DESC LIMIT 1) AS latest_payment_status
      FROM booking b

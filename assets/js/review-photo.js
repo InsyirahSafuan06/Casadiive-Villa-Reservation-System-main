@@ -29,9 +29,22 @@ function initReviewPhotoWidget(ids) {
   var homeUrl = ids.homeUrl;
 
   var CONFIDENCE_THRESHOLD = 0.5;
+  var SCAN_TIMEOUT_MS = 30000; // batalkan scan kalau ambil masa lebih 30 saat (cth. internet slow)
   var cocoModel = null;
   var modelLoading = null;
   var cameraStream = null;
+
+  // "lumba" satu promise dengan satu had masa — kalau promise tu tak selesai dalam ms tu,
+  // reject dengan Error('timeout') supaya caller boleh papar mesej yang sesuai
+  function withTimeout(promise, ms) {
+    return new Promise(function (resolve, reject) {
+      var timer = setTimeout(function () { reject(new Error('timeout')); }, ms);
+      promise.then(
+        function (result) { clearTimeout(timer); resolve(result); },
+        function (err) { clearTimeout(timer); reject(err); }
+      );
+    });
+  }
 
   // ---- scan-frame corners (over the live camera feed) + a "Verified" badge that pops onto
   // the accepted preview thumbnail — purely visual polish, doesn't change what's validated ----
@@ -163,10 +176,10 @@ function initReviewPhotoWidget(ids) {
     var url = URL.createObjectURL(file);
     var img = new Image();
     img.onload = function () {
-      classify(img).then(function (result) {
+      withTimeout(classify(img), SCAN_TIMEOUT_MS).then(function (result) {
         if (result.is_valid) {
           setStatus('✓ Image verified. Your room photo is suitable for this review.', 'success');
-          
+
           // PENTING: Hanya set src dan papar gambar jika disahkan tulen oleh AI
           preview.src = url;
           preview.hidden = false;
@@ -178,8 +191,12 @@ function initReviewPhotoWidget(ids) {
         } else {
           setStatus('✕ Image rejected. Please upload a clear photo of the villa room only.', 'reject');
         }
-      }).catch(function () {
-        setStatus('Please try again, or submit your review without a photo.', 'reject');
+      }).catch(function (err) {
+        if (err && err.message === 'timeout') {
+          setStatus('Taking too long to verify (check your internet connection). Please try again.', 'reject');
+        } else {
+          setStatus('Please try again, or submit your review without a photo.', 'reject');
+        }
       });
     };
     img.src = url;
