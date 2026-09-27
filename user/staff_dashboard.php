@@ -76,9 +76,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'recor
     exit;
 }
 
+$galleryError = null;
+
+// manager/staff tambah gambar baru ke gallery awam (customer/gallery.php) — logik validasi/simpan
+// dikongsi dengan admin_dashboard.php dalam save_gallery_upload() (includes/helpers.php)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'add_gallery_image') {
+    if (!csrf_verify()) {
+        $galleryError = 'Your session expired. Please try again.';
+    } else {
+        $result = save_gallery_upload($pdo, $_FILES['gallery_image'] ?? null, trim((string) ($_POST['caption'] ?? '')), (int) $user['user_id']);
+        if ($result === true) {
+            header('Location: staff_dashboard.php?galleryadded=1');
+            exit;
+        }
+        $galleryError = $result;
+    }
+}
+
+// buang gambar dari gallery — cuma redirect "berjaya" kalau memang sesuatu dipadam (elak
+// dashboard claim "Image removed" walhal CSRF gagal/id tak wujud/jadual tak wujud lagi)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'delete_gallery_image') {
+    $galleryId = filter_input(INPUT_POST, 'gallery_id', FILTER_VALIDATE_INT);
+
+    if (csrf_verify() && $galleryId && delete_gallery_image($pdo, $galleryId)) {
+        header('Location: staff_dashboard.php?gallerydeleted=1');
+        exit;
+    }
+    $galleryError = 'We could not remove that image. Please try again.';
+}
+
 $updated = isset($_GET['updated']);
 $accUpdated = isset($_GET['accupdated']);
 $paymentRecorded = isset($_GET['paymentrecorded']);
+$galleryAdded = isset($_GET['galleryadded']);
+$galleryDeleted = isset($_GET['gallerydeleted']);
 $refundBookingId = filter_input(INPUT_GET, 'refund_booking', FILTER_VALIDATE_INT) ?: null; // datang dari butang "Refund" kat dashboard admin
 
 // nombor ringkas untuk jubin statistik atas dashboard
@@ -107,6 +138,17 @@ $accommodations = $pdo->query(
     'SELECT accommodation_id, accommodation_name, accommodation_type, capacity, status
      FROM accommodation ORDER BY accommodation_type, accommodation_id'
 )->fetchAll();
+
+// dibalut try/catch — kalau database production belum di-migrate (jadual `gallery` belum
+// wujud lagi), dashboard tetap load dengan bahagian Gallery kosong je, bukan fatal error
+try {
+    $galleryImages = $pdo->query(
+        'SELECT gallery_id, image_path, caption FROM gallery ORDER BY gallery_id DESC'
+    )->fetchAll();
+} catch (PDOException $e) {
+    error_log('Failed to load gallery images: ' . $e->getMessage());
+    $galleryImages = [];
+}
 
 $recentPayments = $pdo->query(
     "SELECT p.payment_id, p.booking_id, p.deposit_paid, p.payment_date, p.payment_status, p.receipt, c.full_name

@@ -20,6 +20,7 @@
   var chatbotForm = document.getElementById('chatbot-form');
   var chatbotInput = document.getElementById('chatbot-input');
   var chatbotMic = document.getElementById('chatbot-mic');
+  var chatbotMicLang = document.getElementById('chatbot-mic-lang');
   var chatbotQuickreplies = document.getElementById('chatbot-quickreplies');
   var chatbotListening = document.getElementById('chatbot-listening');
   var chatbotListeningStop = document.getElementById('chatbot-listening-stop');
@@ -587,11 +588,24 @@
   if (SpeechRecognitionImpl && chatbotMic) {
     var recognizer = new SpeechRecognitionImpl();
     var isListening = false;
+    // Web Speech API perlukan SATU locale tetap setiap sesi rakam (tak boleh auto-detect
+    // Melayu/English dalam rakaman yang sama), so customer sendiri toggle bahasa yang dia
+    // nak cakap guna butang EN/BM sebelah mic — mula ikut bahasa chat semasa (chatLang).
+    var micLang = chatLang;
     recognizer.continuous = false;
     recognizer.interimResults = false;
     recognizer.maxAlternatives = 1;
 
     chatbotMic.hidden = false;
+
+    if (chatbotMicLang) {
+      chatbotMicLang.hidden = false;
+      chatbotMicLang.textContent = micLang === 'ms' ? 'BM' : 'EN';
+      chatbotMicLang.addEventListener('click', function () {
+        micLang = micLang === 'ms' ? 'en' : 'ms';
+        chatbotMicLang.textContent = micLang === 'ms' ? 'BM' : 'EN';
+      });
+    }
 
     function setListeningUI(on) {
       isListening = on;
@@ -628,9 +642,7 @@
         recognizer.stop();
         return;
       }
-      // guna bahasa perbualan semasa (flip automatik ikut apa yang ditaip sebelum ni) —
-      // Web Speech API perlukan SATU locale tetap setiap sesi rakam, tak boleh auto-detect
-      recognizer.lang = chatLang === 'ms' ? 'ms-MY' : 'en-US';
+      recognizer.lang = micLang === 'ms' ? 'ms-MY' : 'en-US';
       try {
         recognizer.start();
         setListeningUI(true);

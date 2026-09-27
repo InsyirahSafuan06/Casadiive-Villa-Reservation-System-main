@@ -10,16 +10,19 @@
   <!-- GALLERY GRID -->
   <section class="gallery" id="gallery-grid">
     <div class="container gallery-grid">
-      <figure class="gallery-item ratio-tall"><img src="../assets/images/villa-complex-day.jpg" alt="Villa exterior view" loading="lazy"></figure>
-      <figure class="gallery-item ratio-tall"><img src="../assets/images/villa-bedroom-bunk.jpg" alt="Villa bedroom" loading="lazy"></figure>
-      <figure class="gallery-item ratio-tall"><img src="../assets/images/villa-living-room.jpg" alt="Villa living area" loading="lazy"></figure>
-      <figure class="gallery-item ratio-tall"><img src="../assets/images/campsite-tents-pool.jpg" alt="Campsite by the beach" loading="lazy"></figure>
-      <figure class="gallery-item ratio-short"><img src="../assets/images/campsite-tent-pool.jpg" alt="Swimming pool" loading="lazy"></figure>
-      <figure class="gallery-item ratio-short"><img src="../assets/images/beach-lounge-bench.jpg" alt="Poolside lounge" loading="lazy"></figure>
-      <figure class="gallery-item ratio-tall"><img src="../assets/images/wooden-villa-sunset.jpg" alt="Beachfront sunset" loading="lazy"></figure>
-      <figure class="gallery-item ratio-tall"><img src="../assets/images/campsite-tents-pool.jpg" alt="Campsite tents" loading="lazy"></figure>
-      <figure class="gallery-item ratio-portrait"><img src="../assets/images/casa3-balcony-view.jpg" alt="Villa balcony view" loading="lazy"></figure>
-      <figure class="gallery-item ratio-portrait"><img src="../assets/images/wooden-villa-porch-view.jpg" alt="Beachside walkway" loading="lazy"></figure>
+      <?php if (!$images): ?>
+        <p>No gallery photos yet — check back soon!</p>
+      <?php else: ?>
+        <?php
+          // ulang 3 nisbah ni ikut turutan (tall, tall, short, portrait) supaya masonry grid nampak
+          // variasi macam reka bentuk asal — gambar sendiri tak simpan nisbah, senang untuk staff upload
+          $ratios = ['ratio-tall', 'ratio-tall', 'ratio-short', 'ratio-portrait'];
+          foreach ($images as $i => $img):
+            $ratio = $ratios[$i % count($ratios)];
+        ?>
+          <figure class="gallery-item <?= $ratio ?>"><img src="../<?= htmlspecialchars($img['image_path']) ?>" alt="<?= htmlspecialchars($img['caption'] ?: 'Casadive Villa gallery photo') ?>" loading="lazy"></figure>
+        <?php endforeach; ?>
+      <?php endif; ?>
     </div>
   </section>
 

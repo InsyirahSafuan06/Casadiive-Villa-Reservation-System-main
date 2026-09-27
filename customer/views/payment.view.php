@@ -91,7 +91,8 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
             Pay
           </button>
-          <a href="mybooking.php?ref=<?= $bookingId ?>&phone=<?= urlencode($booking['phone']) ?>" class="pay-btn pay-btn-outline" style="margin-top:14px;">Back to Booking</a>
+          <?php $backHref = ($items[0]['accommodation_type'] ?? '') === 'Campsite' ? 'campsite.php' : 'villa.php'; ?>
+          <a href="<?= $backHref ?>" class="pay-btn pay-btn-outline" style="margin-top:14px;">Back to Booking</a>
         </form>
 
       <?php endif; ?>

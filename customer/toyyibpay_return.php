@@ -58,7 +58,10 @@ $redirectUrl = 'sucess_payment.php?ref=' . $bookingId . '&phone=' . urlencode($b
 
 // billpaymentStatus: '1' = berjaya, '2' = pending, '3' = tak berjaya (ikut dokumentasi ToyyibPay)
 if (($transaction['billpaymentStatus'] ?? null) === '1') {
-    $amountPaid = ((float) ($transaction['billpaymentAmount'] ?? 0)) / 100; // ToyyibPay pulangkan dalam sen
+    // NOTA: billAmount yang kita HANTAR ke createBill kena dalam sen, tapi billpaymentAmount
+    // yang ToyyibPay PULANGKAN balik dalam getBillTransactions dah dalam Ringgit (cth. "1.00"
+    // untuk RM1.00) — bukan sen. Jangan bahagi /100 kat sini, beza dari amountSen di toyyibpay_pay.php.
+    $amountPaid = (float) ($transaction['billpaymentAmount'] ?? 0);
     $paidNow = record_booking_payment($pdo, (int) $bookingId, $amountPaid, 'toyyibpay', 'ToyyibPay bill ' . $billCode);
 
     if ($paidNow) {

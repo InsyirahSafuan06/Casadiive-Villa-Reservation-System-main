@@ -17,6 +17,85 @@ function booking_addon_total(bool $bbq, bool $mattress): float
     return ($bbq ? ADDON_BBQ_PRICE : 0.0) + ($mattress ? ADDON_MATTRESS_PRICE : 0.0);
 }
 
+/**
+ * Sahkan + simpan satu gambar gallery yang di-upload manager/staff dari dashboard, dan
+ * rekod dalam DB. Dikongsi oleh admin_dashboard.php dan staff_dashboard.php (dulu logik
+ * yang sama disalin dua tempat — sekarang satu je, senang nak selenggara/betulkan).
+ * Pulangkan true bila berjaya, atau mesej error (string) untuk papar kat customer/staff.
+ */
+function save_gallery_upload(PDO $pdo, ?array $file, string $caption, int $uploadedBy): bool|string
+{
+    if (!$file || empty($file['name']) || $file['error'] !== UPLOAD_ERR_OK) {
+        return 'Please choose an image to upload.';
+    }
+
+    $allowedExt = ['jpg', 'jpeg', 'png', 'webp'];
+    $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+    $maxSize = 5 * 1024 * 1024;
+
+    if (!in_array($ext, $allowedExt, true) || $file['size'] <= 0 || $file['size'] > $maxSize || @getimagesize($file['tmp_name']) === false) {
+        return 'Please upload a valid image (JPG, PNG or WEBP, max 5MB).';
+    }
+
+    $destDir = __DIR__ . '/../assets/uploads/gallery/';
+    if (!is_dir($destDir)) {
+        mkdir($destDir, 0755, true);
+    }
+    $filename = 'gallery_' . bin2hex(random_bytes(4)) . '.' . $ext;
+
+    if (!move_uploaded_file($file['tmp_name'], $destDir . $filename)) {
+        return 'We could not save your uploaded image. Please try again.';
+    }
+
+    try {
+        $stmt = $pdo->prepare(
+            'INSERT INTO gallery (image_path, caption, uploaded_by) VALUES (:path, :caption, :uploaded_by)'
+        );
+        $stmt->execute([
+            'path' => 'assets/uploads/gallery/' . $filename,
+            'caption' => $caption !== '' ? $caption : null,
+            'uploaded_by' => $uploadedBy,
+        ]);
+    } catch (PDOException $e) {
+        // table `gallery` mungkin belum wujud lagi kat production (belum di-migrate) — buang
+        // fail yang dah terlanjur di-upload tu, elak fail terbiar tanpa rekod DB
+        unlink($destDir . $filename);
+        error_log('Failed to save gallery image: ' . $e->getMessage());
+        return 'Gallery is not available right now. Please try again later.';
+    }
+
+    return true;
+}
+
+/**
+ * Padam satu gambar gallery (rekod DB + fail di cakera). Pulangkan true kalau memang ada
+ * sesuatu yang dipadam, false kalau id tak wujud atau query gagal (contoh: jadual belum wujud).
+ */
+function delete_gallery_image(PDO $pdo, int $galleryId): bool
+{
+    try {
+        $stmt = $pdo->prepare('SELECT image_path FROM gallery WHERE gallery_id = :id');
+        $stmt->execute(['id' => $galleryId]);
+        $imagePath = $stmt->fetchColumn();
+
+        if ($imagePath === false) {
+            return false;
+        }
+
+        $pdo->prepare('DELETE FROM gallery WHERE gallery_id = :id')->execute(['id' => $galleryId]);
+
+        $fullPath = __DIR__ . '/../' . $imagePath;
+        if (is_file($fullPath)) {
+            unlink($fullPath);
+        }
+
+        return true;
+    } catch (PDOException $e) {
+        error_log('Failed to delete gallery image: ' . $e->getMessage());
+        return false;
+    }
+}
+
 // Diskaun automatik untuk tempahan lama (3 malam ke atas) — RM tetap, bukan peratus, sama
 // prinsip macam harga add-on kat atas: tukar nilai kat SINI je, booking yang dah wujud takkan
 // terjejas sebab jumlah diskaun dah "dibekukan" dalam booking.discount_amount masa tempahan dibuat.

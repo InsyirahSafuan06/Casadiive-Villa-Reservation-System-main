@@ -39,8 +39,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['form'] ?? '') === 'cancel'
     }
 
     if (!$cancelError) {
-        // redirect balik supaya refresh page tak submit cancel dua kali
-        header('Location: mybooking.php?ref=' . $cRef . '&phone=' . urlencode($cPhone));
+        // hantar terus ke homepage lepas cancel berjaya (bukan balik ke mybooking.php)
+        header('Location: ../index.php');
         exit;
     }
 
@@ -159,7 +159,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['form'] ?? '') === 'review'
     if (!$reviewError) {
         // laluan verified redirect balik ke lookup dia sendiri; laluan unverified (footer,
         // takde ref/phone) takde page tu nak balik ke, so hantar ke homepage je
-        header('Location: ' . ($hasBookingRef ? 'mybooking.php?ref=' . $rRef . '&phone=' . urlencode($rPhone) : '../index.php'));
+        header('Location: ' . ($hasBookingRef ? 'mybooking.php?ref=' . $rRef . '&phone=' . urlencode($rPhone) . '&reviewed=1' : '../index.php'));
         exit;
     }
 
@@ -239,6 +239,7 @@ if ($booking) {
     $stay = compute_stay_price(1, 1, $checkIn, $checkOut);
 }
 
+$reviewSubmitted = isset($_GET['reviewed']); // papar modal "Thanks for Reviewing!" sekali je lepas submit berjaya
 $base = '../'; // page ni dalam folder customer/, naik satu tahap untuk pergi root
 $active = 'mybooking'; // untuk highlight menu "MyBooking" kat navbar
 $pageTitle = 'MyBooking — Casadive Villa';

@@ -6,7 +6,7 @@
       <p class="hero-eyebrow">Casadive Villa</p>
       <h1 class="hero-title">Spend your Dream Holidays with us</h1>
       <p class="hero-sub">Every moment feels like the first time in Casadive Villa</p>
-      <button class="play-btn" type="button" aria-label="Watch video">
+      <button class="play-btn" type="button" id="hero-video-btn" aria-label="Watch video">
         <span class="play-circle">
           <svg viewBox="0 0 12 17" xmlns="http://www.w3.org/2000/svg"><path d="M0 0 L12 8.5 L0 17 Z" fill="#fff"/></svg>
         </span>
@@ -14,6 +14,42 @@
       </button>
     </div>
   </section>
+
+  <!-- HERO VIDEO LIGHTBOX -->
+  <div class="video-lightbox" id="hero-video-lightbox">
+    <div class="video-lightbox-inner">
+      <button type="button" class="video-lightbox-close" id="hero-video-close" aria-label="Close video">&times;</button>
+      <video id="hero-video-player" controls playsinline>
+        <source src="assets/videos/hero-tour.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+      </video>
+    </div>
+  </div>
+  <script>
+    (function () {
+      var btn = document.getElementById('hero-video-btn');
+      var lightbox = document.getElementById('hero-video-lightbox');
+      var closeBtn = document.getElementById('hero-video-close');
+      var video = document.getElementById('hero-video-player');
+      if (!btn || !lightbox || !video) return;
+
+      function openLightbox() {
+        lightbox.classList.add('is-open');
+        video.play();
+      }
+      function closeLightbox() {
+        lightbox.classList.remove('is-open');
+        video.pause();
+        video.currentTime = 0;
+      }
+
+      btn.addEventListener('click', openLightbox);
+      closeBtn.addEventListener('click', closeLightbox);
+      lightbox.addEventListener('click', function (e) {
+        if (e.target === lightbox) closeLightbox();
+      });
+    })();
+  </script>
 
   <!-- QUICK BOOKING BAR -->
   <div class="booking-wrap">
@@ -195,6 +231,7 @@
       </div>
       <form class="chatbot-input-row" id="chatbot-form">
         <input type="text" id="chatbot-input" placeholder="Ask a question..." autocomplete="off" aria-label="Type your question">
+        <button type="button" class="chatbot-mic-lang" id="chatbot-mic-lang" aria-label="Voice input language" title="Voice input language" hidden>BM</button>
         <button type="button" class="chatbot-mic-btn" id="chatbot-mic" aria-label="Speak your question" hidden>
           <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 14a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v5a3 3 0 0 0 3 3Z" fill="currentColor"/><path d="M19 11a1 1 0 1 0-2 0 5 5 0 0 1-10 0 1 1 0 1 0-2 0 7 7 0 0 0 6 6.93V20H9a1 1 0 1 0 0 2h6a1 1 0 1 0 0-2h-2v-2.07A7 7 0 0 0 19 11Z" fill="currentColor"/></svg>
         </button>

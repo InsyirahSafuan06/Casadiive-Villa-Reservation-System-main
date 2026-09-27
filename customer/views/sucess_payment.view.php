@@ -36,6 +36,45 @@
 
   <?php else: ?>
 
+    <!-- THANKS FOR PURCHASE MODAL -->
+    <div class="purchase-modal-overlay" id="purchase-modal-overlay">
+      <div class="purchase-modal" role="dialog" aria-modal="true" aria-labelledby="purchase-modal-title">
+        <button type="button" class="purchase-modal-close" id="purchase-modal-close" aria-label="Close">&times;</button>
+        <span class="purchase-modal-leaf purchase-modal-leaf-bl" aria-hidden="true"></span>
+        <span class="purchase-modal-leaf purchase-modal-leaf-br" aria-hidden="true"></span>
+        <svg class="purchase-modal-icon" viewBox="0 0 120 110" aria-hidden="true">
+          <path d="M100 20l4-4M108 24h6M104 15v6" stroke="var(--orange-deep)" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+          <rect x="34" y="16" width="52" height="72" rx="8" fill="#F3D9B1" stroke="var(--brown-price)" stroke-width="3"/>
+          <rect x="48" y="8" width="24" height="16" rx="4" fill="var(--brown-price)"/>
+          <circle cx="60" cy="16" r="3" fill="#F3D9B1"/>
+          <rect x="42" y="34" width="8" height="8" rx="2" fill="var(--orange)"/>
+          <rect x="54" y="36" width="24" height="4" rx="2" fill="var(--brown-price)" opacity=".5"/>
+          <rect x="42" y="50" width="8" height="8" rx="2" fill="var(--orange)"/>
+          <rect x="54" y="52" width="24" height="4" rx="2" fill="var(--brown-price)" opacity=".5"/>
+          <rect x="42" y="66" width="8" height="8" rx="2" fill="var(--orange)"/>
+          <rect x="54" y="68" width="18" height="4" rx="2" fill="var(--brown-price)" opacity=".5"/>
+          <circle cx="82" cy="78" r="18" fill="var(--orange-deep)" stroke="var(--cream)" stroke-width="4"/>
+          <path d="M74 78l6 6 12-14" stroke="#fff" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <h2 id="purchase-modal-title">Thanks for Purchase!</h2>
+        <p>Your booking has been successfully confirmed. We look forward to welcoming you soon!</p>
+        <div class="purchase-modal-customer">
+          <span class="purchase-modal-avatar" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg>
+          </span>
+          <span>
+            <span class="purchase-modal-customer-label">Customer Name</span>
+            <span class="purchase-modal-customer-name"><?= htmlspecialchars($booking['full_name']) ?></span>
+          </span>
+        </div>
+        <button type="button" class="purchase-modal-ok" id="purchase-modal-ok">OK</button>
+      </div>
+    </div>
+    <script src="../assets/js/simple-modal.js"></script>
+    <script>
+      initSimpleModal('purchase-modal-overlay', { closeIds: ['purchase-modal-close', 'purchase-modal-ok'] });
+    </script>
+
     <div class="container page-title">
       <h1>Payment Successful!</h1>
       <p>Your booking has been confirmed. A confirmation email has been sent to you.</p>

@@ -148,37 +148,6 @@
       padding-bottom: 84px;
   }
 
-  .hero-eyebrow {
-      display: inline-block;
-      font-family: 'Dancing Script', cursive;
-      font-weight: 700;
-      font-size: 50px;
-      color: var(--orange);
-      text-shadow: 0 2px 12px rgba(0, 0, 0, .6), 0 1px 3px rgba(0, 0, 0, .7);
-      background: rgba(0, 0, 0, .3);
-      padding: 6px 22px;
-      border-radius: 999px;
-      backdrop-filter: blur(2px);
-  }
-
-  .hero-title {
-      font-family: 'Raleway', sans-serif;
-      font-weight: 700;
-      font-size: clamp(34px, 5vw, 55px);
-      line-height: 1.15;
-      max-width: 560px;
-      color: var(--cream);
-  }
-
-  .hero-sub {
-      font-family: 'Raleway', sans-serif;
-      font-weight: 600;
-      font-size: 15px;
-      max-width: 300px;
-      color: var(--cream);
-      opacity: .9;
-  }
-
   .play-btn {
       margin-top: 20px;
       display: inline-flex;
@@ -212,6 +181,78 @@
       font-weight: 600;
       font-size: 16px;
       color: #fff;
+  }
+
+  .hero-eyebrow {
+      display: inline-block;
+      font-family: 'Dancing Script', cursive;
+      font-weight: 700;
+      font-size: 50px;
+      color: var(--orange);
+      text-shadow: 0 2px 12px rgba(0, 0, 0, .6), 0 1px 3px rgba(0, 0, 0, .7);
+      background: rgba(0, 0, 0, .3);
+      padding: 6px 22px;
+      border-radius: 999px;
+      backdrop-filter: blur(2px);
+  }
+
+  .hero-title {
+      font-family: 'Raleway', sans-serif;
+      font-weight: 700;
+      font-size: clamp(34px, 5vw, 55px);
+      line-height: 1.15;
+      max-width: 560px;
+      color: var(--cream);
+  }
+
+  .hero-sub {
+      font-family: 'Raleway', sans-serif;
+      font-weight: 600;
+      font-size: 15px;
+      max-width: 300px;
+      color: var(--cream);
+      opacity: .9;
+  }
+
+  /* ---------- HERO VIDEO LIGHTBOX ---------- */
+  .video-lightbox {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .85);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+  }
+
+  .video-lightbox.is-open {
+      display: flex;
+  }
+
+  .video-lightbox-inner {
+      position: relative;
+      width: 100%;
+      max-width: 960px;
+  }
+
+  .video-lightbox-inner video {
+      width: 100%;
+      max-height: 80vh;
+      border-radius: 8px;
+      background: #000;
+  }
+
+  .video-lightbox-close {
+      position: absolute;
+      top: -44px;
+      right: 0;
+      background: none;
+      border: none;
+      color: #fff;
+      font-size: 32px;
+      line-height: 1;
+      cursor: pointer;
   }
 
   /* ---------- QUICK BOOKING BAR ---------- */
@@ -1117,6 +1158,27 @@
 
   .chatbot-input-row button:not(.chatbot-mic-btn):hover {
       filter: brightness(1.05);
+  }
+
+  .chatbot-mic-lang {
+      flex-shrink: 0;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #fff;
+      color: var(--orange);
+      border: 1.5px solid var(--orange);
+      padding: 0;
+      font-family: 'Raleway', sans-serif;
+      font-weight: 700;
+      font-size: 11px;
+  }
+
+  .chatbot-mic-lang:hover {
+      background: #fff6ec;
   }
 
   .chatbot-mic-btn {

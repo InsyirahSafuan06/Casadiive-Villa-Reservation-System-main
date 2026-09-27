@@ -126,10 +126,10 @@
               <label class="upload-dropzone" id="payment-proof-dropzone" for="payment-proof-input">
                 <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M12 4 7 9M12 4l5 5"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>
                 <span class="upload-dropzone-title">Click to upload payment receipt</span>
-                <span class="upload-dropzone-hint">JPG, PNG or WEBP &middot; max 5MB</span>
+                <span class="upload-dropzone-hint">JPG, PNG, WEBP or PDF &middot; max 5MB</span>
                 <span class="upload-filename" id="payment-proof-filename" hidden></span>
               </label>
-              <input type="file" id="payment-proof-input" name="payment_proof" accept=".jpg,.jpeg,.png,.webp,image/*" required hidden>
+              <input type="file" id="payment-proof-input" name="payment_proof" accept=".jpg,.jpeg,.png,.webp,.pdf,image/*,application/pdf" required hidden>
 
               <script>
                 (function () {

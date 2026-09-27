@@ -4,21 +4,25 @@
  * Tiada kebergantungan Composer/SDK — cakap terus dengan REST API ToyyibPay guna cURL,
  * selari dengan seluruh kod projek ini (bandingkan includes/mailer.php untuk SMTP mentah).
  *
- * PERSEDIAAN DIPERLUKAN: isikan TOYYIBPAY_SECRET_KEY dan TOYYIBPAY_CATEGORY_CODE di bawah
- * dengan nilai sebenar dari dashboard ToyyibPay anda (Settings > User Profile untuk Secret Key,
- * dan halaman Category anda untuk Category Code) sebelum bil sebenar boleh dicipta.
- * Sehingga itu, toyyibpay_create_bill() akan pulangkan false sahaja.
+ * Secret Key dan semua Category Code (Settings > User Profile dan halaman Category dashboard
+ * ToyyibPay anda) dah diisi di bawah — satu category setiap Casa/Campsite Package.
  */
 declare(strict_types=1);
 
 const TOYYIBPAY_SECRET_KEY = '5srvns99-2dvf-pzbf-teb1-fvnraubics5e';
-const TOYYIBPAY_CATEGORY_CODE = 'ar03kmpx'; // default/fallback — juga category code untuk Casa 1
+const TOYYIBPAY_CATEGORY_CODE = 'jq9987ht'; // default/fallback — category umum "CasadiveVilla"
 
-// satu category ToyyibPay setiap villa, supaya bayaran untuk villa tu masuk category yang betul
-// dalam dashboard ToyyibPay. Villa yang takde entri di sini guna TOYYIBPAY_CATEGORY_CODE (Casa 1).
+// satu category ToyyibPay setiap villa/campsite, supaya bayaran untuk unit tu masuk category
+// yang betul dalam dashboard ToyyibPay. Unit yang takde entri di sini guna TOYYIBPAY_CATEGORY_CODE.
 const TOYYIBPAY_CATEGORY_CODES_BY_ACCOMMODATION = [
     'Casa 1' => 'ar03kmpx',
     'Casa 2' => '9dzvj2xh',
+    'Casa 3' => 'shd4i55p',
+    'Casa 4' => 'xioo7g8f',
+    'Campsite Package 1' => 'qbmf6rev',
+    'Campsite Package 2' => '4sw9sf22',
+    'Campsite Package 3' => '5fnhw1fb',
+    'Campsite Package 4' => 'nqt9sjsc',
 ];
 
 // tukar ke 'https://dev.toyyibpay.com' kalau nak test guna sandbox/staging environment ToyyibPay

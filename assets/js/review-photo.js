@@ -33,6 +33,8 @@ function initReviewPhotoWidget(ids) {
   var cocoModel = null;
   var modelLoading = null;
   var cameraStream = null;
+  var autoCaptureTimer = null;
+  var AUTO_CAPTURE_MS = 5000; // scan tetingkap kamera cuma 5 saat, lepas tu terus capture automatik
 
   // "lumba" satu promise dengan satu had masa — kalau promise tu tak selesai dalam ms tu,
   // reject dengan Error('timeout') supaya caller boleh papar mesej yang sesuai
@@ -130,7 +132,7 @@ function initReviewPhotoWidget(ids) {
 
   function classify(imgEl) {
     return loadModel().then(function (model) {
-      setStatus('AI is checking your image…', 'processing');
+      setStatus('Checking your image…', 'processing');
       return model.detect(imgEl);
     }).then(function (predictions) {
       var best = null;
@@ -236,11 +238,36 @@ function initReviewPhotoWidget(ids) {
   }
 
   function stopCamera() {
+    if (autoCaptureTimer) {
+      clearTimeout(autoCaptureTimer);
+      autoCaptureTimer = null;
+    }
     if (cameraStream) {
       cameraStream.getTracks().forEach(function (t) { t.stop(); });
       cameraStream = null;
     }
     cameraModal.classList.remove('is-open');
+  }
+
+  function capturePhoto() {
+    if (autoCaptureTimer) {
+      clearTimeout(autoCaptureTimer);
+      autoCaptureTimer = null;
+    }
+    // stream metadata (videoWidth/videoHeight) kadang belum sedia lagi pada peranti/browser
+    // perlahan — tunggu sekejap lagi supaya tak capture bingkai 0x0 (gambar kosong tak sah)
+    if (!cameraVideo.videoWidth || !cameraVideo.videoHeight) {
+      autoCaptureTimer = setTimeout(capturePhoto, 200);
+      return;
+    }
+    cameraCanvas.width = cameraVideo.videoWidth;
+    cameraCanvas.height = cameraVideo.videoHeight;
+    cameraCanvas.getContext('2d').drawImage(cameraVideo, 0, 0);
+    cameraCanvas.toBlob(function (blob) {
+      var file = new File([blob], 'camera-capture.jpg', { type: 'image/jpeg' });
+      stopCamera();
+      handleFile(file);
+    }, 'image/jpeg', 0.9);
   }
 
   cameraBtn.addEventListener('click', function () {
@@ -250,6 +277,8 @@ function initReviewPhotoWidget(ids) {
       cameraVideo.srcObject = stream;
       cameraModal.classList.add('is-open');
       statusEl.hidden = true;
+      // scan tetingkap kamera cuma 5 saat — lepas tu terus capture automatik, tak payah tunggu klik
+      autoCaptureTimer = setTimeout(capturePhoto, AUTO_CAPTURE_MS);
     }).catch(function () {
       setStatus('Camera access was denied or unavailable. Please use Upload Image instead.', 'reject');
     });
@@ -257,14 +286,5 @@ function initReviewPhotoWidget(ids) {
 
   cancelBtn.addEventListener('click', stopCamera);
 
-  captureBtn.addEventListener('click', function () {
-    cameraCanvas.width = cameraVideo.videoWidth;
-    cameraCanvas.height = cameraVideo.videoHeight;
-    cameraCanvas.getContext('2d').drawImage(cameraVideo, 0, 0);
-    cameraCanvas.toBlob(function (blob) {
-      var file = new File([blob], 'camera-capture.jpg', { type: 'image/jpeg' });
-      stopCamera();
-      handleFile(file);
-    }, 'image/jpeg', 0.9);
-  });
+  captureBtn.addEventListener('click', capturePhoto);
 }

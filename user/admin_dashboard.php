@@ -62,6 +62,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'delet
     exit;
 }
 
+$galleryError = null;
+
+// manager/staff tambah gambar baru ke gallery awam (customer/gallery.php) — logik validasi/simpan
+// dikongsi dengan staff_dashboard.php dalam save_gallery_upload() (includes/helpers.php)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'add_gallery_image') {
+    if (!csrf_verify()) {
+        $galleryError = 'Your session expired. Please try again.';
+    } else {
+        $result = save_gallery_upload($pdo, $_FILES['gallery_image'] ?? null, trim((string) ($_POST['caption'] ?? '')), (int) $user['user_id']);
+        if ($result === true) {
+            header('Location: admin_dashboard.php?galleryadded=1');
+            exit;
+        }
+        $galleryError = $result;
+    }
+}
+
+// buang gambar dari gallery — cuma redirect "berjaya" kalau memang sesuatu dipadam (elak
+// dashboard claim "Image removed" walhal CSRF gagal/id tak wujud/jadual tak wujud lagi)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'delete_gallery_image') {
+    $galleryId = filter_input(INPUT_POST, 'gallery_id', FILTER_VALIDATE_INT);
+
+    if (csrf_verify() && $galleryId && delete_gallery_image($pdo, $galleryId)) {
+        header('Location: admin_dashboard.php?gallerydeleted=1');
+        exit;
+    }
+    $galleryError = 'We could not remove that image. Please try again.';
+}
+
 // flag-flag ni untuk papar mesej "berjaya" lepas redirect dari page lain (contoh: lepas save account)
 $updated = isset($_GET['updated']);
 $accountCreated = isset($_GET['created']);
@@ -71,15 +100,8 @@ $accCreated = isset($_GET['acccreated']);
 $accSaved = isset($_GET['accsaved']);
 $accDeleted = isset($_GET['accdeleted']);
 $reviewDeleted = isset($_GET['reviewdeleted']);
-
-// nombor ringkas untuk tunjuk kat jubin statistik atas dashboard
-// "Revenue" cuma kira booking yang betul-betul confirm/checked-in/checked-out (bukan pending/cancelled)
-$stats = [
-    'total_bookings' => (int) $pdo->query('SELECT COUNT(*) FROM booking')->fetchColumn(),
-    'pending_bookings' => (int) $pdo->query("SELECT COUNT(*) FROM booking WHERE booking_status = 'pending'")->fetchColumn(),
-    'revenue' => (float) $pdo->query("SELECT COALESCE(SUM(total_amount),0) FROM booking WHERE booking_status IN ('confirmed','checked_in','checked_out')")->fetchColumn(),
-    'total_users' => (int) $pdo->query('SELECT COUNT(*) FROM user')->fetchColumn(),
-];
+$galleryAdded = isset($_GET['galleryadded']);
+$galleryDeleted = isset($_GET['gallerydeleted']);
 
 // satu baris untuk setiap booking, nama penginapan + status bayaran terkini kita gabung sekali
 // guna GROUP_CONCAT/subquery, supaya table kat bawah takyah query lagi untuk setiap baris
@@ -101,6 +123,18 @@ $accommodations = $pdo->query(
     'SELECT accommodation_id, accommodation_name, accommodation_type, price, capacity, status
      FROM accommodation ORDER BY accommodation_type, accommodation_id'
 )->fetchAll();
+
+// dibalut try/catch sama macam $reviews di bawah — kalau database production belum di-migrate
+// (jadual `gallery` belum wujud lagi), dashboard tetap load dengan bahagian Gallery kosong
+// je, bukan fatal error seluruh page.
+try {
+    $galleryImages = $pdo->query(
+        'SELECT gallery_id, image_path, caption FROM gallery ORDER BY gallery_id DESC'
+    )->fetchAll();
+} catch (PDOException $e) {
+    error_log('Failed to load gallery images: ' . $e->getMessage());
+    $galleryImages = [];
+}
 
 // notification terkini yang berjaya dihantar untuk setiap booking + jenis mesej, supaya
 // column Notification kat bawah boleh papar "Sent" ganti butang, kalau mesej tu dah dihantar

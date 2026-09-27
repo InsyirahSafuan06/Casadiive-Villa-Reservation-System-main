@@ -123,6 +123,11 @@
     font-weight:600;
     margin-bottom: 24px;
   }
+  .flash-error{
+    background:#fdecea;
+    border-color:#f3b7b0;
+    color:#a12b1f;
+  }
   .notice-info{
     background:#fff8e6;
     border:1px solid #f0ddaa;
@@ -217,6 +222,20 @@
     border-radius: 50px;
     text-transform: capitalize;
   }
+  .pbi-embed-wrap{
+    position:relative;
+    width:100%;
+    padding-top:47.5%; /* nisbah 1140:541.25 dari embed code Power BI */
+    border-radius:8px;
+    overflow:hidden;
+  }
+  .pbi-embed-wrap iframe{
+    position:absolute;
+    top:0; left:0;
+    width:100%;
+    height:100%;
+    border:0;
+  }
   .addon-badges{
     display:flex;
     flex-wrap:wrap;
@@ -277,6 +296,63 @@
      used by manage_account.view.php and manage_accommodation.view.php */
   .form-row-2{ display:flex; gap:18px; }
   .form-row-2 > div{ flex:1; }
+
+  /* ---------- GALLERY MANAGEMENT ---------- */
+  .gallery-upload-form{
+    display:flex;
+    flex-wrap:wrap;
+    gap: 12px;
+    align-items:center;
+    margin-bottom: 24px;
+  }
+  .gallery-upload-form input[type="file"]{
+    font-family:'Raleway', sans-serif;
+    font-size: 13px;
+  }
+  .gallery-upload-form input[type="text"]{
+    flex: 1 1 220px;
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-family:'Raleway', sans-serif;
+    font-size: 13px;
+  }
+  .gallery-grid{
+    display:grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 14px;
+  }
+  .gallery-thumb{
+    position:relative;
+    border-radius: 8px;
+    overflow:hidden;
+    aspect-ratio: 1;
+    background: var(--border);
+  }
+  .gallery-thumb img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    display:block;
+  }
+  .gallery-thumb form{
+    position:absolute;
+    top: 6px;
+    right: 6px;
+  }
+  .gallery-thumb-delete{
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: rgba(0,0,0,.55);
+    color:#fff;
+    font-size: 16px;
+    line-height:1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .gallery-thumb-delete:hover{ background: rgba(161,43,31,.85); }
 
   @media (max-width: 1100px){
     .stat-grid{ grid-template-columns: repeat(2, 1fr); }

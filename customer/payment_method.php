@@ -84,12 +84,26 @@ if ($booking && !$paid && $method !== '' && $_SERVER['REQUEST_METHOD'] === 'POST
             $errors[] = 'Please upload your payment receipt/proof of payment.';
         } else {
             $file = $_FILES['payment_proof'];
-            $allowedExt = ['jpg', 'jpeg', 'png', 'webp'];
+            $allowedExt = ['jpg', 'jpeg', 'png', 'webp', 'pdf'];
             $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
             $maxSize = 5 * 1024 * 1024; // 5MB
 
-            if (!in_array($ext, $allowedExt, true) || $file['size'] <= 0 || $file['size'] > $maxSize || @getimagesize($file['tmp_name']) === false) {
-                $errors[] = 'Please upload a valid receipt image (JPG, PNG or WEBP, max 5MB).';
+            $isValid = in_array($ext, $allowedExt, true) && $file['size'] > 0 && $file['size'] <= $maxSize;
+            if ($isValid) {
+                // sahkan kandungan fail sebenar padan dengan sangkaan (bukan cuma percaya extension) —
+                // PDF disahkan guna MIME type kalau extension fileinfo ada, kalau tak (sesetengah
+                // hosting disable dia) baca 5 byte pertama fail terus (semua PDF sah mula dengan "%PDF-")
+                if ($ext === 'pdf') {
+                    $isValid = function_exists('mime_content_type')
+                        ? mime_content_type($file['tmp_name']) === 'application/pdf'
+                        : @file_get_contents($file['tmp_name'], false, null, 0, 5) === '%PDF-';
+                } else {
+                    $isValid = @getimagesize($file['tmp_name']) !== false;
+                }
+            }
+
+            if (!$isValid) {
+                $errors[] = 'Please upload a valid receipt file (JPG, PNG, WEBP or PDF, max 5MB).';
             } else {
                 $destDir = __DIR__ . '/../assets/uploads/payments/';
                 if (!is_dir($destDir)) {

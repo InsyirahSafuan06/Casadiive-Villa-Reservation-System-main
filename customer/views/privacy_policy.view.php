@@ -50,9 +50,21 @@
 
         <h2>Questions</h2>
         <p>If you have any questions about this policy or how your information is handled, please reach out.</p>
-        <div class="info-contact-row">
-          <a href="https://wa.me/60103851892" target="_blank" rel="noopener">WhatsApp Us</a>
-          <a href="mailto:casadivevilla@gmail.com">Email Us</a>
+        <div class="social-grid social-grid-compact">
+          <div class="social-card">
+            <span class="social-icon whatsapp" aria-hidden="true">
+              <svg viewBox="0 0 32 32"><path d="M16 5a11 11 0 0 0-9.5 16.4L5 27l5.8-1.5A11 11 0 1 0 16 5z" fill="none"/><path d="M16 6.6a9.4 9.4 0 0 0-8 14.4l.2.4-1 3.6 3.7-1 .4.2A9.4 9.4 0 1 0 16 6.6z" fill="#fff"/><path d="M12.9 10.7c-.2-.5-.4-.5-.6-.5h-.5c-.2 0-.5.1-.7.4-.2.3-1 1-.9 2.4.1 1.4 1 2.7 1.1 2.9.1.2 2 3.2 5 4.3 2.5 1 2.9.8 3.5.7.6-.1 1.7-.7 2-1.3.2-.7.2-1.2.1-1.3-.1-.1-.3-.2-.5-.4-.3-.1-1.7-.8-1.9-.9-.3-.1-.5-.1-.6.1-.2.3-.7.9-.9 1.1-.1.2-.3.2-.6.1-.3-.1-1.2-.5-2.3-1.4-.9-.8-1.4-1.7-1.6-2-.2-.3 0-.5.1-.6l.4-.5c.1-.2.2-.3.3-.5.1-.2 0-.4 0-.5-.1-.2-.5-1.5-.8-2.1z" fill="#25D366"/></svg>
+            </span>
+            <h4>WhatsApp</h4>
+            <a href="https://wa.me/60103851892" target="_blank" rel="noopener" class="social-btn filled">Chat Now</a>
+          </div>
+          <div class="social-card">
+            <span class="social-icon email" aria-hidden="true">
+              <svg viewBox="0 0 32 32"><rect x="5" y="8" width="22" height="16" rx="3" fill="none" stroke="#fff" stroke-width="2"/><path d="M6 9l10 8 10-8" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </span>
+            <h4>Email</h4>
+            <a href="mailto:casadivevilla@gmail.com" class="social-btn filled">Email Us</a>
+          </div>
         </div>
 
       </div>

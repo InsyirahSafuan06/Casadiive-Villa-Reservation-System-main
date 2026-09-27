@@ -35,6 +35,12 @@
       <?php if ($paymentRecorded): ?>
         <p class="flash">Payment recorded.</p>
       <?php endif; ?>
+      <?php if ($galleryAdded): ?>
+        <p class="flash">Image added to gallery.</p>
+      <?php endif; ?>
+      <?php if ($galleryDeleted): ?>
+        <p class="flash">Image removed from gallery.</p>
+      <?php endif; ?>
 
       <div class="stat-grid">
         <div class="stat-tile">
@@ -54,6 +60,13 @@
           <p class="stat-value"><?= $stats['checkouts_today'] ?></p>
         </div>
       </div>
+
+      <section class="dash-section">
+        <h2 class="section-heading">Analytics Dashboard</h2>
+        <div class="pbi-embed-wrap">
+          <iframe title="FYP" src="https://app.powerbi.com/reportEmbed?reportId=522d4c30-5da2-44f0-8e28-f019de0ce933&autoAuth=true&ctid=221e8880-f1b1-41cd-8221-56d4277e4ffc" frameborder="0" allowFullScreen="true"></iframe>
+        </div>
+      </section>
 
       <section class="dash-section">
         <h2>Bookings</h2>
@@ -238,6 +251,35 @@
             <?php endforeach; endif; ?>
           </tbody>
         </table>
+      </section>
+
+      <section class="dash-section">
+        <h2 class="section-heading">Gallery</h2>
+        <?php if ($galleryError): ?>
+          <p class="flash flash-error"><?= htmlspecialchars($galleryError) ?></p>
+        <?php endif; ?>
+        <form method="post" enctype="multipart/form-data" class="gallery-upload-form">
+          <?= csrf_field() ?>
+          <input type="hidden" name="action" value="add_gallery_image">
+          <input type="file" name="gallery_image" accept=".jpg,.jpeg,.png,.webp,image/*" required>
+          <input type="text" name="caption" placeholder="Caption (optional)" maxlength="150">
+          <button type="submit" class="btn btn-md btn-primary">+ Add Image</button>
+        </form>
+        <div class="gallery-grid">
+          <?php if (!$galleryImages): ?>
+            <p class="text-muted">No gallery images yet.</p>
+          <?php else: foreach ($galleryImages as $g): ?>
+            <div class="gallery-thumb">
+              <img src="../<?= htmlspecialchars($g['image_path']) ?>" alt="<?= htmlspecialchars($g['caption'] ?: 'Gallery image') ?>">
+              <form method="post" onsubmit="return confirm('Remove this image from the gallery?');">
+                <?= csrf_field() ?>
+                <input type="hidden" name="action" value="delete_gallery_image">
+                <input type="hidden" name="gallery_id" value="<?= (int) $g['gallery_id'] ?>">
+                <button type="submit" class="gallery-thumb-delete" aria-label="Delete image">&times;</button>
+              </form>
+            </div>
+          <?php endforeach; endif; ?>
+        </div>
       </section>
     </div>
   </main>

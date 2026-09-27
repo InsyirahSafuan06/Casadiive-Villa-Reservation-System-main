@@ -1,4 +1,5 @@
 <?php include __DIR__ . '/../../includes/header.php'; ?>
+<script src="../assets/js/simple-modal.js"></script>
 
   <!-- PAGE TITLE -->
   <div class="container page-title">
@@ -137,20 +138,97 @@
         <div class="receipt-actions">
           <?php if ($showPayNow): ?>
             <a href="payment.php?booking_id=<?= (int) $booking['booking_id'] ?>" class="receipt-print">Pay Now</a>
+          <?php else: ?>
+            <button type="button" class="receipt-print" onclick="window.print()">Print Receipt</button>
+            <a href="<?= htmlspecialchars($base) ?>index.php" class="receipt-back">Look Up Another Booking</a>
           <?php endif; ?>
-          <button type="button" class="receipt-print" onclick="window.print()">Print Receipt</button>
-          <a href="mybooking.php" class="receipt-back">Look Up Another Booking</a>
           <?php if (in_array($booking['booking_status'], ['pending', 'confirmed'], true)): ?>
-            <form method="post" onsubmit="return confirm('Are you sure you want to cancel this booking?');">
+            <form method="post" id="cancel-booking-form">
               <?= csrf_field() ?>
               <input type="hidden" name="form" value="cancel">
               <input type="hidden" name="ref" value="<?= (int) $booking['booking_id'] ?>">
               <input type="hidden" name="phone" value="<?= htmlspecialchars($booking['phone']) ?>">
-              <button type="submit" class="receipt-back" style="color:#c0392b;border-color:#c0392b;">Cancel Booking</button>
+              <button type="button" id="cancel-booking-trigger" class="receipt-back" style="color:#c0392b;border-color:#c0392b;">Cancel Booking</button>
             </form>
+
+            <!-- CANCEL BOOKING REMINDER MODAL -->
+            <div class="cancel-modal-overlay" id="cancel-modal-overlay" hidden>
+              <div class="cancel-modal" role="dialog" aria-modal="true" aria-labelledby="cancel-modal-title">
+                <button type="button" class="cancel-modal-close" id="cancel-modal-close" aria-label="Close">&times;</button>
+                <svg class="cancel-modal-icon" viewBox="0 0 120 100" aria-hidden="true">
+                  <path d="M92 26l4-4M101 30h6M97 21v6" stroke="var(--orange-deep)" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+                  <path d="M14 55c8-4 14-2 18 4" stroke="var(--brown-price)" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+                  <path d="M10 63c8 2 12 6 14 12" stroke="var(--brown-price)" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+                  <path d="M106 55c-8-4-14-2-18 4" stroke="var(--brown-price)" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+                  <path d="M110 63c-8 2-12 6-14 12" stroke="var(--brown-price)" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+                  <rect x="28" y="25" width="64" height="55" rx="8" fill="#F3D9B1" stroke="var(--brown-price)" stroke-width="3"/>
+                  <rect x="28" y="25" width="64" height="16" rx="8" fill="var(--brown-price)"/>
+                  <rect x="40" y="16" width="6" height="16" rx="3" fill="var(--brown-price)"/>
+                  <rect x="74" y="16" width="6" height="16" rx="3" fill="var(--brown-price)"/>
+                  <rect x="37" y="50" width="10" height="10" rx="2" fill="var(--orange)"/>
+                  <rect x="55" y="50" width="10" height="10" rx="2" fill="var(--orange)"/>
+                  <circle cx="83" cy="66" r="14" fill="#E4572E" stroke="#fff" stroke-width="3"/>
+                  <path d="M77 60l12 12M89 60l-12 12" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+                </svg>
+                <h2 id="cancel-modal-title">Cancel Booking Reminder</h2>
+                <p>Are you sure you want to cancel this booking?<br>This action cannot be undone.</p>
+                <div class="cancel-modal-actions">
+                  <button type="button" class="cancel-modal-btn cancel-modal-btn-outline" id="cancel-modal-dismiss">Cancel</button>
+                  <button type="button" class="cancel-modal-btn cancel-modal-btn-solid" id="cancel-modal-confirm">OK</button>
+                </div>
+              </div>
+            </div>
+            <script>
+              (function () {
+                var form = document.getElementById('cancel-booking-form');
+                var trigger = document.getElementById('cancel-booking-trigger');
+                var modal = initSimpleModal('cancel-modal-overlay', {
+                  closeIds: ['cancel-modal-close', 'cancel-modal-dismiss'],
+                  confirmId: 'cancel-modal-confirm',
+                  onConfirm: function () { form.submit(); }
+                });
+                if (trigger && modal) trigger.addEventListener('click', modal.open);
+              })();
+            </script>
           <?php endif; ?>
         </div>
       </div>
+
+      <?php if ($reviewSubmitted && $existingReview): ?>
+      <!-- THANKS FOR REVIEWING MODAL -->
+      <div class="purchase-modal-overlay" id="review-thanks-overlay">
+        <div class="purchase-modal" role="dialog" aria-modal="true" aria-labelledby="review-thanks-title">
+          <button type="button" class="purchase-modal-close" id="review-thanks-close" aria-label="Close">&times;</button>
+          <span class="purchase-modal-leaf purchase-modal-leaf-bl" aria-hidden="true"></span>
+          <span class="purchase-modal-leaf purchase-modal-leaf-br" aria-hidden="true"></span>
+          <svg class="purchase-modal-icon" viewBox="0 0 120 100" aria-hidden="true">
+            <path d="M14 26l4-4M22 30h6M18 21v6" stroke="var(--orange-deep)" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+            <path d="M100 22l4-4M108 26h6M104 17v6" stroke="var(--orange-deep)" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+            <path d="M30 20h60a8 8 0 0 1 8 8v28a8 8 0 0 1-8 8H50l-16 14V64h-4a8 8 0 0 1-8-8V28a8 8 0 0 1 8-8Z" fill="#fff" stroke="var(--brown-price)" stroke-width="3"/>
+            <polygon points="45,32 47.5,39 55,39 49,43.5 51,50.5 45,46 39,50.5 41,43.5 35,39 42.5,39" fill="var(--orange)"/>
+            <polygon points="63,32 65.5,39 73,39 67,43.5 69,50.5 63,46 57,50.5 59,43.5 53,39 60.5,39" fill="var(--orange)"/>
+            <polygon points="81,32 83.5,39 91,39 85,43.5 87,50.5 81,46 75,50.5 77,43.5 71,39 78.5,39" fill="var(--orange)"/>
+            <circle cx="94" cy="60" r="14" fill="var(--orange-deep)" stroke="var(--cream)" stroke-width="4"/>
+            <path d="M94 66c-5-3.5-7-6-7-9a4 4 0 0 1 7-2.6A4 4 0 0 1 101 57c0 3-2 5.5-7 9Z" fill="#fff"/>
+          </svg>
+          <h2 id="review-thanks-title">Thanks for Reviewing!</h2>
+          <p>Your feedback means a lot to us. It helps us improve and gives others confidence to book with us.</p>
+          <div class="purchase-modal-customer">
+            <span class="purchase-modal-avatar" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg>
+            </span>
+            <span>
+              <span class="purchase-modal-customer-label">Customer Name</span>
+              <span class="purchase-modal-customer-name"><?= htmlspecialchars($booking['full_name']) ?></span>
+            </span>
+          </div>
+          <button type="button" class="purchase-modal-ok" id="review-thanks-ok">OK</button>
+        </div>
+      </div>
+      <script>
+        initSimpleModal('review-thanks-overlay', { closeIds: ['review-thanks-close', 'review-thanks-ok'] });
+      </script>
+      <?php endif; ?>
 
       <?php if ($booking['booking_status'] === 'checked_out'): ?>
       <div class="receipt-card review-card">
@@ -194,7 +272,7 @@
             <textarea name="comment" rows="3" placeholder="Tell us about your stay (optional)"></textarea>
 
             <div class="review-photo-section">
-              <p class="review-photo-label">Add a room photo (optional) &mdash; our AI checks it's actually a photo of the room before it's attached.</p>
+              <p class="review-photo-label">Add a room photo (optional) &mdash; we'll check it's actually a photo of the room before it's attached.</p>
               <div class="review-photo-controls">
                 <button type="button" class="photo-btn" id="review-upload-btn">Upload Image</button>
                 <button type="button" class="photo-btn" id="review-camera-btn">Open Camera</button>
