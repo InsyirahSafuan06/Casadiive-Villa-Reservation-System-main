@@ -104,6 +104,30 @@ function parse_booking_ref(string $ref): int|false
     return filter_var($ref, FILTER_VALIDATE_INT);
 }
 
+function fetch_booking_door_codes_plain(PDO $pdo, int $bookingId): string
+{
+    $stmt = $pdo->prepare(
+        "SELECT DISTINCT a.accommodation_name, a.door_code
+         FROM booking_item bi
+         JOIN accommodation a ON a.accommodation_id = bi.accommodation_id
+         WHERE bi.booking_id = :id AND a.door_code IS NOT NULL AND a.door_code <> ''"
+    );
+    $stmt->execute(['id' => $bookingId]);
+    $rows = $stmt->fetchAll();
+
+    if (count($rows) === 1) {
+        return $rows[0]['door_code'];
+    }
+    if (count($rows) > 1) {
+        return implode(', ', array_map(
+            fn ($r) => $r['accommodation_name'] . ': ' . $r['door_code'],
+            $rows
+        ));
+    }
+
+    return 'Please contact the admin for your door lock code.';
+}
+
 function booking_grand_total(array $booking): float
 {
     return (float) $booking['total_amount'] + (float) $booking['deposit_amount'];

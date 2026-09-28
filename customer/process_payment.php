@@ -6,9 +6,10 @@ require_once __DIR__ . '/../includes/email_notify.php';
 
 $allowedBanks = ['Bank Islam', 'Maybank', 'CIMB Bank', 'Public Bank', 'RHB Bank', 'Hong Leong Bank'];
 
-$bookingId = filter_var($_GET['booking_id'] ?? '', FILTER_VALIDATE_INT);
-$method = $_GET['method'] ?? '';
-$bank = trim((string) ($_GET['bank'] ?? ''));
+$bookingId = filter_var($_POST['booking_id'] ?? '', FILTER_VALIDATE_INT);
+$method = $_POST['method'] ?? '';
+$bank = trim((string) ($_POST['bank'] ?? ''));
+$phone = trim((string) ($_POST['phone'] ?? ''));
 $booking = null;
 $errors = [];
 $paid = false;
@@ -20,13 +21,19 @@ if (!in_array($bank, $allowedBanks, true)) {
     $bank = '';
 }
 
-if ($bookingId !== false) {
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    $errors[] = 'This page can only be reached from the payment confirmation form.';
+} elseif (!csrf_verify()) {
+    $errors[] = 'Your session expired. Please try again.';
+}
+
+if (!$errors && $bookingId !== false) {
     $stmt = $pdo->prepare(
         'SELECT b.*, c.full_name, c.phone
          FROM booking b JOIN customer c ON c.customer_id = b.customer_id
-         WHERE b.booking_id = :id'
+         WHERE b.booking_id = :id AND c.phone = :phone'
     );
-    $stmt->execute(['id' => $bookingId]);
+    $stmt->execute(['id' => $bookingId, 'phone' => $phone]);
     $booking = $stmt->fetch();
 
     if ($booking) {
@@ -38,10 +45,12 @@ if ($bookingId !== false) {
     }
 }
 
-if (!$booking) {
+if (!$errors && !$booking) {
     $errors[] = 'We couldn\'t find that booking. Please start again from the booking form.';
-} elseif ($method === '') {
+} elseif (!$errors && $method === '') {
     $errors[] = 'Missing payment method. Please choose a payment method again.';
+} elseif (!$errors && !($_POST['confirm'] ?? false)) {
+    $errors[] = 'Please confirm the payment details before proceeding.';
 }
 
 if ($booking && !$paid && !$errors) {

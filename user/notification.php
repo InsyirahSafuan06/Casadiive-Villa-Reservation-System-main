@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/helpers.php';
 require_login(['manager']);
 
 $booking_id = filter_input(INPUT_GET, 'booking_id', FILTER_VALIDATE_INT);
@@ -79,6 +80,8 @@ Kindly complete your payment to confirm your reservation. Thank you.";
 
     case "check_in":
 
+        $doorCode = fetch_booking_door_codes_plain($pdo, $booking_id);
+
         $message = " CasaDive Villa
 
 Hi $name,
@@ -88,7 +91,7 @@ This is a friendly reminder that your check-in date is:
  Check-in Time : After $checkinTime
  Check-out Time : Before $checkoutTime
 
-Door Code: 8876
+Door Code: $doorCode
 Kindly keep this code confidential and do not share it with anyone.
 
 If you have any questions or need assistance, feel free to contact us.
