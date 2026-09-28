@@ -1,26 +1,13 @@
 <?php
-/**
- * Susun atur header yang dikongsi untuk laman web.
- * Fail ini membina navigasi atas dan struktur halaman umum yang digunakan di seluruh projek.
- */
 declare(strict_types=1);
 require_once __DIR__ . '/auth.php';
 
-/**
- * Pembolehubah yang dijangka daripada halaman yang memasukkan fail ini:
- *   $base      string  '' di root projek, '../' satu tahap ke bawah (customer/, user/)
- *   $active    string  salah satu daripada home|villa|campsite|gallery|mybooking|contact
- *   $pageTitle string  teks <title>
- *   $pageCss   string  href stylesheet, relatif kepada halaman yang memasukkannya
- */
-$base ??= ''; // kalau page tak set $base, default kosong (maksudnya kita kat root folder)
-$active ??= ''; // page mana yang sedang aktif, untuk highlight menu navigasi
-$pageTitle ??= 'Casadive Villa'; // tajuk default kalau page tak bagi tajuk sendiri
-$pageCss ??= ''; // stylesheet khas untuk page ni (kalau ada)
-$loggedInUser = current_user(); // check siapa yang login sekarang (kalau ada)
+$base ??= '';
+$active ??= '';
+$pageTitle ??= 'Casadive Villa';
+$pageCss ??= '';
+$loggedInUser = current_user();
 
-// ni untuk elak browser guna CSS lama yang tersimpan (cache). kita tambah "?v=" + masa
-// fail CSS last diubah, supaya bila kita edit CSS, browser terus ambil versi baru
 $pageCssHref = $pageCss;
 if ($pageCss !== '') {
     $pageCssPath = dirname($_SERVER['SCRIPT_FILENAME']) . '/' . $pageCss;
@@ -29,9 +16,6 @@ if ($pageCss !== '') {
     }
 }
 
-// shared mobile-nav CSS/JS, cache-busted the same way as $pageCss above.
-// loaded after $pageCss so `.nav-links.is-open` can override that page's
-// own `@media (max-width:760px){ .nav-links{display:none} }` rule.
 $navCssHref = $base . 'assets/css/nav-responsive.css';
 $navCssPath = __DIR__ . '/../assets/css/nav-responsive.css';
 if (is_file($navCssPath)) {
@@ -59,7 +43,6 @@ if (is_file($navJsPath)) {
 </head>
 <body>
 
-  <!-- NAVBAR -->
   <header class="navbar">
     <div class="container">
       <a href="<?= $base ?>index.php" class="nav-logo-link">

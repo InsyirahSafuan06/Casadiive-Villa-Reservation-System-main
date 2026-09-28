@@ -1,8 +1,4 @@
 <?php
-/**
- * Senarai endpoint API laporan yang ada — takde data sebenar dipaparkan sini, so
- * page ni sendiri takyah API key (cuma dokumentasi macam mana nak guna endpoint lain).
- */
 declare(strict_types=1);
 header('Content-Type: application/json; charset=utf-8');
 

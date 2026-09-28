@@ -57,11 +57,14 @@
       <?php if ($galleryDeleted): ?>
         <p class="flash">Image removed from gallery.</p>
       <?php endif; ?>
+      <?php if ($refunded): ?>
+        <p class="flash">Refund recorded.</p>
+      <?php endif; ?>
 
       <section class="dash-section">
         <h2 class="section-heading">Analytics Dashboard</h2>
         <div class="pbi-embed-wrap">
-          <iframe title="FYP" src="https://app.powerbi.com/reportEmbed?reportId=522d4c30-5da2-44f0-8e28-f019de0ce933&autoAuth=true&ctid=221e8880-f1b1-41cd-8221-56d4277e4ffc" frameborder="0" allowFullScreen="true"></iframe>
+          <iframe title="FYP" src="https://app.powerbi.com/reportEmbed?reportId=317fef2a-5607-4506-97f7-4f5e24ff35a1&autoAuth=true&ctid=221e8880-f1b1-41cd-8221-56d4277e4ffc" frameborder="0" allowFullScreen="true"></iframe>
         </div>
       </section>
 
@@ -91,11 +94,8 @@
             <?php if (!$bookings): ?>
               <tr class="empty-row"><td colspan="14">No bookings yet.</td></tr>
             <?php else: foreach ($bookings as $b):
-              // "Due" maksudnya check-in esok — itu waktu yang sepatutnya reminder dihantar
               $reminderDue = $b['check_in'] === date('Y-m-d', strtotime('+1 day'));
 
-              // setiap baris dapat SATU je butang notification, ikut status booking sekarang
-              // (ada status yang takde butang langsung, contoh checked_in)
               $notifType = null;
               $notifLabel = null;
               $notifClass = 'btn-primary';
@@ -126,8 +126,6 @@
                   $notifClass = 'btn-primary';
               }
 
-              // dah hantar ke belum mesej ni untuk booking ni? kalau dah, butang tunjuk "Sent" —
-              // tapi tetap boleh klik lagi kalau nak hantar semula
               $alreadySentAt = $notifType ? ($sentLookup[$b['booking_id']][$notifType] ?? null) : null;
               ?>
               <tr<?= $reminderDue ? ' class="tr-due"' : '' ?>>
@@ -135,8 +133,8 @@
                 <td><?= htmlspecialchars($b['full_name']) ?></td>
                 <td><?= htmlspecialchars($b['phone']) ?></td>
                 <td><?= htmlspecialchars($b['accommodations'] ?? '—') ?></td>
-                <td><?= htmlspecialchars($b['check_in']) ?></td>
-                <td><?= htmlspecialchars($b['check_out']) ?></td>
+                <td><?= htmlspecialchars(date('d/m/Y', strtotime($b['check_in']))) ?></td>
+                <td><?= htmlspecialchars(date('d/m/Y', strtotime($b['check_out']))) ?></td>
                 <td><?= (int) $b['total_guest'] ?></td>
                 <td>
                   <?= number_format((float) $b['total_amount'], 2) ?>
@@ -153,7 +151,13 @@
                 <td>
                   <?php if (payment_needs_refund($b['booking_status'], $b['latest_payment_status'])): ?>
                     <span class="status-badge status-refund_due">Refund Due</span>
-                    <a href="staff_dashboard.php?refund_booking=<?= (int) $b['booking_id'] ?>#record-payment" class="btn btn-sm btn-outline" style="margin-left:6px;">Refund</a>
+                    <form class="refund-form" method="post">
+                      <?= csrf_field() ?>
+                      <input type="hidden" name="action" value="process_refund">
+                      <input type="hidden" name="booking_id" value="<?= (int) $b['booking_id'] ?>">
+                      <input type="number" name="refund_amount" min="0" step="0.01" value="<?= number_format((float) ($b['amount_paid'] ?? $b['deposit_amount']), 2, '.', '') ?>" required>
+                      <button type="submit" class="btn btn-sm btn-outline">Mark Refunded</button>
+                    </form>
                   <?php elseif ($b['latest_payment_status']): ?>
                     <?= htmlspecialchars(ucfirst($b['latest_payment_status'])) ?>
                   <?php else: ?>

@@ -10,7 +10,6 @@
 </head>
 <body>
 
-  <!-- NAVBAR -->
   <header class="navbar">
     <div class="container">
       <img src="<?= htmlspecialchars($base) ?>assets/images/logo.png" alt="Casadive Villa" class="login-navbar-logo">
@@ -18,7 +17,6 @@
     </div>
   </header>
 
-  <!-- LOGIN -->
   <section class="login-hero">
     <div class="login-card">
       <h1 class="login-title">Manager Sign In</h1>
@@ -56,7 +54,6 @@
 <?php include __DIR__ . '/../../includes/footer.php'; ?>
 
   <script>
-    // butang mata untuk toggle tunjuk/sorok password bila diklik
     const toggleBtn = document.getElementById('toggle-password');
     const passwordInput = document.getElementById('login-password');
     toggleBtn.addEventListener('click', () => {

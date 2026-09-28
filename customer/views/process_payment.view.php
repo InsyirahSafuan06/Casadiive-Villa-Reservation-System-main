@@ -1,6 +1,5 @@
 <?php include __DIR__ . '/../../includes/header.php'; ?>
 
-  <!-- STEP BAR -->
   <div class="step-bar" aria-label="Booking progress">
     <div class="step">
       <span class="step-circle">1</span>
@@ -41,7 +40,6 @@
       <p>Please wait while we are processing your payment.</p>
     </div>
 
-    <!-- BIG SPINNER -->
     <div class="spinner-hero" role="status" aria-live="polite">
       <div class="spinner-ring" aria-hidden="true"></div>
       <h2>Verifying your transaction...</h2>
@@ -51,7 +49,6 @@
     <section class="payment-section">
       <div class="container">
 
-        <!-- STEP CHECKLIST -->
         <div class="processing-card">
           <ul class="process-steps">
             <li class="process-step is-done">
@@ -76,7 +73,6 @@
           <p class="process-note">Please do not refresh or close this page</p>
         </div>
 
-        <!-- WARNING BANNER -->
         <div class="process-alert">
           <span class="alert-icon" aria-hidden="true">!</span>
           <div class="alert-text">
@@ -89,8 +85,6 @@
     </section>
 
     <script>
-      // payment dah simpan kat server tadi — delay ni cuma efek visual "processing..."
-      // supaya nampak natural sebelum hantar pelanggan ke page berjaya
       setTimeout(function () {
         window.location.href = <?= json_encode($redirectUrl) ?>;
       }, 2200);

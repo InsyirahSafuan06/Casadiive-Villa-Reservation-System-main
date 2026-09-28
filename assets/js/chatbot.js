@@ -1,13 +1,3 @@
-/**
- * AI Assistant chatbot widget (index.php).
- * Scripted/rule-based assistant — keyword matching + a small multi-turn slot-filling state
- * machine, NOT a real LLM (no external AI API call, no per-message cost). Villa facts/prices
- * come from CHATBOT_DATA (real accommodation rows, built server-side and set as a global by a
- * small inline <script> in index.php before this file loads). Live availability/recommendation
- * and booking-status lookups call real DB-backed endpoints (customer/chatbot_recommend.php,
- * customer/chatbot_booking_status.php) — never invented. Voice input (mic button) is optional
- * browser speech-to-text — it just fills the same text pipeline as typing, nothing AI-side.
- */
 (function () {
   var WHATSAPP_NUMBER = CHATBOT_DATA.whatsapp;
   var FALLBACK_EN = "Sorry, I don't have that information right now. Please contact CasaDive Villa staff for more details.";
@@ -17,6 +7,7 @@
   var chatbotPanel = document.getElementById('chatbot-panel');
   var chatbotClose = document.getElementById('chatbot-close');
   var chatbotLog = document.getElementById('chatbot-log');
+  var chatbotBody = document.getElementById('chatbot-body');
   var chatbotForm = document.getElementById('chatbot-form');
   var chatbotInput = document.getElementById('chatbot-input');
   var chatbotMic = document.getElementById('chatbot-mic');
@@ -27,10 +18,9 @@
   var chatbotGreeted = false;
   var speechSynth = window.speechSynthesis;
 
-  var chatLang = 'en'; // 'en' | 'ms' — flips based on detected language of free-typed messages
-  var chatIntent = null; // null | 'reco_guests' | 'reco_dates' | 'booking_id' | 'booking_phone'
+  var chatLang = 'en';
+  var chatIntent = null;
   var recoSlots = { guests: null, checkIn: null, checkOut: null, budget: null, facility: null };
-  var bookingSlots = { ref: null };
 
   function T(en, ms) { return chatLang === 'ms' ? ms : en; }
 
@@ -40,11 +30,9 @@
     bubble.innerHTML = html;
     chatbotLog.appendChild(bubble);
     if (sender === 'bot') appendBubbleActions(bubble);
-    chatbotLog.scrollTop = chatbotLog.scrollHeight;
+    chatbotBody.scrollTop = chatbotBody.scrollHeight;
   }
 
-  // ---- copy / read-aloud icons under each bot bubble — pure UI polish, mirrors the mic's
-  // speech-to-text with speech-to-speech using the same browser Web Speech API ----
   function copyToClipboard(text) {
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(text).catch(function () {});
@@ -56,7 +44,7 @@
     var wasActive = btn.classList.contains('is-active');
     speechSynth.cancel();
     document.querySelectorAll('.chat-bubble-action.is-active').forEach(function (b) { b.classList.remove('is-active'); });
-    if (wasActive) return; // second click on the same bubble just stops it
+    if (wasActive) return;
 
     var utter = new SpeechSynthesisUtterance(text);
     utter.lang = chatLang === 'ms' ? 'ms-MY' : 'en-US';
@@ -106,7 +94,7 @@
     bubble.id = 'chatbot-typing';
     bubble.innerHTML = '<span></span><span></span><span></span>';
     chatbotLog.appendChild(bubble);
-    chatbotLog.scrollTop = chatbotLog.scrollHeight;
+    chatbotBody.scrollTop = chatbotBody.scrollHeight;
   }
 
   function hideTyping() {
@@ -114,8 +102,6 @@
     if (el) el.remove();
   }
 
-  // papar SATU indicator "typing...", lepas tu letak semua bubble bot sekali gus —
-  // elak typing indicator berkelip-kelip untuk jawapan yang ada banyak bubble
   function botSayMulti(htmlList, delay) {
     showTyping();
     return new Promise(function (resolve) {
@@ -148,7 +134,6 @@
     );
   }
 
-  // ---- bahasa: kira perkataan penanda Melayu vs Inggeris, tukar chatLang kalau jelas menang ----
   var MS_MARKERS = ['ada','boleh','nak','saya','awak','anda','tak','tidak','macam','berapa','bila','apa','sila','kosong','bilik','malam','orang','dewasa','kanak','tarikh','esok','cadang','sesuai','tempahan','tempah','bayar','deposit','batal','hubungi','kemudahan','peraturan','lokasi','mana','bawa','pukul','hari','ini','itu','saya','dgn','dengan','untuk'];
   var EN_MARKERS = ['the','is','are','can','want','room','night','please','thank','available','book','price','when','how','what','where','guest','recommend','staying','cancel'];
 
@@ -162,7 +147,6 @@
     return null;
   }
 
-  // ---- extraction helpers (scoped pattern matching, not general NLU) ----
   function extractNumber(text) {
     var m = text.match(/\d+/);
     return m ? parseInt(m[0], 10) : null;
@@ -231,7 +215,6 @@
     return { checkIn: toIsoDate(dates[0]), checkOut: toIsoDate(dates[1]) };
   }
 
-  // ---- static FAQ content (grounded in real data; ungrounded topics use the required fallback) ----
   function showFacilities() {
     var htmls = [T('Here are our available villas & campsites:', 'Berikut senarai villa & campsite yang tersedia:')];
     CHATBOT_DATA.accommodations.forEach(function (a) {
@@ -248,13 +231,13 @@
   }
 
   function showPaymentInfo() {
-    chatIntent = 'booking_id';
+    chatIntent = 'booking_phone';
     return botSayMulti([
       T(
         'We accept payment via online banking or FPX (ToyyibPay). A deposit confirms your booking (status changes to "Confirmed"); the remaining balance is settled at check-in.',
         'Kami menerima pembayaran melalui online banking atau FPX (ToyyibPay). Deposit akan mengesahkan tempahan anda (status bertukar kepada "Confirmed"); baki bayaran diselesaikan semasa check-in.'
       ),
-      T('Want to check the payment status of a specific booking? Just tell me your Booking ID.', 'Nak semak status pembayaran tempahan tertentu? Beritahu saya Booking ID anda.')
+      T('Want to check the payment status of your booking? Just tell me the phone number you used when booking.', 'Nak semak status pembayaran tempahan anda? Beritahu saya nombor telefon yang anda gunakan semasa membuat tempahan.')
     ]);
   }
 
@@ -314,50 +297,49 @@
     ]);
   }
 
-  // ---- booking status flow (Booking ID + phone = same shared-secret gate as MyBooking) ----
   function startBookingStatus() {
-    bookingSlots = { ref: null };
-    chatIntent = 'booking_id';
-    return botSay(T('Sure! What is your Booking ID / reference number? (e.g. CDV12)', 'Baik! Apakah nombor rujukan/Booking ID tempahan anda? (cth: CDV12)'));
-  }
-
-  function handleBookingId(text) {
-    var ref = extractNumber(text);
-    if (!ref) {
-      return botSay(T('Please enter a valid Booking ID, e.g. CDV12.', 'Sila masukkan Booking ID yang sah, cth: CDV12.'));
-    }
-    bookingSlots.ref = ref;
     chatIntent = 'booking_phone';
-    return botSay(T('Thanks! Now, what is the phone number you used when booking?', 'Baik! Sekarang, apakah nombor telefon yang anda gunakan semasa membuat tempahan?'));
+    return botSay(T('Sure! What is the phone number you used when booking?', 'Baik! Apakah nombor telefon yang anda gunakan semasa membuat tempahan?'));
   }
 
   function handleBookingPhone(text) {
     var phone = text.replace(/[^\d]/g, '');
     chatIntent = null;
+    if (!phone) {
+      return botSay(T('Please enter a valid phone number.', 'Sila masukkan nombor telefon yang sah.'));
+    }
     showTyping();
-    return fetch('customer/chatbot_booking_status.php?ref=' + encodeURIComponent(bookingSlots.ref) + '&phone=' + encodeURIComponent(phone))
+    return fetch('customer/chatbot_booking_status.php?phone=' + encodeURIComponent(phone))
       .then(function (res) { return res.json(); })
       .then(function (data) {
         hideTyping();
-        if (!data.found) {
+        if (!data.found || !data.bookings || !data.bookings.length) {
           addChatMessage(T(
-            "I couldn't find a booking with that reference and phone number. Please double-check and try again, or contact our staff.",
-            'Maaf, saya tidak jumpa tempahan dengan rujukan dan nombor telefon tersebut. Sila semak semula, atau hubungi staff kami.'
+            "I couldn't find any booking with that phone number. Please double-check and try again, or contact our staff.",
+            'Maaf, saya tidak jumpa sebarang tempahan dengan nombor telefon tersebut. Sila semak semula, atau hubungi staff kami.'
           ), 'bot');
           addChatMessage(whatsappChip(T('Hi, I need help checking my booking status.', 'Hai, saya perlukan bantuan menyemak status tempahan saya.')), 'bot');
           return;
         }
-        var balanceLine = data.balance_due > 0
-          ? (T(' (Balance due: RM ', ' (Baki: RM ') + data.balance_due.toFixed(2) + ')')
-          : '';
         addChatMessage(
-          T('Booking ', 'Tempahan ') + data.booking_ref + ': <strong>' + data.status + '</strong><br>' +
-          T('Villa/Campsite', 'Villa/Campsite') + ': ' + escapeHtml(data.accommodations) + '<br>' +
-          T('Check-in', 'Check-in') + ': ' + data.check_in + ' &middot; ' + T('Check-out', 'Check-out') + ': ' + data.check_out + '<br>' +
-          T('Guests', 'Bilangan Tetamu') + ': ' + data.total_guest + '<br>' +
-          T('Payment', 'Pembayaran') + ': ' + (data.payment_status || T('No record yet', 'Belum ada rekod')) + balanceLine,
+          data.bookings.length > 1
+            ? T('Here is your booking history:', 'Ini sejarah tempahan anda:')
+            : T('Here is your booking:', 'Ini tempahan anda:'),
           'bot'
         );
+        data.bookings.forEach(function (booking) {
+          var balanceLine = booking.balance_due > 0
+            ? (T(' (Balance due: RM ', ' (Baki: RM ') + booking.balance_due.toFixed(2) + ')')
+            : '';
+          addChatMessage(
+            T('Booking ', 'Tempahan ') + booking.booking_ref + ': <strong>' + booking.status + '</strong><br>' +
+            T('Villa/Campsite', 'Villa/Campsite') + ': ' + escapeHtml(booking.accommodations) + '<br>' +
+            T('Check-in', 'Check-in') + ': ' + booking.check_in + ' &middot; ' + T('Check-out', 'Check-out') + ': ' + booking.check_out + '<br>' +
+            T('Guests', 'Bilangan Tetamu') + ': ' + booking.total_guest + '<br>' +
+            T('Payment', 'Pembayaran') + ': ' + (booking.payment_status || T('No record yet', 'Belum ada rekod')) + balanceLine,
+            'bot'
+          );
+        });
       })
       .catch(function () {
         hideTyping();
@@ -365,7 +347,6 @@
       });
   }
 
-  // ---- recommendation / availability flow ----
   function startRecommendation(text) {
     recoSlots = { guests: null, checkIn: null, checkOut: null, budget: null, facility: extractFacility(text) };
     var guests = extractNumber(text);
@@ -479,7 +460,6 @@
       });
   }
 
-  // ---- top-level keyword router (used for free-typed text with no pending intent) ----
   function botReply(text) {
     var msg = text.toLowerCase();
 
@@ -509,7 +489,6 @@
     ]);
   }
 
-  // ---- master entry point: routes to the pending slot-filling step, or the keyword router ----
   function handleUserMessage(text) {
     addChatMessage(escapeHtml(text), 'user');
     var detected = detectLanguage(text);
@@ -517,19 +496,13 @@
 
     if (chatIntent === 'reco_guests') return handleRecoGuests(text);
     if (chatIntent === 'reco_dates') return handleRecoDates(text);
-    if (chatIntent === 'booking_id') return handleBookingId(text);
     if (chatIntent === 'booking_phone') return handleBookingPhone(text);
 
     return botReply(text);
   }
 
-  // ---- quick-reply / in-chat action buttons (data-action) — separate from real <a class="chip"> links ----
   function runAction(action, label) {
     addChatMessage(escapeHtml(label), 'user');
-    // klik quick-reply = topik baru — batalkan mana-mana flow bertanya (reco/booking status)
-    // yang tergantung, supaya balasan seterusnya tak "tersasar" pergi state lama. Fungsi yang
-    // memang nak mula flow baru (startAvailability, showPaymentInfo, dll.) set chatIntent
-    // semula lepas ni, so ni selamat.
     chatIntent = null;
     switch (action) {
       case 'check_availability': return startAvailability('');
@@ -549,7 +522,7 @@
   function chipActionHandler(e) {
     var btn = e.target.closest('button[data-action]');
     if (!btn) return;
-    runAction(btn.dataset.action, btn.textContent);
+    runAction(btn.dataset.action, btn.textContent.trim().replace(/\s+/g, ' '));
   }
   chatbotQuickreplies.addEventListener('click', chipActionHandler);
   chatbotLog.addEventListener('click', chipActionHandler);
@@ -581,16 +554,10 @@
     handleUserMessage(text);
   });
 
-  // ---- voice input (Web Speech API) — mic button only shown when the browser supports it.
-  // Speech is transcribed client-side, then fed into the SAME pipeline as typed text (quick
-  // intents first, real AI fallback after) — nothing special-cased for voice server-side. ----
   var SpeechRecognitionImpl = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (SpeechRecognitionImpl && chatbotMic) {
     var recognizer = new SpeechRecognitionImpl();
     var isListening = false;
-    // Web Speech API perlukan SATU locale tetap setiap sesi rakam (tak boleh auto-detect
-    // Melayu/English dalam rakaman yang sama), so customer sendiri toggle bahasa yang dia
-    // nak cakap guna butang EN/BM sebelah mic — mula ikut bahasa chat semasa (chatLang).
     var micLang = chatLang;
     recognizer.continuous = false;
     recognizer.interimResults = false;
@@ -625,7 +592,6 @@
 
     recognizer.addEventListener('error', function (e) {
       setListeningUI(false);
-      // 'aborted' = customer sendiri klik stop — tak payah papar apa-apa mesej untuk kes tu
       if (e.error === 'aborted') return;
 
       var reasons = {

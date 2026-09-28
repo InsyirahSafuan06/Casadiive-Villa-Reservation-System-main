@@ -1,21 +1,4 @@
 <?php
-/**
- * Tugas cron peringatan check-in.
- * Hantar emel kepada setiap tempahan confirmed yang tarikh check-in nya esok — inilah
- * bahagian yang menjadikan peringatan check-in benar-benar automatik, bukannya bergantung
- * pada admin klik "Send" dalam dashboard. PHP tiada daemon sendiri, jadi skrip ini
- * perlu dijalankan sekali sehari oleh penjadual luaran:
- *
- *   Windows Task Scheduler — pencetus harian, tindakan:
- *     Program: C:\xampp\php\php.exe
- *     Arguments: "C:\xampp\htdocs\Casadiive-Villa-Reservation-System-main\cron\send_checkin_reminders.php"
- *
- *   cron (hosting Linux/macOS):
- *     0 8 * * * php /path/to/cron/send_checkin_reminders.php >> /path/to/cron/reminders.log 2>&1
- *
- * CLI sahaja: menolak untuk berjalan melalui HTTP supaya pelawat web sembarangan tidak boleh
- * cetuskan penghantaran emel secara pukal dengan meminta URL ini secara terus.
- */
 declare(strict_types=1);
 
 if (PHP_SAPI !== 'cli') {

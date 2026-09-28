@@ -1,12 +1,10 @@
 <?php include __DIR__ . '/../../includes/header.php'; ?>
 
-  <!-- HERO -->
   <section class="hero" id="top">
     <h1>Privacy Policy</h1>
     <p>How Casadive Villa collects, uses, and protects your information.</p>
   </section>
 
-  <!-- CONTENT -->
   <section class="info-section">
     <div class="container">
       <div class="info-card">

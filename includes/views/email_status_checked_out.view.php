@@ -1,9 +1,4 @@
 <?php
-/**
- * @var string $name
- * @var string $checkin
- * @var string $checkout
- */
 ?>
 <p>Hi <?= $name ?>,</p>
 <p>Thank you for staying with Casadive Villa.</p>

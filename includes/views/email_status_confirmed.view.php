@@ -1,10 +1,4 @@
 <?php
-/**
- * @var string $name
- * @var string $checkin
- * @var string $checkout
- * @var string $total
- */
 ?>
 <p>Hi <?= $name ?>,</p>
 <p>Your booking has been <strong>confirmed</strong>! Here are your stay details:</p>

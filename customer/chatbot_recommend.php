@@ -1,10 +1,4 @@
 <?php
-/**
- * Endpoint JSON untuk AI Assistant — cadangkan villa/campsite berdasarkan keperluan pelanggan.
- * Guna recommend_accommodations() (includes/helpers.php) yang sama dengan scoring/availability
- * logic sebenar — tak reka data baru kat sini, cuma tambah soft-sort ikut facility keyword
- * (contoh "pool") sebab recommend_accommodations() sendiri tak tahu pasal facility text.
- */
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/helpers.php';
 
@@ -60,8 +54,6 @@ foreach ($matches as $item) {
     ];
 }
 
-// bila facility keyword diberi, letak yang match tu dulu — tapi tak buang yang tak match,
-// sebab "tiada hasil langsung" boleh nampak macam kita reka availability yang tak wujud
 if ($facility !== '') {
     usort($results, function ($a, $b) {
         return ($b['matches_facility'] ? 1 : 0) <=> ($a['matches_facility'] ? 1 : 0);

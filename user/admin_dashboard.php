@@ -1,19 +1,14 @@
 <?php
-/**
- * Halaman dashboard manager.
- * Fail ini memberikan pentadbir ringkasan tempahan, akaun, dan pengurusan penginapan.
- */
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/helpers.php';
 require_once __DIR__ . '/../includes/email_notify.php';
-require_login(['manager']); // page ni cuma untuk manager, staff biasa tak boleh masuk
+require_login(['manager']);
 
 $user = current_user();
 $validStatuses = ['pending', 'confirmed', 'checked_in', 'checked_out', 'cancelled'];
 $updated = false;
 
-// admin tukar status booking dari dropdown kat table bawah — proses kat sini
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'update_status') {
     $bookingId = filter_input(INPUT_POST, 'booking_id', FILTER_VALIDATE_INT);
     $newStatus = $_POST['booking_status'] ?? '';
@@ -26,19 +21,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'updat
         $stmt = $pdo->prepare('UPDATE booking SET booking_status = :status WHERE booking_id = :id');
         $stmt->execute(['status' => $newStatus, 'id' => $bookingId]);
 
-        // hantar emel notification cuma kalau status betul-betul berubah
         if ($previousStatus !== false && $previousStatus !== $newStatus) {
             send_status_email($pdo, $bookingId, $newStatus);
         }
     }
 
-    // redirect balik supaya refresh page tak submit form dua kali
     header('Location: admin_dashboard.php?updated=1');
     exit;
 }
-// manager je yang boleh padam review (page ni dah require_login(['manager']) kat atas, so takde
-// laluan lain customer/staff boleh sampai sini) — buang gambar dari cakera sekali kalau ada,
-// elak fail terbiar tanpa rekod DB
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'process_refund') {
+    $bookingId = filter_input(INPUT_POST, 'booking_id', FILTER_VALIDATE_INT);
+    $refundAmount = filter_var($_POST['refund_amount'] ?? '', FILTER_VALIDATE_FLOAT);
+    $note = trim((string) ($_POST['note'] ?? ''));
+
+    if (csrf_verify() && $bookingId && $refundAmount !== false && $refundAmount >= 0) {
+        $stmt = $pdo->prepare(
+            "SELECT b.booking_status,
+                    (SELECT p.payment_status FROM payment p WHERE p.booking_id = b.booking_id ORDER BY p.payment_id DESC LIMIT 1) AS latest_payment_status
+             FROM booking b WHERE b.booking_id = :id"
+        );
+        $stmt->execute(['id' => $bookingId]);
+        $row = $stmt->fetch();
+
+        if ($row && payment_needs_refund($row['booking_status'], $row['latest_payment_status'])) {
+            $stmt = $pdo->prepare(
+                'INSERT INTO payment (booking_id, deposit_paid, payment_status, receipt) VALUES (:booking_id, :amount, :status, :receipt)'
+            );
+            $stmt->execute([
+                'booking_id' => $bookingId,
+                'amount' => $refundAmount,
+                'status' => 'refunded',
+                'receipt' => $note !== '' ? $note : ('Refund processed by ' . $user['fullname']),
+            ]);
+        }
+    }
+
+    header('Location: admin_dashboard.php?refunded=1');
+    exit;
+}
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'delete_review') {
     $reviewId = filter_input(INPUT_POST, 'review_id', FILTER_VALIDATE_INT);
 
@@ -64,8 +84,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'delet
 
 $galleryError = null;
 
-// manager/staff tambah gambar baru ke gallery awam (customer/gallery.php) — logik validasi/simpan
-// dikongsi dengan staff_dashboard.php dalam save_gallery_upload() (includes/helpers.php)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'add_gallery_image') {
     if (!csrf_verify()) {
         $galleryError = 'Your session expired. Please try again.';
@@ -79,8 +97,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'add_g
     }
 }
 
-// buang gambar dari gallery — cuma redirect "berjaya" kalau memang sesuatu dipadam (elak
-// dashboard claim "Image removed" walhal CSRF gagal/id tak wujud/jadual tak wujud lagi)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'delete_gallery_image') {
     $galleryId = filter_input(INPUT_POST, 'gallery_id', FILTER_VALIDATE_INT);
 
@@ -91,7 +107,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'delet
     $galleryError = 'We could not remove that image. Please try again.';
 }
 
-// flag-flag ni untuk papar mesej "berjaya" lepas redirect dari page lain (contoh: lepas save account)
 $updated = isset($_GET['updated']);
 $accountCreated = isset($_GET['created']);
 $accountSaved = isset($_GET['saved']);
@@ -102,14 +117,14 @@ $accDeleted = isset($_GET['accdeleted']);
 $reviewDeleted = isset($_GET['reviewdeleted']);
 $galleryAdded = isset($_GET['galleryadded']);
 $galleryDeleted = isset($_GET['gallerydeleted']);
+$refunded = isset($_GET['refunded']);
 
-// satu baris untuk setiap booking, nama penginapan + status bayaran terkini kita gabung sekali
-// guna GROUP_CONCAT/subquery, supaya table kat bawah takyah query lagi untuk setiap baris
 $bookings = $pdo->query(
     "SELECT b.booking_id, c.full_name, c.phone, b.check_in, b.check_out, b.total_guest,
             b.total_amount, b.deposit_amount, b.booking_status, b.addon_bbq, b.addon_mattress, b.discount_amount,
             GROUP_CONCAT(a.accommodation_name SEPARATOR ', ') AS accommodations,
-            (SELECT p.payment_status FROM payment p WHERE p.booking_id = b.booking_id ORDER BY p.payment_id DESC LIMIT 1) AS latest_payment_status
+            (SELECT p.payment_status FROM payment p WHERE p.booking_id = b.booking_id ORDER BY p.payment_id DESC LIMIT 1) AS latest_payment_status,
+            (SELECT p.deposit_paid FROM payment p WHERE p.booking_id = b.booking_id AND p.payment_status = 'paid' ORDER BY p.payment_id DESC LIMIT 1) AS amount_paid
      FROM booking b
      JOIN customer c ON c.customer_id = b.customer_id
      LEFT JOIN booking_item bi ON bi.booking_id = b.booking_id
@@ -124,9 +139,6 @@ $accommodations = $pdo->query(
      FROM accommodation ORDER BY accommodation_type, accommodation_id'
 )->fetchAll();
 
-// dibalut try/catch sama macam $reviews di bawah — kalau database production belum di-migrate
-// (jadual `gallery` belum wujud lagi), dashboard tetap load dengan bahagian Gallery kosong
-// je, bukan fatal error seluruh page.
 try {
     $galleryImages = $pdo->query(
         'SELECT gallery_id, image_path, caption FROM gallery ORDER BY gallery_id DESC'
@@ -136,8 +148,6 @@ try {
     $galleryImages = [];
 }
 
-// notification terkini yang berjaya dihantar untuk setiap booking + jenis mesej, supaya
-// column Notification kat bawah boleh papar "Sent" ganti butang, kalau mesej tu dah dihantar
 $sentLookup = [];
 foreach ($pdo->query(
     "SELECT booking_id, notification_type, MAX(sent_date) AS last_sent
@@ -152,13 +162,7 @@ $users = $pdo->query(
     'SELECT user_id, username, fullname, email, role, status, created_at FROM user ORDER BY user_id'
 )->fetchAll();
 
-// dibalut try/catch supaya kalau database belum kena migrate (contoh: lupa jalankan
-// database/add_review_display_name.sql lepas deploy), dashboard still load dengan section
-// Guest Reviews kosong je — dan bukan seluruh dashboard (bookings/accommodations/staff) fatal error.
 try {
-    // LEFT JOIN sebab footer review widget takde ref/phone — review dari situ tersimpan
-    // dengan booking_id NULL (unverified/tak boleh disahkan), so takde row booking/customer
-    // untuk dipadan. c.full_name jadi NULL untuk review macam tu, dihandle kat view.
     $reviews = $pdo->query(
         "SELECT r.review_id, r.booking_id, r.rating, r.comment, r.display_name, r.image_path, r.review_date, c.full_name
          FROM review r
@@ -171,6 +175,4 @@ try {
     $reviews = [];
 }
 
-// semua logic dah selesai kat atas ni — baris bawah papar HTML page dia.
-// HTML/borang tu disimpan berasingan dalam folder views/ supaya file ni tak jadi terlalu panjang.
 require __DIR__ . '/views/admin_dashboard.view.php';

@@ -1,13 +1,11 @@
 <?php include __DIR__ . '/../../includes/header.php'; ?>
 
-  <!-- HERO -->
   <section class="hero" id="top" style="background-image:linear-gradient(rgba(124,106,70,.55), rgba(124,106,70,.55)), url('../assets/images/beach-benches.jpg');background-size:cover;background-position:center;">
     <h1>Campsite Packages</h1>
     <p>Experience beach camping with pool and sea view.</p>
     <a href="#packages" class="scroll-down" aria-label="Scroll down"><span></span></a>
   </section>
 
-  <!-- PACKAGES -->
   <section class="packages" id="packages">
     <div class="container">
 
@@ -26,8 +24,6 @@
       <?php endif; ?>
 
       <?php
-      // bila customer datang dari carian, bawa terus tarikh/tetamu tu ke borang tempahan
-      // (Book now) supaya dia tak payah isi semula
       $searchQuery = $searchActive
           ? '&check_in=' . urlencode($searchCheckIn) . '&check_out=' . urlencode($searchCheckOut) . '&guests=' . urlencode((string) ($_GET['guests'] ?? ''))
           : '';
@@ -35,13 +31,10 @@
 
       <div class="package-grid">
       <?php foreach ($campsites as $campsite):
-        // sama macam villa.php — takde column khas untuk "ada pool"/"ada tent" dalam DB,
-        // so kita cari perkataan tu dalam features/description je untuk decide icon
         $searchText = strtolower(($campsite['features'] ?? '') . ' ' . ($campsite['description'] ?? ''));
         $hasPool = strpos($searchText, 'pool') !== false;
         $hasTent = strpos($searchText, 'tent') !== false;
         $siteLabel = ($hasPool || $hasTent) ? 'Site' : 'Site Only';
-        // kalau admin dah upload gambar untuk pakej ni, guna sebagai background kad
         $mediaStyle = $campsite['image'] ? ' style="background-image:url(\'' . htmlspecialchars($campsite['image']) . '\');background-size:cover;background-position:center;"' : '';
       ?>
       <article class="package-card">

@@ -1,6 +1,5 @@
 <?php include __DIR__ . '/../../includes/header.php'; ?>
 
-  <!-- STEP BAR -->
   <div class="step-bar" aria-label="Booking progress">
     <div class="step">
       <span class="step-circle">1</span>
@@ -36,7 +35,6 @@
 
   <?php else: ?>
 
-    <!-- THANKS FOR PURCHASE MODAL -->
     <div class="purchase-modal-overlay" id="purchase-modal-overlay">
       <div class="purchase-modal" role="dialog" aria-modal="true" aria-labelledby="purchase-modal-title">
         <button type="button" class="purchase-modal-close" id="purchase-modal-close" aria-label="Close">&times;</button>
@@ -96,8 +94,8 @@
           </p>
 
           <dl class="success-grid">
-            <div><dt>Check-in</dt><dd><?= htmlspecialchars($booking['check_in']) ?></dd></div>
-            <div><dt>Check-out</dt><dd><?= htmlspecialchars($booking['check_out']) ?></dd></div>
+            <div><dt>Check-in</dt><dd><?= htmlspecialchars(date('d/m/Y', strtotime($booking['check_in']))) ?></dd></div>
+            <div><dt>Check-out</dt><dd><?= htmlspecialchars(date('d/m/Y', strtotime($booking['check_out']))) ?></dd></div>
             <div><dt>Accommodation</dt><dd><?= htmlspecialchars(implode(', ', array_column($items, 'accommodation_name')) ?: '—') ?></dd></div>
             <div><dt>Payment Method</dt><dd><?= $payment ? htmlspecialchars($methodLabels[$payment['payment_method']] ?? $payment['payment_method']) : '—' ?></dd></div>
             <div><dt>Amount Paid</dt><dd>RM <?= number_format($amountPaid, 2) ?></dd></div>

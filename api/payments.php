@@ -1,8 +1,4 @@
 <?php
-/**
- * API laporan: satu baris per rekod bayaran, untuk Power BI.
- * Guna ni untuk analisa cashflow — jumlah dibayar, kaedah bayaran, dan status ikut masa.
- */
 declare(strict_types=1);
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/api_auth.php';

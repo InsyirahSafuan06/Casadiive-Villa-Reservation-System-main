@@ -52,7 +52,6 @@
       padding: 0 40px;
   }
 
-  /* ---------- NAVBAR ---------- */
   .navbar {
       background: var(--sand-light);
       position: sticky;
@@ -117,7 +116,6 @@
       box-shadow: 0 8px 20px rgba(253, 89, 12, .28);
   }
 
-  /* ---------- HERO ---------- */
   .hero {
       position: relative;
       min-height: 700px;
@@ -188,7 +186,6 @@
       }
   }
 
-  /* ---------- CONTACT SECTION ---------- */
   .contact-section {
       padding: 90px 0 110px;
   }
@@ -301,7 +298,6 @@
       background: linear-gradient(135deg, #e7c99a, #5b3a29);
   }
 
-  /* ---------- SOCIAL CARDS ---------- */
   .socials {
       padding: 0 0 100px;
   }
@@ -387,7 +383,6 @@
       transform: translateY(-2px);
   }
 
-  /* ---------- FOOTER (shared) ---------- */
   footer {
       background: var(--brown);
       color: #fff;
@@ -515,7 +510,6 @@
       text-align: center;
   }
 
-  /* ---------- RESPONSIVE ---------- */
   @media (max-width: 1100px) {
       .footer-grid {
           grid-template-columns: 1fr 1fr;

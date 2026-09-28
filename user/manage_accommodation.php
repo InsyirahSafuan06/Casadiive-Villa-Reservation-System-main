@@ -1,8 +1,4 @@
 <?php
-/**
- * Halaman pengurusan penginapan.
- * Manager boleh tambah, kemas kini, atau buang pakej vila dan khemah dari halaman ini.
- */
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/auth.php';
 require_login(['manager']);
@@ -54,8 +50,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 header('Location: admin_dashboard.php?accdeleted=1');
                 exit;
             } catch (PDOException $e) {
-                // Pangkalan data sendiri menghalang padam ini (foreign key constraint) apabila
-                // masih ada tempahan yang merujuk pakej ini, jadi kita papar mesej yang lebih mesra.
                 $errors[] = 'This package can\'t be deleted because it already has bookings against it. Set its status to "unavailable" instead.';
             }
         }
@@ -104,8 +98,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $errors[] = 'Please select a valid status.';
         }
 
-        // Array $params yang sama digunakan semula untuk UPDATE dan INSERT di bawah —
-        // hanya kenyataan SQL (dan sama ada :id diperlukan) yang berbeza.
         if (!$errors) {
             $params = [
                 'name' => $old['accommodation_name'],
@@ -147,6 +139,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// semua logic dah selesai kat atas ni — baris bawah papar HTML page dia.
-// HTML/borang tu disimpan berasingan dalam folder views/ supaya file ni tak jadi terlalu panjang.
 require __DIR__ . '/views/manage_accommodation.view.php';

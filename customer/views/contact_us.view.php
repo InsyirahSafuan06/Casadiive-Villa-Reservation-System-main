@@ -1,13 +1,11 @@
 <?php include __DIR__ . '/../../includes/header.php'; ?>
 
-  <!-- HERO -->
   <section class="hero" id="top" style="background-image:linear-gradient(rgba(124,106,70,.55), rgba(124,106,70,.55)), url('../assets/images/casadive-sign-porch.jpg');background-size:cover;background-position:center;">
     <h1>Contact us</h1>
     <p>The elegant luxury bedrooms in this gallery showcase custom interior designs &amp; decorating ideas. View pictures and find your perfect luxury bedroom design.</p>
     <a href="#get-in-touch" class="scroll-down" aria-label="Scroll down"><span></span></a>
   </section>
 
-  <!-- CONTACT + PHOTO -->
   <section class="contact-section" id="get-in-touch">
     <div class="container contact-grid">
 
@@ -65,14 +63,12 @@
           referrerpolicy="strict-origin-when-cross-origin"
           title="Casadive Villa location on Google Maps"
         ></iframe>
-        <!-- this button opens Google Maps app/website with our address pre-filled as the destination -->
         <a href="https://www.google.com/maps/dir/?api=1&destination=<?= urlencode('Casadive Villa, PT 195, Kg Baru, Kampung Pulau Sayak, 08500 Kota Kuala Muda, Kedah') ?>" class="directions-btn" target="_blank" rel="noopener">Get Direction</a>
       </div>
 
     </div>
   </section>
 
-  <!-- SOCIAL CARDS -->
   <section class="socials">
     <div class="container social-grid">
 

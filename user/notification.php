@@ -1,17 +1,8 @@
 <?php
-/**
- * Penghantar notifikasi WhatsApp.
- * Bina mesej pra-isi untuk tempahan yang diberikan dan buka melalui pautan
- * wa.me — manager semak dalam WhatsApp Web/App dan tekan Hantar sendiri.
- * (Menghantar secara automatik tanpa langkah manual itu memerlukan WhatsApp
- * Business Cloud API, yang perlukan akaun Meta Business, token akses kekal,
- * dan templat mesej yang diluluskan terlebih dahulu — belum disediakan di sini.)
- */
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/auth.php';
 require_login(['manager']);
 
-// Semak ID tempahan
 $booking_id = filter_input(INPUT_GET, 'booking_id', FILTER_VALIDATE_INT);
 if (!$booking_id) {
     die("Booking ID not found.");
@@ -22,7 +13,6 @@ if (!in_array($type, ['booking_confirmation', 'pending', 'check_in', 'check_out'
     $type = 'booking_confirmation';
 }
 
-// Dapatkan butiran tempahan + pelanggan
 $sql = "SELECT
             b.booking_id,
             b.customer_id,
@@ -52,15 +42,12 @@ $checkout = date("d F Y", strtotime($data['check_out']));
 $checkinTime = "3.00 PM";
 $checkoutTime = "12.00 PM";
 
-// WhatsApp perlukan nombor telefon dalam format antarabangsa penuh (bermula dengan
-// kod negara, tiada simbol) — contoh: "012-345 6789" jadi "60123456789".
 $phone = preg_replace('/[^0-9]/', '', $phone);
 
 if (substr($phone, 0, 1) == "0") {
     $phone = "6" . $phone;
 }
 
-// Mesej notifikasi
 switch ($type) {
 
     case "booking_confirmation":
@@ -147,9 +134,6 @@ If you have any questions or wish to make a new booking, feel free to contact us
 }
 
 
-// Simpan rekod notifikasi. Status direkod sebagai "sent" sebaik sahaja manager buka
-// pautan ini — tiada cara untuk sahkan dari server sama ada mereka betul-betul tekan Hantar
-// dalam WhatsApp selepas itu, kerana langkah terakhir itu berlaku sepenuhnya pada peranti manager sendiri.
 $insert = $pdo->prepare("
 INSERT INTO notification_status
 (booking_id, customer_id, sent_date, status, notification_type, channel)
@@ -162,7 +146,6 @@ $insert->execute([
     $type
 ]);
 
-// Buka WhatsApp dengan mesej pra-isi, sedia untuk manager semak dan hantar.
 $link = "https://wa.me/".$phone."?text=".urlencode($message);
 
 header("Location: ".$link);

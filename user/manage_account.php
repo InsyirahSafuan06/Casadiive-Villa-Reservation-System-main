@@ -1,17 +1,12 @@
 <?php
-/**
- * Halaman pengurusan akaun.
- * Manager boleh cipta, sunting, atau padam akaun staf dan manager dari halaman ini.
- */
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/auth.php';
-require_login(['manager']); // cuma manager boleh urus akaun staff/manager
+require_login(['manager']);
 
 $currentUser = current_user();
 $validRoles = ['manager', 'staff'];
 $validStatuses = ['active', 'inactive', 'suspended'];
 
-// ?id=123 kat URL bermaksud kita nak edit akaun sedia ada, takde id maksudnya create baru
 $editId = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT) ?: null;
 $editing = null;
 if ($editId) {
@@ -19,11 +14,11 @@ if ($editId) {
     $stmt->execute(['id' => $editId]);
     $editing = $stmt->fetch();
     if (!$editing) {
-        header('Location: admin_dashboard.php'); // id tak wujud, balik dashboard je
+        header('Location: admin_dashboard.php');
         exit;
     }
 }
-$isSelfEdit = $editing && (int) $editing['user_id'] === (int) $currentUser['user_id']; // manager edit akaun dia sendiri ke tak
+$isSelfEdit = $editing && (int) $editing['user_id'] === (int) $currentUser['user_id'];
 
 $errors = [];
 $old = [
@@ -51,8 +46,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif ($targetId === (int) $currentUser['user_id']) {
             $errors[] = 'You cannot delete your own account.';
         } elseif ($target['role'] === 'manager' && $target['status'] === 'active') {
-            // safety net — jangan biar sistem jadi sifar manager aktif, nanti semua orang
-            // terkunci dari dashboard ni selama-lamanya, takde sesiapa boleh masuk balik
             $activeManagers = (int) $pdo->query("SELECT COUNT(*) FROM user WHERE role = 'manager' AND status = 'active'")->fetchColumn();
             if ($activeManagers <= 1) {
                 $errors[] = 'At least one active manager account must remain.';
@@ -72,9 +65,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $password = (string) ($_POST['password'] ?? '');
 
         if ($isSelfEdit) {
-            // jangan sekali percaya browser untuk role/status akaun sendiri — walaupun
-            // field-field ni diubah paksa kat browser, kita ignore je, tak boleh naik/turun
-            // atau off-kan akaun sendiri; kena manager lain yang buat
             $old['role'] = $editing['role'];
             $old['status'] = $editing['status'];
         } else {
@@ -105,7 +95,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         if (!$errors) {
-            // username & email kena unik merentas semua akaun (kecuali akaun ni sendiri, masa edit)
             $stmt = $pdo->prepare('SELECT user_id FROM user WHERE (username = :username OR email = :email) AND user_id != :self');
             $stmt->execute([
                 'username' => $old['username'],
@@ -117,8 +106,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-        // safety net "kekalkan sekurang-kurangnya satu manager aktif" sama macam bahagian delete
-        // atas tadi, tapi ni untuk kes turunkan/off-kan manager terakhir masa edit
         if (!$errors && $editing && $editing['role'] === 'manager' && $editing['status'] === 'active') {
             $willStillBeActiveManager = $old['role'] === 'manager' && $old['status'] === 'active';
             if (!$willStillBeActiveManager) {
@@ -131,8 +118,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if (!$errors) {
             if ($editing) {
-                // sentuh column password cuma kalau password baru betul-betul ditaip —
-                // kalau kosong, biar hash lama tak berubah
                 if ($password !== '') {
                     $stmt = $pdo->prepare(
                         'UPDATE user SET username = :username, fullname = :fullname, email = :email, phone = :phone,
@@ -167,8 +152,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 exit;
             }
 
-            // password_hash() digunakan setiap kali nak simpan password — password asal
-            // (plain text) tak sekali pun disimpan, cuma hash sehala ni je yang masuk DB
             $stmt = $pdo->prepare(
                 'INSERT INTO user (username, password, fullname, email, phone, role, status)
                  VALUES (:username, :password, :fullname, :email, :phone, :role, :status)'
@@ -188,6 +171,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// semua logic dah selesai kat atas ni — baris bawah papar HTML page dia.
-// HTML/borang tu disimpan berasingan dalam folder views/ supaya file ni tak jadi terlalu panjang.
 require __DIR__ . '/views/manage_account.view.php';

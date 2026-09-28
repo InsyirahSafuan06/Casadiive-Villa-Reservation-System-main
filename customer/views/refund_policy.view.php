@@ -1,12 +1,10 @@
 <?php include __DIR__ . '/../../includes/header.php'; ?>
 
-  <!-- HERO -->
   <section class="hero" id="top">
     <h1>Refund Policy</h1>
     <p>What happens when a booking is cancelled, and how refunds are handled.</p>
   </section>
 
-  <!-- CONTENT -->
   <section class="info-section">
     <div class="container">
       <div class="info-card">

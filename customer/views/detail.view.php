@@ -12,9 +12,7 @@
         </div>
 
       <?php else:
-        // butang "Back"/"Browse More" kena pergi ke page senarai yang betul (villa ke campsite)
         $backHref = $accommodation['accommodation_type'] === 'Campsite' ? 'campsite.php' : 'villa.php';
-        // guna label custom admin (contoh: "4-5 PAX") kalau ada, kalau tak generate dari nombor kapasiti
         $paxLabel = $accommodation['pax_label'] ?: ('Max ' . (int) $accommodation['capacity'] . ' guests');
       ?>
 
@@ -56,7 +54,6 @@
               <span class="rates-value">RM <?= number_format((float) $accommodation['price'], 0) ?> /night</span>
             </div>
             <?php if ($accommodation['price_weekend'] !== null): ?>
-            <!-- baris ni papar je kalau admin ada set harga weekend -->
             <div class="rates-row">
               <span class="rates-label">Weekend</span>
               <span class="rates-value">RM <?= number_format((float) $accommodation['price_weekend'], 0) ?> /night</span>
@@ -71,13 +68,11 @@
           </div>
 
           <?php if ($accommodation['status'] !== 'available'): ?>
-            <!-- kalau status bukan "available" (contoh: maintenance/booked), bagitahu tetamu terus -->
             <p class="detail-unavailable">This package is currently <?= htmlspecialchars($accommodation['status']) ?> and not open for booking right now. Please check back later or browse other packages.</p>
           <?php endif; ?>
 
           <div class="detail-actions">
             <?php if ($accommodation['status'] === 'available'): ?>
-              <!-- butang "Book Now" hilang terus kalau pakej tak available, elak orang booking benda takde -->
               <a href="bookingform.php?accommodation=<?= urlencode($accommodation['accommodation_name']) ?>" class="detail-book">Book Now</a>
             <?php endif; ?>
             <a href="<?= $backHref ?>" class="detail-browse">Browse More</a>

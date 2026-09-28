@@ -54,7 +54,6 @@
       padding: 0 40px;
   }
 
-  /* ---------- NAVBAR ---------- */
   .navbar {
       background: var(--sand-light);
       position: sticky;
@@ -126,7 +125,6 @@
       flex-shrink: 0;
   }
 
-  /* ---------- HERO ---------- */
   .hero {
       position: relative;
       min-height: 700px;
@@ -214,7 +212,6 @@
       opacity: .9;
   }
 
-  /* ---------- HERO VIDEO LIGHTBOX ---------- */
   .video-lightbox {
       display: none;
       position: fixed;
@@ -255,7 +252,6 @@
       cursor: pointer;
   }
 
-  /* ---------- QUICK BOOKING BAR ---------- */
   .booking-wrap {
       position: relative;
       z-index: 5;
@@ -342,7 +338,6 @@
       filter: brightness(1.05);
   }
 
-  /* ---------- WELCOME SECTION ---------- */
   .welcome {
       background: var(--sand-light);
       padding: 130px 0 90px;
@@ -407,7 +402,6 @@
       margin-bottom: 32px;
   }
 
-  /* ---------- FACILITIES ---------- */
   .facilities {
       padding: 90px 0 60px;
       text-align: center;
@@ -465,7 +459,6 @@
       color: var(--brown);
   }
 
-  /* ---------- TESTIMONIALS ---------- */
   .testimonials {
       padding: 110px 0 90px;
       background: var(--sand-light);
@@ -590,7 +583,6 @@
       padding: 0 6px;
   }
 
-  /* click a testimonial photo to enlarge it here — no new tab, closing just returns to the homepage */
   .photo-lightbox {
       position: fixed;
       inset: 0;
@@ -603,7 +595,6 @@
       display: none;
   }
 
-  /* same [hidden]-vs-CSS-display gotcha as .chatbot-panel / .footer-camera-modal — toggle this class instead */
   .photo-lightbox.is-open {
       display: flex;
   }
@@ -666,7 +657,6 @@
       opacity: .7;
   }
 
-  /* ---------- FOOTER ---------- */
   footer {
       background: var(--brown);
       color: #fff;
@@ -795,7 +785,6 @@
       text-align: center;
   }
 
-  /* ---------- WHATSAPP FLOATING CARD ---------- */
   .whatsapp-card {
       position: fixed;
       right: 28px;
@@ -817,7 +806,6 @@
       flex-shrink: 0;
   }
 
-  /* ---------- AI ASSISTANT CHATBOT ---------- */
   .chatbot-launcher {
       position: fixed;
       right: 28px;
@@ -848,28 +836,54 @@
       width: 340px;
       max-width: calc(100vw - 40px);
       max-height: min(520px, calc(100vh - 220px));
-      background: var(--cream);
+      background: linear-gradient(180deg, var(--cream) 0%, #FFF3E0 100%);
       border-radius: 20px;
       box-shadow: 0 20px 50px rgba(0, 0, 0, .28);
       flex-direction: column;
-      /* Panel sendiri TAK scroll — cuma .chatbot-log (bahagian mesej) je yang scroll, kekal
-         di antara header dan (quick-replies + kotak taip) yang keduanya flex-shrink:0. Dulu
-         cuba buat seluruh panel scroll dengan header/kotak-taip "sticky", tapi tu buat
-         quick-replies (yang sepatutnya kekal SATU tempat, bawah sekali) jadi hanyut ikut
-         mesej — nampak macam bertindih/tak kemas bila conversation dah panjang. Punca
-         sebenar overflow dulu ialah .chatbot-log ada min-height yang terlalu besar (tengok
-         nota kat rule tu) — dah dikurangkan, so overflow:hidden di sini dah selamat balik. */
       overflow: hidden;
       display: none;
   }
 
-  /* .chatbot-panel sets its own `display`, so the [hidden] attribute alone won't hide it
-     (author CSS beats the UA stylesheet's `[hidden]{display:none}`) — toggle this class instead. */
   .chatbot-panel.is-open {
       display: flex;
   }
 
+  .chatbot-panel::before,
+  .chatbot-panel::after {
+      content: "";
+      position: absolute;
+      pointer-events: none;
+      z-index: 0;
+      opacity: .3;
+  }
+
+  .chatbot-panel::before {
+      left: -6px;
+      bottom: -4px;
+      width: 96px;
+      height: 38px;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 50'%3E%3Cpath d='M0 10 Q15 0 30 10 T60 10 T90 10 T120 10' stroke='%23844525' stroke-width='3' fill='none' stroke-linecap='round'/%3E%3Cpath d='M0 25 Q15 15 30 25 T60 25 T90 25 T120 25' stroke='%23844525' stroke-width='3' fill='none' stroke-linecap='round'/%3E%3Cpath d='M0 40 Q15 30 30 40 T60 40 T90 40 T120 40' stroke='%23844525' stroke-width='3' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-size: contain;
+  }
+
+  .chatbot-panel::after {
+      right: -4px;
+      bottom: 2px;
+      width: 54px;
+      height: 54px;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 60'%3E%3Ccircle cx='46' cy='14' r='7' fill='none' stroke='%23844525' stroke-width='2.5'/%3E%3Cpath d='M10 34 28 20 46 34' fill='none' stroke='%23844525' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M14 32 14 48 42 48 42 32' fill='none' stroke='%23844525' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-size: contain;
+  }
+
+  .chatbot-panel > * {
+      position: relative;
+      z-index: 1;
+  }
+
   .chatbot-header {
+      position: relative;
       background: linear-gradient(135deg, var(--brown), #3f2a1d);
       color: #fff;
       padding: 14px 16px;
@@ -877,6 +891,26 @@
       align-items: center;
       gap: 10px;
       flex-shrink: 0;
+      overflow: hidden;
+  }
+
+  .chatbot-header::after {
+      content: "";
+      position: absolute;
+      right: -14px;
+      top: -16px;
+      width: 92px;
+      height: 92px;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M55 60 C50 40 60 25 75 20 C70 30 68 38 70 45' fill='none' stroke='%23F9F5EF' stroke-width='2.5' stroke-linecap='round'/%3E%3Cpath d='M55 60 C58 42 50 28 35 22 C42 30 46 38 46 46' fill='none' stroke='%23F9F5EF' stroke-width='2.5' stroke-linecap='round'/%3E%3Cpath d='M55 60 C55 45 55 35 55 22' fill='none' stroke='%23F9F5EF' stroke-width='2.5' stroke-linecap='round'/%3E%3Cline x1='55' y1='60' x2='55' y2='85' stroke='%23F9F5EF' stroke-width='3' stroke-linecap='round'/%3E%3Cpath d='M15 90 Q30 82 45 90 T75 90 T105 90' stroke='%23F9F5EF' stroke-width='2.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-size: contain;
+      opacity: .3;
+      pointer-events: none;
+  }
+
+  .chatbot-header > * {
+      position: relative;
+      z-index: 1;
   }
 
   .chatbot-header-avatar {
@@ -918,10 +952,10 @@
   }
 
   .chatbot-close {
-      width: 26px;
-      height: 26px;
+      width: 28px;
+      height: 28px;
       border-radius: 50%;
-      background: var(--sand-light);
+      background: #fff;
       color: var(--brown);
       font-size: 18px;
       line-height: 1;
@@ -932,22 +966,25 @@
   }
 
   .chatbot-close:hover {
-      background: #fff;
+      background: var(--sand-light);
+  }
+
+  .chatbot-body {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
+      touch-action: pan-y;
+      display: flex;
+      flex-direction: column;
   }
 
   .chatbot-log {
-      flex: 1;
-      overflow-y: auto;
       padding: 18px;
       display: flex;
       flex-direction: column;
       gap: 4px;
-      /* rendah sengaja (bukan 160px macam dulu) — min-height yang besar la yang punca
-         sebenar quick-replies/kotak-taip "hilang" dulu: bila header + quick-replies + kotak
-         taip + lantai minimum log ni jumlahnya lagi tinggi dari max-height panel, flexbox
-         terpaksa overflow, dan panel overflow:hidden potong bahagian bawah tu senyap-senyap.
-         Log kena boleh susut hingga sekecil mana pun yang perlu supaya jiran dia
-         (quick-replies, kotak taip) SENTIASA muat dalam panel, tak pernah terpotong. */
       min-height: 40px;
   }
 
@@ -1011,7 +1048,6 @@
       30% { opacity: 1; transform: translateY(-3px); }
   }
 
-  /* message action row (copy / read aloud) — sits directly under each bot bubble */
   .chat-bubble-actions {
       display: flex;
       gap: 4px;
@@ -1045,7 +1081,6 @@
       color: var(--orange);
   }
 
-  /* voice-listening state — replaces the quick-reply bar while the mic is recording */
   .chatbot-listening {
       display: flex;
       align-items: center;
@@ -1054,8 +1089,6 @@
       flex-shrink: 0;
   }
 
-  /* same [hidden]-vs-CSS-display gotcha as .chatbot-panel — these two set their own `display`,
-     so the [hidden] attribute alone won't hide them without this explicit override */
   .chatbot-listening[hidden],
   .chatbot-quickreplies[hidden] {
       display: none;
@@ -1106,79 +1139,141 @@
   }
 
   .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
       background: #fff;
       color: var(--brown);
-      border: 1px solid var(--brown);
+      border: 1px solid var(--border, #E7DCC9);
       border-radius: 100px;
-      padding: 7px 14px;
+      padding: 4px 16px 4px 4px;
       font-family: 'Raleway', sans-serif;
       font-weight: 600;
       font-size: 12px;
       white-space: nowrap;
   }
 
-  .chip:hover {
+  .chip-icon {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
       background: var(--brown);
-      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+  }
+
+  .chip-icon svg {
+      width: 14px;
+      height: 14px;
+  }
+
+  .chip:hover {
+      border-color: var(--orange);
+      background: #FFF6EC;
+  }
+
+  .chip:hover .chip-icon {
+      background: var(--orange);
   }
 
   .chatbot-input-row {
       display: flex;
-      gap: 8px;
-      padding: 14px 18px;
+      align-items: center;
+      gap: 6px;
+      padding: 12px 14px;
       border-top: 1px solid #eee;
+      flex-shrink: 0;
+  }
+
+  .chatbot-input-wrap {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 100px;
+      padding: 0 6px 0 12px;
+  }
+
+  .chatbot-input-wrap:focus-within {
+      outline: 2px solid var(--orange);
+  }
+
+  .chatbot-input-icon {
+      width: 16px;
+      height: 16px;
+      color: #b9a892;
       flex-shrink: 0;
   }
 
   .chatbot-input-row input {
       flex: 1;
-      border: 1px solid #ddd;
-      border-radius: 100px;
-      padding: 10px 16px;
+      min-width: 0;
+      border: none;
+      background: transparent;
+      padding: 10px 4px;
       font-family: 'Raleway', sans-serif;
       font-size: 13px;
   }
 
   .chatbot-input-row input:focus {
-      outline: 2px solid var(--orange);
+      outline: none;
   }
 
-  /* :not(.chatbot-mic-btn) — ni cuma untuk butang "Send"; mic ada bentuk/saiz/background
-     dia sendiri (lihat .chatbot-mic-btn di bawah), tanpa :not() ni rule generic kat atas
-     menang atas specificity dan "makan" padding/background circle mic tu */
-  .chatbot-input-row button:not(.chatbot-mic-btn) {
-      background: var(--orange);
+  .chatbot-send-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: linear-gradient(135deg, var(--orange), var(--orange-deep, #FD590C));
       color: #fff;
       border-radius: 100px;
-      padding: 10px 20px;
+      padding: 9px 14px;
       font-family: 'Raleway', sans-serif;
       font-weight: 700;
-      font-size: 13px;
+      font-size: 12.5px;
+      white-space: nowrap;
+      flex-shrink: 0;
   }
 
-  .chatbot-input-row button:not(.chatbot-mic-btn):hover {
+  .chatbot-send-btn svg {
+      width: 13px;
+      height: 13px;
+      flex-shrink: 0;
+  }
+
+  .chatbot-send-btn:hover {
       filter: brightness(1.05);
   }
 
   .chatbot-mic-lang {
       flex-shrink: 0;
-      width: 34px;
-      height: 34px;
-      border-radius: 50%;
       display: flex;
       align-items: center;
-      justify-content: center;
-      background: #fff;
-      color: var(--orange);
-      border: 1.5px solid var(--orange);
-      padding: 0;
+      gap: 2px;
+      height: 34px;
+      border-radius: 100px;
+      padding: 0 7px;
+      background: var(--orange);
+      color: #fff;
+      border: none;
       font-family: 'Raleway', sans-serif;
       font-weight: 700;
-      font-size: 11px;
+      font-size: 10.5px;
+      white-space: nowrap;
+  }
+
+  .chatbot-mic-lang svg {
+      width: 10px;
+      height: 10px;
+      flex-shrink: 0;
   }
 
   .chatbot-mic-lang:hover {
-      background: #fff6ec;
+      filter: brightness(1.05);
   }
 
   .chatbot-mic-btn {
@@ -1208,7 +1303,6 @@
       50% { box-shadow: 0 0 0 9px rgba(254, 129, 10, 0); }
   }
 
-  /* ---------- RESPONSIVE ---------- */
   @media (max-width: 1100px) {
       .footer-grid {
           grid-template-columns: 1fr 1fr;

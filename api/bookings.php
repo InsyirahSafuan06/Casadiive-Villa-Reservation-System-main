@@ -1,8 +1,4 @@
 <?php
-/**
- * API laporan: satu baris per booking, untuk Power BI.
- * Guna ni untuk analisa jumlah tempahan, hasil (revenue), dan taburan status ikut tarikh.
- */
 declare(strict_types=1);
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/api_auth.php';

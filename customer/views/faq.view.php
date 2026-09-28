@@ -1,12 +1,10 @@
 <?php include __DIR__ . '/../../includes/header.php'; ?>
 
-  <!-- HERO -->
   <section class="hero" id="top">
     <h1>Frequently Asked Questions</h1>
     <p>Everything you need to know about booking, paying, and staying at Casadive Villa.</p>
   </section>
 
-  <!-- CONTENT -->
   <section class="info-section">
     <div class="container">
       <div class="info-card">

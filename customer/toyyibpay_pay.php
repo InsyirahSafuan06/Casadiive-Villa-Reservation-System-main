@@ -1,9 +1,4 @@
 <?php
-/**
- * Cipta satu bil ToyyibPay sebenar untuk satu booking, dan terus redirect customer ke
- * page pembayaran ToyyibPay tu. Sahkan booking guna "ref + phone" macam mybooking.php —
- * pautan "Pay with ToyyibPay" pada resit tu yang bawa customer ke sini.
- */
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/helpers.php';
@@ -64,27 +59,21 @@ $typeLabel = in_array('Villa', $types, true) && in_array('Campsite', $types, tru
     ? 'Villa & Campsite'
     : ($types[0] ?? 'Booking');
 
-// booking hanya untuk satu accommodation je (lihat bookingform.php) — guna category code
-// ToyyibPay khusus villa tu supaya bayaran masuk category yang betul dalam dashboard ToyyibPay
 $categoryCode = toyyibpay_category_code_for((string) ($items[0]['accommodation_name'] ?? ''));
 
 $bookingRef = format_booking_ref($refId);
 $amountSen = (int) round(booking_grand_total($booking) * 100);
 
-// URL kena absolute (bukan relative) sebab ToyyibPay server yang panggil/redirect ke sini,
-// bukan browser customer yang dah pun ada dalam context site kita
 $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
 $scriptDir = rtrim(str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'])), '/');
 $siteBaseUrl = $scheme . '://' . $_SERVER['HTTP_HOST'] . $scriptDir;
 $returnUrl = $siteBaseUrl . '/toyyibpay_return.php';
 
-// billEmail wajib untuk ToyyibPay tapi email customer kita optional — guna placeholder
-// berasaskan phone bila customer tak bagi email masa booking
 $billEmail = $booking['email'] ?: preg_replace('/[^0-9]/', '', $booking['phone']) . '@no-email.casadivevilla.local';
 
 $billCode = toyyibpay_create_bill([
     'categoryCode' => $categoryCode,
-    'billName' => substr($bookingRef . ' - ' . $typeLabel, 0, 30), // ToyyibPay hadkan billName kat 30 aksara
+    'billName' => substr($bookingRef . ' - ' . $typeLabel, 0, 30),
     'billDescription' => substr('Casadive Villa booking ' . $bookingRef . ' (' . $typeLabel . ')', 0, 100),
     'billAmount' => $amountSen,
     'billReturnUrl' => $returnUrl,

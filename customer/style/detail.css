@@ -30,7 +30,6 @@
     padding: 0 40px;
   }
 
-  /* ---------- NAVBAR (shared) ---------- */
   .navbar{ background: var(--sand-light); position: sticky; top: 0; z-index: 100; }
   .navbar .container{ display:flex; align-items:center; justify-content:space-between; height: 100px; gap: 24px; }
   .brand{ font-family:'Dancing Script', cursive; font-weight:700; font-size: 28px; color: var(--orange); white-space:nowrap; }
@@ -41,7 +40,6 @@
   .btn:hover{ transform: translateY(-2px); }
   .btn-primary{ background: var(--orange-deep); color:#fff; font-size:15px; padding: 16px 34px; box-shadow: 0 8px 20px rgba(253,89,12,.28); }
 
-  /* ---------- DETAIL ---------- */
   .detail-section{ padding: 70px 0 100px; }
   .detail-back{
     display:inline-flex;
@@ -216,7 +214,6 @@
     margin-bottom: 14px;
   }
 
-  /* ---------- FOOTER (shared) ---------- */
   footer{ background: var(--brown); color:#fff; padding: 80px 0 40px; }
   .footer-grid{ display:grid; grid-template-columns: 1.4fr 1fr 1fr 1fr 1.6fr; gap: 40px; padding-bottom: 60px; }
   .footer-brand .brand{ color:#fff; margin-bottom: 14px; }
@@ -248,7 +245,6 @@
   .footer-divider{ border:none; border-top: 1px solid rgba(217,217,217,.5); margin-bottom: 30px; }
   .footer-bottom{ font-family:'Raleway', sans-serif; font-weight:600; font-size: 15px; text-align:center; }
 
-  /* ---------- RESPONSIVE ---------- */
   @media (max-width: 1100px){
     .footer-grid{ grid-template-columns: 1fr 1fr; }
   }

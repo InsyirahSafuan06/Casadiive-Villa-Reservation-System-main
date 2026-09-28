@@ -1,9 +1,4 @@
 <?php
-/**
- * @var string $name
- * @var string $checkin
- * @var string $doorCodeHtml
- */
 ?>
 <p>Hi <?= $name ?>,</p>
 <p>This is a friendly reminder that your check-in date is coming up:</p>

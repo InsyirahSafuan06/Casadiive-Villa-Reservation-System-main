@@ -1,14 +1,9 @@
 <?php
-/**
- * Susun atur footer yang dikongsi untuk laman web Casadive Villa.
- */
 declare(strict_types=1);
 
 $base ??= ''; 
 $showWhatsapp ??= false; 
 
-// Cache-busting untuk footer CSS + JS (review-photo.js/footer-review-init.js), supaya browser
-// customer tak terus guna versi lama yang dah di-cache lepas fail-fail ni diubah
 $footerCssHref = 'assets/css/footer.css';
 $footerCssPath = __DIR__ . '/../assets/css/footer.css';
 if (is_file($footerCssPath)) {
@@ -27,18 +22,15 @@ if (is_file($footerReviewInitJsPath)) {
     $footerReviewInitJsHref .= '?v=' . filemtime($footerReviewInitJsPath);
 }
 ?>
-  <!-- FOOTER -->
   <footer>
     <div class="container">
       <div class="footer-grid">
         
-        <!-- Kolom Info Utama -->
         <div class="footer-col footer-brand">
           <img src="<?= htmlspecialchars($base) ?>assets/images/logo-white.png" alt="Casadive Villa" class="footer-logo">
           <p>Casadive villa offers a relaxing beachfront stay with modern villas and campsite. Your perfect gateway awaits.</p>
         </div>
 
-        <!-- Kolom Quick Links -->
         <div class="footer-col">
           <h4>Quick links</h4>
           <ul>
@@ -51,7 +43,6 @@ if (is_file($footerReviewInitJsPath)) {
           </ul>
         </div>
 
-        <!-- Kolom Company -->
         <div class="footer-col">
           <h4>Company</h4>
           <ul>
@@ -62,7 +53,6 @@ if (is_file($footerReviewInitJsPath)) {
           </ul>
         </div>
 
-        <!-- Kolom Social Media -->
         <div class="footer-col">
           <h4>Social media</h4>
           <ul>
@@ -73,7 +63,6 @@ if (is_file($footerReviewInitJsPath)) {
           </ul>
         </div>
 
-        <!-- Kolom Mini Review Form -->
         <div class="footer-col newsletter">
           <h4 class="footer-review-heading">
             <span class="footer-review-heading-icon" aria-hidden="true">
@@ -126,7 +115,6 @@ if (is_file($footerReviewInitJsPath)) {
               </button>
             </div>
 
-            <!-- PENEGAPAN FORMAT GAMBAR DI SINI (Hanya terima PNG, JPEG, JPG dari galeri) -->
             <input type="file" id="footer-file-input" name="review_image" accept="image/png, image/jpeg, image/jpg" hidden>
 
             <img id="footer-image-preview" class="footer-image-preview" hidden alt="Selected room photo preview">
@@ -141,7 +129,6 @@ if (is_file($footerReviewInitJsPath)) {
         </div>
       </div>
 
-      <!-- CAMERA MODAL WIDGET -->
       <div class="footer-camera-modal" id="footer-camera-modal">
         <div class="footer-camera-modal-inner">
           <video id="footer-camera-video" autoplay playsinline muted></video>
@@ -153,7 +140,6 @@ if (is_file($footerReviewInitJsPath)) {
         </div>
       </div>
 
-      <!-- PREVIEW LIGHTBOX (klik preview untuk besarkan, dari upload ATAU camera capture) -->
       <div class="photo-lightbox" id="footer-lightbox">
         <button type="button" class="photo-lightbox-close" id="footer-lightbox-close" aria-label="Close">&times;</button>
         <img id="footer-lightbox-img" src="" alt="Room photo, enlarged">
@@ -165,7 +151,6 @@ if (is_file($footerReviewInitJsPath)) {
     </div>
   </footer>
 
-  <!-- WHATSAPP FLOATING CARD -->
   <?php if ($showWhatsapp): ?>
   <a class="whatsapp-card" href="https://wa.me/60103851892" aria-label="Chat with us on WhatsApp">
     <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
@@ -177,12 +162,9 @@ if (is_file($footerReviewInitJsPath)) {
   </a>
   <?php endif; ?>
 
-  <!-- ASSETS & SCRIPT INJECTIONS -->
   <link rel="stylesheet" href="<?= htmlspecialchars($base . $footerCssHref) ?>">
   <script src="<?= htmlspecialchars($base . $reviewPhotoJsHref) ?>"></script>
   <script>
-    // fail .js luar takleh proses <?php ?>, so jambatan kecil ni perlu kekal inline
-    // (sama teknik macam CHATBOT_DATA dalam views/index.view.php)
     var FOOTER_REVIEW_HOME_URL = <?= json_encode($base . 'index.php') ?>;
   </script>
   <script src="<?= htmlspecialchars($base . $footerReviewInitJsHref) ?>"></script>

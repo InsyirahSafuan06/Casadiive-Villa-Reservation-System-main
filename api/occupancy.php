@@ -1,9 +1,4 @@
 <?php
-/**
- * API laporan: satu baris per unit penginapan (Villa/Campsite), untuk Power BI.
- * Guna ni untuk analisa okupansi — berapa malam setiap unit dah ditempah, dan hasil
- * yang dijana setiap unit.
- */
 declare(strict_types=1);
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/api_auth.php';

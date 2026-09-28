@@ -42,29 +42,10 @@
         <p class="flash">Image removed from gallery.</p>
       <?php endif; ?>
 
-      <div class="stat-grid">
-        <div class="stat-tile">
-          <p class="stat-label">Total Bookings</p>
-          <p class="stat-value"><?= $stats['total_bookings'] ?></p>
-        </div>
-        <div class="stat-tile">
-          <p class="stat-label">Pending Bookings</p>
-          <p class="stat-value"><?= $stats['pending_bookings'] ?></p>
-        </div>
-        <div class="stat-tile">
-          <p class="stat-label">Check-ins Today</p>
-          <p class="stat-value"><?= $stats['checkins_today'] ?></p>
-        </div>
-        <div class="stat-tile">
-          <p class="stat-label">Check-outs Today</p>
-          <p class="stat-value"><?= $stats['checkouts_today'] ?></p>
-        </div>
-      </div>
-
       <section class="dash-section">
         <h2 class="section-heading">Analytics Dashboard</h2>
         <div class="pbi-embed-wrap">
-          <iframe title="FYP" src="https://app.powerbi.com/reportEmbed?reportId=522d4c30-5da2-44f0-8e28-f019de0ce933&autoAuth=true&ctid=221e8880-f1b1-41cd-8221-56d4277e4ffc" frameborder="0" allowFullScreen="true"></iframe>
+          <iframe title="FYP" src="https://app.powerbi.com/reportEmbed?reportId=317fef2a-5607-4506-97f7-4f5e24ff35a1&autoAuth=true&ctid=221e8880-f1b1-41cd-8221-56d4277e4ffc" frameborder="0" allowFullScreen="true"></iframe>
         </div>
       </section>
 
@@ -98,8 +79,8 @@
                 <td><?= htmlspecialchars($b['phone']) ?></td>
                 <td><?= htmlspecialchars($b['plate_num'] ?? '—') ?></td>
                 <td><?= htmlspecialchars($b['accommodations'] ?? '—') ?></td>
-                <td><?= htmlspecialchars($b['check_in']) ?></td>
-                <td><?= htmlspecialchars($b['check_out']) ?></td>
+                <td><?= htmlspecialchars(date('d/m/Y', strtotime($b['check_in']))) ?></td>
+                <td><?= htmlspecialchars(date('d/m/Y', strtotime($b['check_out']))) ?></td>
                 <td><?= (int) $b['total_guest'] ?></td>
                 <td>
                   <?= number_format((float) $b['total_amount'], 2) ?>

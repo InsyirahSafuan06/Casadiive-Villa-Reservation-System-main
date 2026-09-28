@@ -1,8 +1,4 @@
 <?php
-/**
- * @var string $title    tajuk (dah di-htmlspecialchars)
- * @var string $bodyHtml isi emel
- */
 ?>
 <!doctype html>
 <html>

@@ -1,12 +1,4 @@
 <?php
-/**
- * API laporan: satu baris per review, untuk Power BI.
- * Guna ni untuk analisa rating & sentimen dari masa ke masa.
- *
- * PENTING (privasi): kita hantar r.display_name (nama yang guest PILIH untuk tunjuk secara
- * terbuka), BUKAN nama sebenar dari booking/customer — sama prinsip macam testimonials
- * kat homepage. Review "unverified" (booking_id NULL, dari footer widget) turut disertakan.
- */
 declare(strict_types=1);
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/api_auth.php';

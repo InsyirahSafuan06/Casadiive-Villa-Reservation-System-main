@@ -28,7 +28,6 @@
     padding: 0 40px;
   }
 
-  /* ---------- TOPBAR (shared with dashboards) ---------- */
   .dash-topbar{ background: var(--sand-light); position: sticky; top: 0; z-index: 100; }
   .dash-topbar .container{ display:flex; align-items:center; justify-content:space-between; height: 90px; gap: 20px; flex-wrap:wrap; }
   .brand{ font-family:'Dancing Script', cursive; font-weight:700; font-size: 26px; color: var(--orange); white-space:nowrap; }
@@ -44,7 +43,6 @@
   .dash-main{ padding: 40px 0 80px; }
   .dash-heading{ font-family:'Mulish', sans-serif; font-weight:700; font-size: clamp(26px, 3.5vw, 38px); color: var(--brown-price); margin-bottom: 24px; }
 
-  /* ---------- RECEIPT ---------- */
   .receipt-card{
     background:#fff;
     border-radius: 16px;

@@ -54,7 +54,6 @@
       padding: 0 40px;
   }
 
-  /* ---------- NAVBAR ---------- */
   .navbar {
       background: var(--sand-light);
       position: sticky;
@@ -119,7 +118,6 @@
       box-shadow: 0 8px 20px rgba(253, 89, 12, .28);
   }
 
-  /* ---------- HERO ---------- */
   .hero {
       position: relative;
       background: linear-gradient(135deg, #FFF0D3 0%, #FE810A 45%, #5B3A29 100%);
@@ -149,7 +147,6 @@
       opacity: .95;
   }
 
-  /* ---------- CONTENT ---------- */
   .info-section {
       padding: 70px 0 90px;
   }
@@ -250,7 +247,6 @@
       color: #fff;
   }
 
-  /* ---------- SOCIAL CONTACT CARDS ---------- */
   .social-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
@@ -328,7 +324,6 @@
       }
   }
 
-  /* ---------- FAQ ACCORDION ---------- */
   .faq-item {
       border-bottom: 1px solid var(--border);
   }
@@ -383,7 +378,6 @@
       padding-bottom: 20px;
   }
 
-  /* ---------- FOOTER (shared) ---------- */
   footer {
       background: var(--brown);
       color: #fff;
@@ -457,7 +451,6 @@
       text-align: center;
   }
 
-  /* ---------- RESPONSIVE ---------- */
   @media (max-width: 1100px) {
       .footer-grid {
           grid-template-columns: 1fr 1fr;

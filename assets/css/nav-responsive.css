@@ -1,12 +1,4 @@
-/* ==========================================================================
-   SHARED MOBILE NAVIGATION
-   Loaded on every page via includes/header.php, after the page's own
-   stylesheet, so it can safely override that page's `.nav-links{display:none}`
-   mobile rule with the more specific `.nav-links.is-open` selector below.
-   ========================================================================== */
 
-/* Logo (replaces the old text ".brand") — self-contained here rather than in each
-   page's own stylesheet, so it's sized the same everywhere this shared header renders. */
 .nav-logo-link {
   display: inline-flex;
   align-items: center;
@@ -76,8 +68,6 @@
   display: none;
 }
 
-/* per-link icons are a mobile-dropdown-only treatment — the desktop horizontal
-   menu stays plain text, unchanged from before this redesign */
 .nav-links a svg {
   display: none;
 }
@@ -105,7 +95,6 @@
     order: 3;
   }
 
-  /* floating dropdown card, overlaying the page rather than pushing it down */
   .nav-links {
     order: 4;
     display: none;
@@ -172,24 +161,10 @@
     font-weight: 600;
   }
 
-  /* transparent tap-outside-to-close layer, sits under the panel but over the page.
-     [hidden] rule must come after (or be at least as specific as) the display:block
-     one below, otherwise this stays visible even while the hidden attribute is set —
-     same gotcha as .chatbot-panel/.footer-camera-modal elsewhere in this codebase. */
   .nav-backdrop {
     display: block;
     position: fixed;
     inset: 0;
-    /* MUST stay below .navbar's own z-index (100, set in each page's own CSS) — .nav-backdrop
-       is a SIBLING of <header class="navbar">, not nested inside it, so at the root stacking
-       context it competes against the navbar as a whole. .navbar has position:sticky WITH an
-       explicit z-index, which makes it its OWN stacking context — the dropdown menu's z-index
-       (200) only gets compared against OTHER CHILDREN of .navbar, never against this backdrop
-       directly. With this at 150 > navbar's 100, the (invisible, transparent) backdrop was
-       rendering on top of the entire navbar, dropdown included, silently swallowing every tap
-       on a menu link before it could reach the <a> underneath — menu would visibly close
-       (the backdrop's own click handler) but navigation never happened. Keep this below 100.
-    */
     z-index: 90;
     background: transparent;
   }

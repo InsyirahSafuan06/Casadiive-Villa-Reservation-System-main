@@ -1,13 +1,11 @@
 <?php include __DIR__ . '/../../includes/header.php'; ?>
 
-  <!-- HERO -->
   <section class="hero" id="top" style="background-image:linear-gradient(rgba(124,106,70,.55), rgba(124,106,70,.55)), url('../assets/images/casa2-casa3-day.jpg');background-size:cover;background-position:center;">
     <h1>Villa Packages</h1>
     <p>Enjoy a peaceful stay with private rooms, pool access and a beachfront view.</p>
     <a href="#packages" class="scroll-down" aria-label="Scroll down"><span></span></a>
   </section>
 
-  <!-- PACKAGES -->
   <section class="packages" id="packages">
     <div class="container">
 
@@ -26,8 +24,6 @@
       <?php endif; ?>
 
       <?php
-      // bila customer datang dari carian, bawa terus tarikh/tetamu tu ke borang tempahan
-      // (Book now) supaya dia tak payah isi semula
       $searchQuery = $searchActive
           ? '&check_in=' . urlencode($searchCheckIn) . '&check_out=' . urlencode($searchCheckOut) . '&guests=' . urlencode((string) ($_GET['guests'] ?? ''))
           : '';
@@ -35,14 +31,11 @@
 
       <div class="package-grid">
       <?php foreach ($villas as $villa):
-        // takde column khas "ada pool"/"ada wifi" dalam DB, so kita just cari perkataan tu
-        // dalam features/description untuk decide icon mana nak tunjuk
         $searchText = strtolower(($villa['features'] ?? '') . ' ' . ($villa['description'] ?? ''));
         $hasPool = strpos($searchText, 'pool') !== false;
         $hasWifi = strpos($searchText, 'wifi') !== false;
         $roomLabel = ($hasPool || $hasWifi) ? 'Room' : 'Room Only';
-        $paxLabel = $villa['pax_label'] ?: ('Max ' . (int) $villa['capacity'] . ' guests'); // guna label custom kalau ada, kalau tak generate sendiri
-        // kalau admin dah upload gambar untuk vila ni, guna sebagai background kad
+        $paxLabel = $villa['pax_label'] ?: ('Max ' . (int) $villa['capacity'] . ' guests');
         $mediaStyle = $villa['image'] ? ' style="background-image:url(\'' . htmlspecialchars($villa['image']) . '\');background-size:cover;background-position:center;"' : '';
       ?>
       <article class="package-card">

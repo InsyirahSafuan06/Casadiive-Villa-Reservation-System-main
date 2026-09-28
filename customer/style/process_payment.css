@@ -33,7 +33,6 @@ button{ font-family:inherit; cursor:pointer; }
   padding: 0 40px;
 }
 
-/* ---------- NAVBAR ---------- */
 .navbar{
   background: var(--sand-light);
   position: sticky;
@@ -86,7 +85,6 @@ button{ font-family:inherit; cursor:pointer; }
   box-shadow: 0 8px 20px rgba(253,89,12,.28);
 }
 
-/* ---------- STEP BAR ---------- */
 .step-bar{
   display:flex;
   align-items:center;
@@ -128,7 +126,6 @@ button{ font-family:inherit; cursor:pointer; }
   background: var(--orange-deep);
 }
 
-/* ---------- PAGE TITLE ---------- */
 .page-title{
   padding: 40px 0 30px;
   text-align:center;
@@ -147,7 +144,6 @@ button{ font-family:inherit; cursor:pointer; }
   color:#000;
 }
 
-/* ---------- BIG SPINNER ---------- */
 .spinner-hero{
   text-align:center;
   padding: 50px 20px 10px;
@@ -178,7 +174,6 @@ button{ font-family:inherit; cursor:pointer; }
   color:#000;
 }
 
-/* ---------- PROCESSING CARD ---------- */
 .payment-section{
   padding-bottom: 100px;
 }
@@ -250,7 +245,6 @@ button{ font-family:inherit; cursor:pointer; }
   color: var(--brown-heading);
 }
 
-/* ---------- WARNING BANNER ---------- */
 .process-alert{
   box-sizing: border-box;
   display:flex;
@@ -286,7 +280,6 @@ button{ font-family:inherit; cursor:pointer; }
 }
 .alert-strong{ margin-bottom: 4px; }
 
-/* ---------- FOOTER ---------- */
 footer{
   background: var(--brown);
   color:#fff;
@@ -381,7 +374,6 @@ footer{
   text-align:center;
 }
 
-/* ---------- RESPONSIVE ---------- */
 @media (max-width: 1100px){
   .footer-grid{ grid-template-columns: 1fr 1fr; }
 }

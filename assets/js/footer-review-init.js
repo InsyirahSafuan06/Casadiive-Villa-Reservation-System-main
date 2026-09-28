@@ -1,5 +1,3 @@
-// Sama modul JS macam review form penuh kat MyBooking (assets/js/review-photo.js),
-// cuma element ID lain sebab widget footer ni versi ringkas.
 initReviewPhotoWidget({
   form: 'footer-review-form',
   uploadBtn: 'footer-upload-btn',

@@ -1,6 +1,5 @@
 <?php include __DIR__ . '/../../includes/header.php'; ?>
 
-  <!-- STEP BAR -->
   <div class="step-bar" aria-label="Booking progress">
     <div class="step is-active">
       <span class="step-circle">1</span>
@@ -18,7 +17,6 @@
     </div>
   </div>
 
-  <!-- PAGE TITLE -->
   <div class="container page-title">
     <div class="page-title-heading">
       <span class="page-title-icon" aria-hidden="true">
@@ -31,7 +29,6 @@
     </div>
   </div>
 
-  <!-- POLICY NOTICE -->
   <div class="container">
     <div class="policy-notice">
       <h3>Good to know before you book</h3>
@@ -44,7 +41,6 @@
     </div>
   </div>
 
-  <!-- BOOKING FORM -->
   <section class="booking-section">
     <div class="container">
       <?php if ($errors): ?>
@@ -215,29 +211,23 @@
   const accommodationSelect = document.getElementById('accommodation');
   const addonBbq = document.getElementById('addon-bbq');
   const addonMattress = document.getElementById('addon-mattress');
-  // sama nilai macam ADDON_BBQ_PRICE / ADDON_MATTRESS_PRICE / LONG_STAY_DISCOUNT_* dalam
-  // includes/helpers.php — dicetak terus dari PHP supaya harga ni tak sekali-kali "double
-  // maintain" dua tempat
   const ADDON_BBQ_PRICE = <?= json_encode(ADDON_BBQ_PRICE) ?>;
   const ADDON_MATTRESS_PRICE = <?= json_encode(ADDON_MATTRESS_PRICE) ?>;
   const LONG_STAY_DISCOUNT_MIN_NIGHTS = <?= json_encode(LONG_STAY_DISCOUNT_MIN_NIGHTS) ?>;
   const LONG_STAY_DISCOUNT_AMOUNT = <?= json_encode(LONG_STAY_DISCOUNT_AMOUNT) ?>;
 
-  // ni sama je logic macam compute_stay_price() dalam includes/helpers.php — kita duplicate
-  // kat sini sebab nak update ringkasan harga secara live dekat browser, tak payah refresh page.
-  // malam Jumaat & Sabtu kena kadar weekend, hari lain kadar biasa
   function computeStay(checkInStr, checkOutStr, weekdayPrice, weekendPrice){
     let weekdayNights = 0, weekendNights = 0;
     if (checkInStr && checkOutStr) {
       const cursor = new Date(checkInStr + 'T00:00:00');
       const end = new Date(checkOutStr + 'T00:00:00');
       while (cursor < end) {
-        const day = cursor.getDay(); // 0=Ahad .. 5=Jumaat, 6=Sabtu
+        const day = cursor.getDay();
         (day === 5 || day === 6) ? weekendNights++ : weekdayNights++;
         cursor.setDate(cursor.getDate() + 1);
       }
     }
-    if (weekdayNights + weekendNights === 0) weekdayNights = 1; // elak divide/display 0 malam sebelum tarikh diisi
+    if (weekdayNights + weekendNights === 0) weekdayNights = 1;
     return {
       weekdayNights,
       weekendNights,
@@ -245,7 +235,6 @@
     };
   }
 
-  // fungsi ni update semua field kat kad "Booking Summary" sebelah kanan, live ikut apa pelanggan taip
   function updateSummary(){
     const opt = accommodationSelect.selectedOptions[0];
     const hasPackage = Boolean(opt && opt.value);
@@ -257,7 +246,6 @@
     document.getElementById('summary-name').textContent = hasPackage ? opt.dataset.name : 'Select a package';
     document.getElementById('summary-capacity').textContent = capacity ? `Max ${capacity} guests` : '—';
 
-    // tunjuk gambar sebenar pakej yang dipilih dekat thumbnail summary tu, kalau admin ada upload gambar
     const thumb = document.getElementById('summary-thumb');
     const image = hasPackage ? opt.dataset.image : '';
     if (image) {
@@ -281,20 +269,17 @@
 
     const stay = computeStay(checkIn, checkOut, weekdayPrice, weekendPrice);
     const totalNights = stay.weekdayNights + stay.weekendNights;
-    const deposit = hasPackage ? 1 : 0; // deposit tetap RM1, sama macam kat server side
+    const deposit = hasPackage ? 1 : 0;
 
     document.getElementById('s-nights').textContent = totalNights;
 
-    // tunjuk kadar ikut hari check-in (kalau check-in tu jatuh weekend, tunjuk kadar weekend)
     let priceLabel = `RM ${weekdayPrice.toFixed(2)} / night`;
     if (checkIn) {
-      const checkInDay = new Date(checkIn + 'T00:00:00').getDay(); // 0=Ahad .. 5=Jumaat, 6=Sabtu
+      const checkInDay = new Date(checkIn + 'T00:00:00').getDay();
       const checkInRate = (checkInDay === 5 || checkInDay === 6) ? weekendPrice : weekdayPrice;
       priceLabel = `RM ${checkInRate.toFixed(2)} / night`;
     }
     const addonTotal = (addonBbq.checked ? ADDON_BBQ_PRICE : 0) + (addonMattress.checked ? ADDON_MATTRESS_PRICE : 0);
-    // sama syarat macam booking_long_stay_discount() PHP — RM tetap, capped kat harga bilik
-    // sendiri supaya tak jadi negatif, cuma tunjuk baris ni bila package + tarikh betul-betul dipilih
     const discount = (hasPackage && totalNights >= LONG_STAY_DISCOUNT_MIN_NIGHTS)
       ? Math.min(stay.total, LONG_STAY_DISCOUNT_AMOUNT)
       : 0;
@@ -307,7 +292,6 @@
     document.getElementById('s-total').textContent = `RM ${(stay.total + addonTotal + deposit - discount).toFixed(2)}`;
   }
 
-  // kalau datang dari page lain dengan ?accommodation= atau ?type= kat URL, auto-pilihkan pakej tu
   const params = new URLSearchParams(window.location.search);
   const preselectName = params.get('accommodation');
   const preselectType = params.get('type');
@@ -319,6 +303,6 @@
     if (match) accommodationSelect.value = match.value;
   }
 
-  form.addEventListener('input', updateSummary); // update live setiap kali pelanggan taip apa-apa
-  updateSummary(); // run sekali time page load, untuk state awal
+  form.addEventListener('input', updateSummary);
+  updateSummary();
 </script>

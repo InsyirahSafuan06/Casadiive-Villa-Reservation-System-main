@@ -1,20 +1,15 @@
 <?php
-/**
- * Halaman dashboard staf.
- * Fail ini membantu staf mengurus tempahan, ketersediaan bilik, dan rekod pembayaran.
- */
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/helpers.php';
 require_once __DIR__ . '/../includes/email_notify.php';
-require_login(['staff', 'manager']); // page ni staff dan manager dua-dua boleh masuk
+require_login(['staff', 'manager']);
 
 $user = current_user();
 $validStatuses = ['pending', 'confirmed', 'checked_in', 'checked_out', 'cancelled'];
 $validAccStatuses = ['available', 'unavailable', 'maintenance'];
 $validPaymentStatuses = ['pending', 'partial', 'paid', 'refunded', 'failed'];
 
-// staff tukar status booking dari dropdown table
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'update_status') {
     $bookingId = filter_input(INPUT_POST, 'booking_id', FILTER_VALIDATE_INT);
     $newStatus = $_POST['booking_status'] ?? '';
@@ -36,8 +31,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'updat
     exit;
 }
 
-// tanda penginapan available / unavailable / under maintenance — ni yang sorokkan
-// pakej dari senarai awam villa.php / campsite.php bila status bukan "available"
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'update_acc_status') {
     $accId = filter_input(INPUT_POST, 'accommodation_id', FILTER_VALIDATE_INT);
     $newAccStatus = $_POST['acc_status'] ?? '';
@@ -51,9 +44,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'updat
     exit;
 }
 
-// untuk bayaran yang diterima luar website (contoh: tunai, transfer bank) — ni cuma
-// tambah rekod payment. Tak macam aliran bayaran online, ni TAK auto tukar booking
-// jadi "confirmed" — staff kena update status tu sendiri secara berasingan kalau perlu
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'record_payment') {
     $bookingId = filter_input(INPUT_POST, 'booking_id', FILTER_VALIDATE_INT);
     $depositPaid = filter_var($_POST['deposit_paid'] ?? '', FILTER_VALIDATE_FLOAT);
@@ -78,8 +68,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'recor
 
 $galleryError = null;
 
-// manager/staff tambah gambar baru ke gallery awam (customer/gallery.php) — logik validasi/simpan
-// dikongsi dengan admin_dashboard.php dalam save_gallery_upload() (includes/helpers.php)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'add_gallery_image') {
     if (!csrf_verify()) {
         $galleryError = 'Your session expired. Please try again.';
@@ -93,8 +81,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'add_g
     }
 }
 
-// buang gambar dari gallery — cuma redirect "berjaya" kalau memang sesuatu dipadam (elak
-// dashboard claim "Image removed" walhal CSRF gagal/id tak wujud/jadual tak wujud lagi)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'delete_gallery_image') {
     $galleryId = filter_input(INPUT_POST, 'gallery_id', FILTER_VALIDATE_INT);
 
@@ -110,15 +96,7 @@ $accUpdated = isset($_GET['accupdated']);
 $paymentRecorded = isset($_GET['paymentrecorded']);
 $galleryAdded = isset($_GET['galleryadded']);
 $galleryDeleted = isset($_GET['gallerydeleted']);
-$refundBookingId = filter_input(INPUT_GET, 'refund_booking', FILTER_VALIDATE_INT) ?: null; // datang dari butang "Refund" kat dashboard admin
-
-// nombor ringkas untuk jubin statistik atas dashboard
-$stats = [
-    'total_bookings' => (int) $pdo->query('SELECT COUNT(*) FROM booking')->fetchColumn(),
-    'pending_bookings' => (int) $pdo->query("SELECT COUNT(*) FROM booking WHERE booking_status = 'pending'")->fetchColumn(),
-    'checkins_today' => (int) $pdo->query('SELECT COUNT(*) FROM booking WHERE check_in = CURDATE()')->fetchColumn(),
-    'checkouts_today' => (int) $pdo->query('SELECT COUNT(*) FROM booking WHERE check_out = CURDATE()')->fetchColumn(),
-];
+$refundBookingId = filter_input(INPUT_GET, 'refund_booking', FILTER_VALIDATE_INT) ?: null;
 
 $bookings = $pdo->query(
     "SELECT b.booking_id, c.full_name, c.phone, c.plate_num, b.check_in, b.check_out, b.total_guest,
@@ -139,8 +117,6 @@ $accommodations = $pdo->query(
      FROM accommodation ORDER BY accommodation_type, accommodation_id'
 )->fetchAll();
 
-// dibalut try/catch — kalau database production belum di-migrate (jadual `gallery` belum
-// wujud lagi), dashboard tetap load dengan bahagian Gallery kosong je, bukan fatal error
 try {
     $galleryImages = $pdo->query(
         'SELECT gallery_id, image_path, caption FROM gallery ORDER BY gallery_id DESC'
@@ -159,6 +135,4 @@ $recentPayments = $pdo->query(
      LIMIT 20"
 )->fetchAll();
 
-// semua logic dah selesai kat atas ni — baris bawah papar HTML page dia.
-// HTML/borang tu disimpan berasingan dalam folder views/ supaya file ni tak jadi terlalu panjang.
 require __DIR__ . '/views/staff_dashboard.view.php';

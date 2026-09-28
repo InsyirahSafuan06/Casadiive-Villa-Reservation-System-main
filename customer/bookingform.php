@@ -1,16 +1,10 @@
 <?php
-/**
- * Halaman borang tempahan.
- * Pelanggan isikan butiran mereka di sini, dan sistem simpan tempahan sebelum ubah hala ke pembayaran.
- */
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/helpers.php';
 
-$errors = []; // simpan semua mesej error kat sini untuk papar balik kat pelanggan
+$errors = [];
 
-// simpan apa yang pelanggan taip, supaya kalau ada error borang tak kosong balik —
-// diisi dari $_POST kalau submit gagal, atau dari $_GET kalau datang dari bar booking pantas homepage
 $old = [
     'full_name' => '',
     'phone' => '',
@@ -29,28 +23,24 @@ $old = [
     'whatsapp_optin' => false,
 ];
 
-// pelanggan cuma boleh pilih pakej yang admin dah tandakan "available"
 $accommodations = $pdo->query(
     "SELECT accommodation_id, accommodation_name, accommodation_type, price, price_weekend, capacity, image
      FROM accommodation
      WHERE status = 'available'
      ORDER BY accommodation_type, accommodation_id"
 )->fetchAll();
-// senarai sama, tapi diindeks ikut ID supaya senang cari "pakej mana yang dia pilih tu" nanti
 $accommodationsById = [];
 foreach ($accommodations as $acc) {
     $accommodationsById[(int) $acc['accommodation_id']] = $acc;
 }
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    // page baru buka (bukan submit) — cuba pra-isi dari bar booking pantas homepage / link pakej
     $qbCheckIn = trim((string) ($_GET['check_in'] ?? ''));
     $qbCheckOut = trim((string) ($_GET['check_out'] ?? ''));
     $qbGuests = trim((string) ($_GET['guests'] ?? ''));
     $qbAccommodation = trim((string) ($_GET['accommodation'] ?? ''));
     $qbType = trim((string) ($_GET['type'] ?? ''));
 
-    // isi cuma kalau format tarikh tu betul, jangan terima sampah dari URL
     if (DateTime::createFromFormat('Y-m-d', $qbCheckIn)) {
         $old['check_in'] = $qbCheckIn;
     }
@@ -61,7 +51,6 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
         $old['total_guest'] = $qbGuests;
     }
 
-    // padan nama pakej dari URL dengan senarai pakej available, cari yang sama nama je
     if ($qbAccommodation !== '') {
         foreach ($accommodations as $acc) {
             if (strcasecmp($acc['accommodation_name'], $qbAccommodation) === 0) {
@@ -71,7 +60,6 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
         }
     }
 
-    // kalau tak jumpa nama pakej yang sama, cuba padan ikut jenis je (Villa/Campsite)
     if ($old['accommodation_id'] === '' && $qbType !== '') {
         foreach ($accommodations as $acc) {
             if (strcasecmp($acc['accommodation_type'], $qbType) === 0) {
@@ -83,7 +71,6 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // pelanggan submit borang — ambil semua data dari $_POST dulu
     $old['full_name'] = trim((string) ($_POST['full_name'] ?? ''));
     $old['phone'] = trim((string) ($_POST['phone'] ?? ''));
     $old['email'] = trim((string) ($_POST['email'] ?? ''));
@@ -104,7 +91,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors[] = 'Your session expired. Please review your details and submit again.';
     }
 
-    // semakan asas — medan wajib takboleh kosong
     if ($old['full_name'] === '') {
         $errors[] = 'Full name is required.';
     }
@@ -121,7 +107,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors[] = 'Please agree to the Terms & Conditions to continue.';
     }
 
-    // pastikan tarikh check-in/out betul format dan check-out kena lepas check-in
     $checkIn = DateTime::createFromFormat('Y-m-d', $old['check_in']) ?: null;
     $checkOut = DateTime::createFromFormat('Y-m-d', $old['check_out']) ?: null;
     if (!$checkIn || !$checkOut) {
@@ -142,8 +127,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($totalGuest !== false && $totalGuest > (int) $selectedAccommodation['capacity']) {
         $errors[] = "This package can only host up to {$selectedAccommodation['capacity']} guests.";
     } elseif ($checkIn && $checkOut) {
-        // check double-booking: cari tempahan lain (yang tak cancel) untuk unit yang sama
-        // yang tarikhnya bertindih dengan tarikh yang pelanggan minta ni
         $stmt = $pdo->prepare(
             "SELECT 1
              FROM booking_item bi
@@ -164,22 +147,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    // baru sentuh database kalau semua semakan atas tu lepas takde error
     if (!$errors) {
         $weekdayPrice = (float) $selectedAccommodation['price'];
         $weekendPrice = $selectedAccommodation['price_weekend'] !== null ? (float) $selectedAccommodation['price_weekend'] : null;
-        $stay = compute_stay_price($weekdayPrice, $weekendPrice, $checkIn, $checkOut); // kira jumlah harga ikut malam weekday/weekend
+        $stay = compute_stay_price($weekdayPrice, $weekendPrice, $checkIn, $checkOut);
         $nights = $stay['weekday_nights'] + $stay['weekend_nights'];
-        // diskaun tak boleh lebih dari harga bilik sendiri (elak total jadi negatif kalau
-        // package murah + diskaun besar — takkan berlaku dengan harga sebenar, tapi selamat je jaga-jaga)
         $discountAmount = min($stay['total'], booking_long_stay_discount($nights));
         $addonAmount = booking_addon_total($old['addon_bbq'], $old['addon_mattress']);
         $totalAmount = $stay['total'] + $addonAmount - $discountAmount;
-        $depositAmount = 1.00; // deposit tetap RM1 untuk confirm mana-mana tempahan
+        $depositAmount = 1.00;
 
         try {
-            // customer + booking + booking_item kena simpan sekali gus — bungkus dalam
-            // satu transaction, kalau mana-mana insert gagal, semua rollback (tak simpan separuh-separuh)
             $pdo->beginTransaction();
 
             $stmt = $pdo->prepare(
@@ -195,7 +173,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'ic_passport' => $old['ic_passport'],
                 'whatsapp_optin' => $old['whatsapp_optin'] ? 1 : 0,
             ]);
-            $customerId = (int) $pdo->lastInsertId(); // id customer baru yang kita baru insert
+            $customerId = (int) $pdo->lastInsertId();
 
             $stmt = $pdo->prepare(
                 'INSERT INTO booking (customer_id, check_in, check_out, total_guest, deposit_amount, total_amount, booking_status, special_request, addon_bbq, addon_mattress, discount_amount)
@@ -213,7 +191,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'addon_mattress' => $old['addon_mattress'] ? 1 : 0,
                 'discount_amount' => $discountAmount,
             ]);
-            $bookingId = (int) $pdo->lastInsertId(); // id booking baru, kita perlukan untuk booking_item & redirect
+            $bookingId = (int) $pdo->lastInsertId();
 
             $stmt = $pdo->prepare(
                 'INSERT INTO booking_item (booking_id, accommodation_id, quantity, price)
@@ -222,31 +200,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->execute([
                 'booking_id' => $bookingId,
                 'accommodation_id' => $accommodationId,
-                // room cost je — bukan $totalAmount, sebab tu dah termasuk add-on. Kalau
-                // add-on masuk sekali kat sini, baris resit accommodation akan tunjuk jumlah
-                // yang tak sepadan dengan pengiraan rate (RM/malam x malam) dia sendiri.
                 'price' => $stay['total'],
             ]);
 
-            $pdo->commit(); // semua ok, confirm simpan
+            $pdo->commit();
         } catch (Exception $e) {
-            $pdo->rollBack(); // ada masalah, undur balik semua insert tadi
+            $pdo->rollBack();
             $errors[] = 'Something went wrong while saving your booking. Please try again.';
         }
 
         if (!$errors) {
-            // booking dah simpan, terus hantar ke page bayar deposit
             header('Location: payment.php?booking_id=' . $bookingId);
             exit;
         }
     }
 }
 
-$base = '../'; // page ni dalam folder customer/, naik satu tahap untuk pergi root
-$active = ''; // takde menu navbar yang perlu di-highlight untuk page ni
+$base = '../';
+$active = '';
 $pageTitle = 'Booking Details — Casadive Villa';
 $pageCss = 'style/bookingform.css';
 
-// semua logic dah selesai kat atas ni — baris bawah papar HTML page dia.
-// HTML/borang tu disimpan berasingan dalam folder views/ supaya file ni tak jadi terlalu panjang.
 require __DIR__ . '/views/bookingform.view.php';

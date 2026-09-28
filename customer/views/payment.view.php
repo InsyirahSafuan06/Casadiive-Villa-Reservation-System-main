@@ -1,6 +1,5 @@
 <?php include __DIR__ . '/../../includes/header.php'; ?>
 
-  <!-- STEP BAR -->
   <div class="step-bar" aria-label="Booking progress">
     <div class="step">
       <span class="step-circle">1</span>
@@ -103,7 +102,6 @@
 
 <?php if ($booking && !$paid): ?>
 <script>
-  // klik pilihan kaedah pembayaran akan sorot pilihan tu dan tunjuk panel yang sepadan kat bawah
   const options = document.querySelectorAll('.method-option');
   options.forEach(opt => {
     opt.addEventListener('click', () => {

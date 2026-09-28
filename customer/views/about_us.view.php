@@ -1,12 +1,10 @@
 <?php include __DIR__ . '/../../includes/header.php'; ?>
 
-  <!-- HERO -->
   <section class="hero" id="top">
     <h1>About Casadive Villa</h1>
     <p>A relaxing beachfront getaway in Kota Kuala Muda, Kedah — modern villas and a campsite, all in one place.</p>
   </section>
 
-  <!-- CONTENT -->
   <section class="info-section">
     <div class="container">
       <div class="info-card">

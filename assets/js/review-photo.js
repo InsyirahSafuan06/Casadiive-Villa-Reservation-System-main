@@ -1,8 +1,3 @@
-/**
- * Review photo upload/camera widget — shared by the full review form (customer/mybooking.php)
- * and the compact footer widget (includes/footer.php), which each call
- * initReviewPhotoWidget() with their own element IDs.
- */
 function initReviewPhotoWidget(ids) {
   var form = document.getElementById(ids.form);
   if (!form) return;
@@ -21,35 +16,16 @@ function initReviewPhotoWidget(ids) {
   var captureBtn = document.getElementById(ids.captureBtn);
   var cancelBtn = document.getElementById(ids.cancelBtn);
 
-  // lightbox untuk besarkan preview (dari upload ATAU camera capture — dua-dua guna preview yang sama)
   var lightbox = document.getElementById(ids.lightbox);
   var lightboxImg = document.getElementById(ids.lightboxImg);
   var lightboxClose = document.getElementById(ids.lightboxClose);
   var lightboxBack = document.getElementById(ids.lightboxBack);
   var homeUrl = ids.homeUrl;
 
-  var CONFIDENCE_THRESHOLD = 0.5;
-  var SCAN_TIMEOUT_MS = 30000; // batalkan scan kalau ambil masa lebih 30 saat (cth. internet slow)
-  var cocoModel = null;
-  var modelLoading = null;
   var cameraStream = null;
   var autoCaptureTimer = null;
-  var AUTO_CAPTURE_MS = 5000; // scan tetingkap kamera cuma 5 saat, lepas tu terus capture automatik
+  var AUTO_CAPTURE_MS = 5000;
 
-  // "lumba" satu promise dengan satu had masa — kalau promise tu tak selesai dalam ms tu,
-  // reject dengan Error('timeout') supaya caller boleh papar mesej yang sesuai
-  function withTimeout(promise, ms) {
-    return new Promise(function (resolve, reject) {
-      var timer = setTimeout(function () { reject(new Error('timeout')); }, ms);
-      promise.then(
-        function (result) { clearTimeout(timer); resolve(result); },
-        function (err) { clearTimeout(timer); reject(err); }
-      );
-    });
-  }
-
-  // ---- scan-frame corners (over the live camera feed) + a "Verified" badge that pops onto
-  // the accepted preview thumbnail — purely visual polish, doesn't change what's validated ----
   function addScanFrame() {
     if (!cameraVideo || cameraVideo.parentNode.classList.contains('rp-scan-frame')) return;
     var wrap = document.createElement('div');
@@ -64,99 +40,10 @@ function initReviewPhotoWidget(ids) {
   }
   addScanFrame();
 
-  function ensurePreviewBadge() {
-    var wrap = preview.parentNode;
-    if (!wrap.classList.contains('rp-preview-wrap')) {
-      wrap = document.createElement('div');
-      wrap.className = 'rp-preview-wrap';
-      preview.parentNode.insertBefore(wrap, preview);
-      wrap.appendChild(preview);
-
-      var badge = document.createElement('div');
-      badge.className = 'rp-verify-badge';
-      badge.innerHTML =
-        '<svg class="rp-verify-icon" viewBox="0 0 24 24" aria-hidden="true">' +
-        '<circle cx="12" cy="12" r="11" fill="#1e9e57"/>' +
-        '<path d="M7 12.5 10.5 16 17 8.5" stroke="#fff" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>' +
-        '</svg>';
-      wrap.appendChild(badge);
-    }
-    return wrap.querySelector('.rp-verify-badge');
-  }
-
-  function showVerifiedBadge() {
-    var badge = ensurePreviewBadge();
-    badge.classList.remove('is-visible');
-    void badge.offsetWidth; // force reflow so the pop-in animation restarts every time
-    badge.classList.add('is-visible');
-  }
-
-  function hideVerifiedBadge() {
-    var wrap = preview.parentNode;
-    if (wrap.classList.contains('rp-preview-wrap')) {
-      var badge = wrap.querySelector('.rp-verify-badge');
-      if (badge) badge.classList.remove('is-visible');
-    }
-  }
-
-  var VEHICLE_CLASSES = ['car', 'motorcycle', 'bus', 'truck', 'bicycle', 'train', 'airplane', 'boat'];
-  var FOOD_CLASSES = ['banana', 'apple', 'sandwich', 'orange', 'broccoli', 'carrot', 'hot dog', 'pizza', 'donut', 'cake', 'bowl'];
-
   function setStatus(text, kind) {
     statusEl.hidden = false;
     statusEl.textContent = text;
     statusEl.className = statusClass + ' ' + (kind || '');
-  }
-
-  function loadScript(src) {
-    return new Promise(function (resolve, reject) {
-      var s = document.createElement('script');
-      s.src = src;
-      s.onload = resolve;
-      s.onerror = reject;
-      document.head.appendChild(s);
-    });
-  }
-
-  function loadModel() {
-    if (cocoModel) return Promise.resolve(cocoModel);
-    if (modelLoading) return modelLoading;
-
-    setStatus('Loading…', 'processing');
-    modelLoading = loadScript('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.20.0/dist/tf.min.js')
-      .then(function () { return loadScript('https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.min.js'); })
-      .then(function () { return window.cocoSsd.load(); })
-      .then(function (model) { cocoModel = model; return model; });
-    return modelLoading;
-  }
-
-  function classify(imgEl) {
-    return loadModel().then(function (model) {
-      setStatus('Checking your image…', 'processing');
-      return model.detect(imgEl);
-    }).then(function (predictions) {
-      var best = null;
-      predictions.forEach(function (p) {
-        if (p.score >= CONFIDENCE_THRESHOLD && (!best || p.score > best.score)) best = p;
-      });
-
-      if (!best) {
-        return { is_valid: false, category: 'uncertain', confidence: predictions[0] ? predictions[0].score : 0 };
-      }
-      if (best.class === 'bed') {
-        return { is_valid: true, category: 'bedroom', confidence: best.score };
-      }
-      if (best.class === 'person') {
-        return { is_valid: false, category: 'selfie', confidence: best.score };
-      }
-      if (VEHICLE_CLASSES.indexOf(best.class) !== -1) {
-        return { is_valid: false, category: 'vehicle', confidence: best.score };
-      }
-      if (FOOD_CLASSES.indexOf(best.class) !== -1) {
-        return { is_valid: false, category: 'food', confidence: best.score };
-      }
-      return { is_valid: false, category: 'uncertain', confidence: best.score };
-    });
   }
 
   function assignFile(file) {
@@ -167,41 +54,18 @@ function initReviewPhotoWidget(ids) {
 
   function clearFile() {
     fileInput.value = '';
-    preview.hidden = true; // Sembunyikan jika fail dibersihkan
+    preview.hidden = true;
     preview.src = '';
     if (removeBtn) removeBtn.hidden = true;
-    hideVerifiedBadge();
   }
 
   function handleFile(file) {
     clearFile();
-    var url = URL.createObjectURL(file);
-    var img = new Image();
-    img.onload = function () {
-      withTimeout(classify(img), SCAN_TIMEOUT_MS).then(function (result) {
-        if (result.is_valid) {
-          setStatus('✓ Image verified. Your room photo is suitable for this review.', 'success');
-
-          // PENTING: Hanya set src dan papar gambar jika disahkan tulen oleh AI
-          preview.src = url;
-          preview.hidden = false;
-          if (removeBtn) removeBtn.hidden = false;
-          showVerifiedBadge();
-          assignFile(file);
-        } else if (result.category === 'uncertain') {
-          setStatus('Please upload a clearer photo showing the villa room.', 'uncertain');
-        } else {
-          setStatus('✕ Image rejected. Please upload a clear photo of the villa room only.', 'reject');
-        }
-      }).catch(function (err) {
-        if (err && err.message === 'timeout') {
-          setStatus('Taking too long to verify (check your internet connection). Please try again.', 'reject');
-        } else {
-          setStatus('Please try again, or submit your review without a photo.', 'reject');
-        }
-      });
-    };
-    img.src = url;
+    preview.src = URL.createObjectURL(file);
+    preview.hidden = false;
+    if (removeBtn) removeBtn.hidden = false;
+    assignFile(file);
+    setStatus('Photo added.', 'success');
   }
 
   uploadBtn.addEventListener('click', function () { fileInput.click(); });
@@ -229,11 +93,11 @@ function initReviewPhotoWidget(ids) {
     }
     if (lightboxBack && homeUrl) {
       lightboxBack.addEventListener('click', function () {
-        window.location.href = homeUrl; // customer tinggalkan page ni terus ke homepage
+        window.location.href = homeUrl;
       });
     }
     lightbox.addEventListener('click', function (e) {
-      if (e.target === lightbox) lightbox.classList.remove('is-open'); // klik background just tutup je
+      if (e.target === lightbox) lightbox.classList.remove('is-open');
     });
   }
 
@@ -254,8 +118,6 @@ function initReviewPhotoWidget(ids) {
       clearTimeout(autoCaptureTimer);
       autoCaptureTimer = null;
     }
-    // stream metadata (videoWidth/videoHeight) kadang belum sedia lagi pada peranti/browser
-    // perlahan — tunggu sekejap lagi supaya tak capture bingkai 0x0 (gambar kosong tak sah)
     if (!cameraVideo.videoWidth || !cameraVideo.videoHeight) {
       autoCaptureTimer = setTimeout(capturePhoto, 200);
       return;
@@ -277,7 +139,6 @@ function initReviewPhotoWidget(ids) {
       cameraVideo.srcObject = stream;
       cameraModal.classList.add('is-open');
       statusEl.hidden = true;
-      // scan tetingkap kamera cuma 5 saat — lepas tu terus capture automatik, tak payah tunggu klik
       autoCaptureTimer = setTimeout(capturePhoto, AUTO_CAPTURE_MS);
     }).catch(function () {
       setStatus('Camera access was denied or unavailable. Please use Upload Image instead.', 'reject');

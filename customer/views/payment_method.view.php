@@ -1,6 +1,5 @@
 <?php include __DIR__ . '/../../includes/header.php'; ?>
 
-  <!-- STEP BAR -->
   <div class="step-bar" aria-label="Booking progress">
     <div class="step">
       <span class="step-circle">1</span>
@@ -78,11 +77,11 @@
             </div>
             <div class="summary-row">
               <span class="summary-label">Check In</span>
-              <span class="summary-value"><?= htmlspecialchars($booking['check_in']) ?></span>
+              <span class="summary-value"><?= htmlspecialchars(date('d/m/Y', strtotime($booking['check_in']))) ?></span>
             </div>
             <div class="summary-row">
               <span class="summary-label">Check Out</span>
-              <span class="summary-value"><?= htmlspecialchars($booking['check_out']) ?></span>
+              <span class="summary-value"><?= htmlspecialchars(date('d/m/Y', strtotime($booking['check_out']))) ?></span>
             </div>
             <div class="summary-row">
               <span class="summary-label">Guests</span>

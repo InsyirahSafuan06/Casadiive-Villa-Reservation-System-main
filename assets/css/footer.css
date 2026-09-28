@@ -1,27 +1,16 @@
-/* ==========================================================================
-   WIDGET GAMBAR & KAMERA FOOTER (KOD YANG BETUL)
-   ========================================================================== */
 
-/* 1. Pengawal Elemen Tersembunyi (Sifat Utama) */
 [hidden],
 .footer-image-preview[hidden],
 .footer-verify-status[hidden] {
   display: none !important;
 }
 
-/* 1c. Logo (footer-brand column) — white wordmark since the footer background is dark. */
 .footer-logo {
   height: 54px;
   width: auto;
   margin-bottom: 14px;
 }
 
-/* ==========================================================================
-   MINI REVIEW WIDGET (footer "Write a Review") — fully self-contained here,
-   not left to inherit generic .newsletter-form/.footer-col rules from whichever
-   page's stylesheet happens to be loaded, so it looks the same everywhere since
-   footer.css is the last stylesheet loaded on every page and always wins.
-   ========================================================================== */
 
 .footer-review-heading {
   display: flex;
@@ -57,7 +46,6 @@
   gap: 16px !important;
 }
 
-/* generic icon + text-box shell shared by every field in this widget */
 .footer-input-wrap { position: relative; }
 
 .footer-input-icon {
@@ -165,8 +153,6 @@
   cursor: pointer;
 }
 
-/* 22px lands between the tiny native checkbox (~13px) and something oversized —
-   proportioned against the 54px input fields without competing with them. */
 .footer-review-anon-check input[type="checkbox"] {
   flex: none;
   appearance: none;
@@ -203,9 +189,6 @@
   outline-offset: 2px;
 }
 
-/* 2. Butang Kawalan Memilih Media + Submit — pill-ish rounded, icon + label,
-   consistent whichever page loads the widget (overrides the page-level generic
-   ".footer-review-form button" rule since this file loads last). */
 .footer-review-form button {
   font-family: 'Raleway', sans-serif;
 }
@@ -219,7 +202,6 @@
 }
 
 .footer-photo-btn {
-  flex: 1 1 160px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -233,6 +215,15 @@
   font-size: 14px;
   cursor: pointer;
   transition: filter 0.2s ease;
+  flex-shrink: 0;
+}
+
+.footer-photo-controls .footer-photo-btn {
+  flex: 1 1 160px;
+}
+
+.footer-photo-btn[hidden] {
+  display: none;
 }
 
 .footer-photo-btn svg { width: 18px; height: 18px; flex-shrink: 0; }
@@ -275,7 +266,6 @@
   filter: brightness(1.05);
 }
 
-/* 3. Pratonton Imej (Hanya aktif apabila hidden digugurkan oleh JS) */
 .footer-image-preview {
   max-width: 140px;
   max-height: 140px;
@@ -290,7 +280,6 @@
 #footer-remove-btn { margin-bottom: 10px; }
 .footer-image-preview { cursor: pointer; }
 
-/* 3b. Lightbox untuk besarkan preview (dari upload ATAU camera capture) */
 .photo-lightbox {
   position: fixed;
   inset: 0;
@@ -339,7 +328,6 @@
 
 .photo-lightbox-back:hover { background: #ff8400; color: #fff; }
 
-/* 4. Status Pengesahan AI (Warna Status) */
 .footer-verify-status {
   font-family: 'Raleway', sans-serif;
   font-weight: 600;
@@ -357,12 +345,11 @@
 .footer-verify-status.reject     { background: #fdecea; color: #9a3226; }
 .footer-verify-status.uncertain  { background: #fde3c7; color: #8a4f00; }
 
-/* 5. Kotak Modal Kamera Terapung */
 .footer-camera-modal {
   position: fixed; 
   inset: 0; 
   background: rgba(0, 0, 0, .8); 
-  z-index: 9999; /* Dipastikan paling atas supaya tidak ditindih elemen lain */
+  z-index: 9999;
   align-items: center; 
   justify-content: center; 
   padding: 20px;
@@ -396,9 +383,6 @@
   justify-content: center; 
 }
 
-/* Reka bentuk butang di dalam kotak kamera modal — fully self-contained (not relying
-   on .footer-photo-btn's own background/border) since that base class now styles the
-   Upload/Camera launch buttons very differently (solid orange, no border). */
 .footer-camera-modal-inner .footer-photo-btn {
   background: #fff;
   color: #333;
@@ -410,7 +394,6 @@
   border-color: #ff8400;
 }
 
-/* ---------- SCAN FRAME (camera) + VERIFIED BADGE (preview) — injected by review-photo.js ---------- */
 .rp-scan-frame { position: relative; }
 .rp-scan-corner {
   position: absolute;

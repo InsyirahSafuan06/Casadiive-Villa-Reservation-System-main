@@ -1,8 +1,4 @@
 <?php
-/**
- * Halaman carian MyBooking.
- * Pelanggan boleh cari tempahan mengikut nombor rujukan dan nombor telefon untuk lihat atau cetak resit.
- */
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/helpers.php';
@@ -13,8 +9,6 @@ $phone = isset($_GET['phone']) ? trim((string) $_GET['phone']) : '';
 $reviewError = null;
 $cancelError = null;
 
-// tetamu boleh batalkan booking sendiri guna ref + phone yang sama macam lookup —
-// cuma dibenarkan selagi booking tu belum check-in/check-out/dah cancelled
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['form'] ?? '') === 'cancel') {
     $cRef = filter_var($_POST['ref'] ?? '', FILTER_VALIDATE_INT);
     $cPhone = trim((string) ($_POST['phone'] ?? ''));
@@ -39,7 +33,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['form'] ?? '') === 'cancel'
     }
 
     if (!$cancelError) {
-        // hantar terus ke homepage lepas cancel berjaya (bukan balik ke mybooking.php)
         header('Location: ../index.php');
         exit;
     }
@@ -48,29 +41,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['form'] ?? '') === 'cancel'
     $phone = $cPhone;
 }
 
-// Dua laluan submit review:
-// 1) Widget ringkas kat footer (footer.php) — TAK minta Booking Reference/Phone Number
-//    langsung, so takde cara nak sahkan tetamu tu betul-betul pernah check-out. Guna
-//    laluan ni bermaksud terima risiko review palsu/spam — keputusan sedar, bukan bug.
-//    booking_id disimpan NULL untuk review jenis ni.
-// 2) Form penuh kat page ni sendiri (lepas customer dah cari booking dia) — hantar
-//    ref+phone (hidden input, dah terisi automatik), so kita TETAP sahkan booking tu
-//    wujud dan status dah 'checked_out' sebelum terima, macam asal.
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['form'] ?? '') === 'review') {
     $rRef = filter_var($_POST['ref'] ?? '', FILTER_VALIDATE_INT);
     $rPhone = trim((string) ($_POST['phone'] ?? ''));
     $rating = filter_var($_POST['rating'] ?? '', FILTER_VALIDATE_INT);
     $comment = trim((string) ($_POST['comment'] ?? ''));
 
-    // guest picks what shows publicly on the review — never the real name on their booking.
-    // ticking "post anonymously" (or just leaving the name blank) stores NULL, which the
-    // display side (index.php) renders as "Anonymous".
     $isAnonymous = isset($_POST['is_anonymous']);
     $displayName = $isAnonymous ? '' : trim((string) ($_POST['display_name'] ?? ''));
     $displayName = $displayName !== '' ? mb_substr($displayName, 0, 100) : null;
 
     $hasBookingRef = $rRef !== false && $rPhone !== '';
-    $bookingIdForReview = null; // tetap NULL kalau laluan unverified (footer widget)
+    $bookingIdForReview = null;
     $verifiedOk = true;
 
     if (!csrf_verify()) {
@@ -94,17 +76,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['form'] ?? '') === 'review'
     }
 
     if ($verifiedOk) {
-        // gambar review — customer JS dah tapis kandungan (AI verification client-side)
-        // sebelum submit, so field review_image ni sepatutnya cuma sampai kat sini kalau dah
-        // lulus. Kat server kita cuma sahkan fail tu betul-betul gambar (bukan re-verify
-        // kandungan — takde model AI kat server), sebagai lapisan keselamatan asas je.
         $imagePath = null;
 
         if (!empty($_FILES['review_image']['name']) && $_FILES['review_image']['error'] === UPLOAD_ERR_OK) {
             $file = $_FILES['review_image'];
             $allowedExt = ['jpg', 'jpeg', 'png', 'webp'];
             $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-            $maxSize = 5 * 1024 * 1024; // 5MB
+            $maxSize = 5 * 1024 * 1024;
 
             if (in_array($ext, $allowedExt, true) && $file['size'] > 0 && $file['size'] <= $maxSize && @getimagesize($file['tmp_name']) !== false) {
                 $destDir = __DIR__ . '/../assets/uploads/reviews/';
@@ -120,11 +98,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['form'] ?? '') === 'review'
         }
 
         try {
-            // table `review` ada UNIQUE constraint kat booking_id, so kalau cuba review kali
-            // kedua untuk booking yang sama, insert ni akan gagal dan masuk catch bawah. MySQL
-            // tak kira NULL sebagai "sama" dengan NULL lain untuk UNIQUE, so review unverified
-            // (booking_id NULL) tak pernah kena sekat oleh constraint ni — memang sengaja,
-            // sebab takde booking sebenar untuk dedupe dia.
             $stmt = $pdo->prepare(
                 'INSERT INTO review (booking_id, rating, comment, display_name, image_path)
                  VALUES (:booking_id, :rating, :comment, :display_name, :image_path)'
@@ -137,10 +110,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['form'] ?? '') === 'review'
                 'image_path' => $imagePath,
             ]);
         } catch (PDOException $e) {
-            // SQLSTATE 23000 = integrity constraint violation — ni je yang sepatutnya bermaksud
-            // "dah pernah review" (UNIQUE constraint kat booking_id). Sebarang error lain (contoh:
-            // 42S22 column not found sebab migration belum jalan) kita log betul-betul dan bagitahu
-            // guest mesej generic, bukan claim "dah review" yang salah/mengelirukan.
             if ($e->getCode() === '23000') {
                 $reviewError = 'You have already reviewed this booking.';
             } else {
@@ -149,16 +118,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['form'] ?? '') === 'review'
             }
 
             if ($imagePath && is_file(__DIR__ . '/../' . $imagePath)) {
-                // insert gagal — buang gambar yang dah terlanjur di-upload tu, elak fail
-                // terbiar kat cakera tanpa rekod DB
                 unlink(__DIR__ . '/../' . $imagePath);
             }
         }
     }
 
     if (!$reviewError) {
-        // laluan verified redirect balik ke lookup dia sendiri; laluan unverified (footer,
-        // takde ref/phone) takde page tu nak balik ke, so hantar ke homepage je
         header('Location: ' . ($hasBookingRef ? 'mybooking.php?ref=' . $rRef . '&phone=' . urlencode($rPhone) . '&reviewed=1' : '../index.php'));
         exit;
     }
@@ -167,16 +132,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['form'] ?? '') === 'review'
     $phone = $rPhone;
 }
 
-// booking dicari guna phone number SAHAJA (booking reference dah dibuang dari borang ini
-// atas permintaan) — kalau satu nombor telefon ada lebih dari satu booking, kita papar yang
-// PALING BARU je (ORDER BY booking_id DESC LIMIT 1), sebab UI ni cuma reka untuk satu
-// lookup -> satu resit, bukan senarai untuk pelanggan pilih.
-//
-// PENTING (nota keselamatan): sebelum ni sistem guna "ref + phone" sebagai pasangan macam
-// "password" ringkas — sesiapa yang just tahu/teka nombor telefon seseorang tak boleh tengok
-// booking dia sebab kena tahu ref yang betul jugak. Sekarang phone SAHAJA dah cukup untuk
-// tengok booking terkini seseorang — kurang selamat berbanding dulu, tapi ini keputusan
-// sedar (customer minta buang field ref), bukan oversight.
 $lookupAttempted = $phone !== '';
 $lookupError = null;
 $booking = null;
@@ -215,15 +170,15 @@ if ($lookupAttempted) {
 
             $stmt = $pdo->prepare('SELECT rating, comment, display_name, image_path, review_date FROM review WHERE booking_id = :id');
             $stmt->execute(['id' => $booking['booking_id']]);
-            $existingReview = $stmt->fetch() ?: null; // ada review sedia ada ke tak untuk booking ni
+            $existingReview = $stmt->fetch() ?: null;
 
             $stmt = $pdo->prepare('SELECT payment_status FROM payment WHERE booking_id = :id ORDER BY payment_id DESC LIMIT 1');
             $stmt->execute(['id' => $booking['booking_id']]);
-            $latestPaymentStatus = $stmt->fetchColumn() ?: null; // untuk papar status refund kalau booking dah cancel
+            $latestPaymentStatus = $stmt->fetchColumn() ?: null;
 
             $stmt = $pdo->prepare("SELECT deposit_paid FROM payment WHERE booking_id = :id AND payment_status = 'paid' ORDER BY payment_id DESC LIMIT 1");
             $stmt->execute(['id' => $booking['booking_id']]);
-            $amountPaid = (float) ($stmt->fetchColumn() ?: 0); // amaun sebenar yang dah dibayar (bayaran penuh, bukan just deposit)
+            $amountPaid = (float) ($stmt->fetchColumn() ?: 0);
         }
     }
 }
@@ -234,17 +189,13 @@ if ($booking) {
     $checkIn = new DateTime($booking['check_in']);
     $checkOut = new DateTime($booking['check_out']);
     $nights = max(1, $checkOut->diff($checkIn)->days);
-    // trick sikit ni — kita hantar 1/1 sebagai harga sebab kita bukan nak jumlah harga,
-    // kita cuma nak tau berapa malam weekday vs weekend untuk bina pecahan harga kat bawah
     $stay = compute_stay_price(1, 1, $checkIn, $checkOut);
 }
 
-$reviewSubmitted = isset($_GET['reviewed']); // papar modal "Thanks for Reviewing!" sekali je lepas submit berjaya
-$base = '../'; // page ni dalam folder customer/, naik satu tahap untuk pergi root
-$active = 'mybooking'; // untuk highlight menu "MyBooking" kat navbar
+$reviewSubmitted = isset($_GET['reviewed']);
+$base = '../';
+$active = 'mybooking';
 $pageTitle = 'MyBooking — Casadive Villa';
 $pageCss = 'style/mybooking.css';
 
-// semua logic dah selesai kat atas ni — baris bawah papar HTML page dia.
-// HTML/borang tu disimpan berasingan dalam folder views/ supaya file ni tak jadi terlalu panjang.
 require __DIR__ . '/views/mybooking.view.php';

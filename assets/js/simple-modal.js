@@ -1,8 +1,3 @@
-/**
- * Helper kongsi untuk modal overlay ringkas (cancel-booking reminder, thanks-for-purchase,
- * thanks-for-reviewing) — semua guna corak sama: tutup bila klik X/butang lain/luar kad.
- * Dulu logik ni disalin 3 kali (mybooking.view.php x2, sucess_payment.view.php) — sekarang satu je.
- */
 function initSimpleModal(overlayId, opts) {
   opts = opts || {};
   var overlay = document.getElementById(overlayId);

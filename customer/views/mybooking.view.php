@@ -1,7 +1,6 @@
 <?php include __DIR__ . '/../../includes/header.php'; ?>
 <script src="../assets/js/simple-modal.js"></script>
 
-  <!-- PAGE TITLE -->
   <div class="container page-title">
     <svg class="mybooking-illustration" viewBox="0 0 160 100" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
       <circle cx="118" cy="20" r="10" fill="currentColor" stroke="none" opacity=".55"></circle>
@@ -18,13 +17,9 @@
 
   <?php if ($booking): ?>
 
-  <!-- RECEIPT -->
   <section class="receipt-section">
     <div class="container">
       <?php if ($reviewError && $booking['booking_status'] !== 'checked_out'): ?>
-        <!-- A review was submitted (e.g. via the footer form) for a booking that isn't
-             checked_out yet — the review section below is hidden in that case, so without
-             this the rejection would happen silently and look like the button did nothing. -->
         <p class="lookup-error" style="max-width:700px;margin:0 auto 24px;"><?= htmlspecialchars($reviewError) ?></p>
       <?php endif; ?>
       <?php if ($cancelError): ?>
@@ -63,8 +58,8 @@
         <div class="receipt-block">
           <h3>Stay Details</h3>
           <dl class="receipt-grid">
-            <div><dt>Check-in</dt><dd><?= htmlspecialchars($booking['check_in']) ?></dd></div>
-            <div><dt>Check-out</dt><dd><?= htmlspecialchars($booking['check_out']) ?></dd></div>
+            <div><dt>Check-in</dt><dd><?= htmlspecialchars(date('d/m/Y', strtotime($booking['check_in']))) ?></dd></div>
+            <div><dt>Check-out</dt><dd><?= htmlspecialchars(date('d/m/Y', strtotime($booking['check_out']))) ?></dd></div>
             <div><dt>Nights</dt><dd><?= $nights ?></dd></div>
             <div><dt>Accommodation</dt><dd><?= htmlspecialchars(implode(', ', array_column($items, 'accommodation_name')) ?: '—') ?></dd></div>
           </dl>
@@ -81,7 +76,6 @@
           <h3>Price Breakdown</h3>
           <div class="receipt-rows">
             <?php foreach ($items as $item):
-              // tunjuk pecahan weekday/weekend cuma kalau kadar dia memang lain, kalau sama je tunjuk simple
               $weekendRate = $item['nightly_price_weekend'] !== null ? (float) $item['nightly_price_weekend'] : (float) $item['nightly_price'];
               $rateLabel = $stay['weekend_nights'] > 0 && $weekendRate !== (float) $item['nightly_price']
                   ? "{$stay['weekday_nights']} weekday night" . ($stay['weekday_nights'] !== 1 ? 's' : '') . " &times; RM " . number_format((float) $item['nightly_price'], 2)
@@ -131,7 +125,6 @@
         </div>
 
         <?php
-          // booking belum bayar/deposit belum settle lagi kalau takde rekod payment atau status dia 'pending'
           $isUnpaid = $latestPaymentStatus === null || $latestPaymentStatus === 'pending';
           $showPayNow = $isUnpaid && in_array($booking['booking_status'], ['pending', 'confirmed'], true);
         ?>
@@ -151,7 +144,6 @@
               <button type="button" id="cancel-booking-trigger" class="receipt-back" style="color:#c0392b;border-color:#c0392b;">Cancel Booking</button>
             </form>
 
-            <!-- CANCEL BOOKING REMINDER MODAL -->
             <div class="cancel-modal-overlay" id="cancel-modal-overlay" hidden>
               <div class="cancel-modal" role="dialog" aria-modal="true" aria-labelledby="cancel-modal-title">
                 <button type="button" class="cancel-modal-close" id="cancel-modal-close" aria-label="Close">&times;</button>
@@ -195,7 +187,6 @@
       </div>
 
       <?php if ($reviewSubmitted && $existingReview): ?>
-      <!-- THANKS FOR REVIEWING MODAL -->
       <div class="purchase-modal-overlay" id="review-thanks-overlay">
         <div class="purchase-modal" role="dialog" aria-modal="true" aria-labelledby="review-thanks-title">
           <button type="button" class="purchase-modal-close" id="review-thanks-close" aria-label="Close">&times;</button>
@@ -272,21 +263,32 @@
             <textarea name="comment" rows="3" placeholder="Tell us about your stay (optional)"></textarea>
 
             <div class="review-photo-section">
-              <p class="review-photo-label">Add a room photo (optional) &mdash; we'll check it's actually a photo of the room before it's attached.</p>
+              <p class="review-photo-label">Add a room photo (optional).</p>
               <div class="review-photo-controls">
-                <button type="button" class="photo-btn" id="review-upload-btn">Upload Image</button>
-                <button type="button" class="photo-btn" id="review-camera-btn">Open Camera</button>
+                <button type="button" class="photo-btn" id="review-upload-btn">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                  Upload Image
+                </button>
+                <button type="button" class="photo-btn" id="review-camera-btn">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+                  Open Camera
+                </button>
               </div>
               <input type="file" id="review-file-input" name="review_image" accept="image/*" hidden>
               <img id="review-image-preview" class="review-photo-preview" hidden alt="Selected room photo preview">
-              <button type="button" class="photo-btn photo-btn-outline" id="review-remove-btn" hidden>Remove Photo</button>
+              <button type="button" class="photo-btn photo-btn-outline" id="review-remove-btn" hidden>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6M14 11v6"></path></svg>
+                Remove Photo
+              </button>
               <p id="review-verify-status" class="review-verify-status" hidden></p>
             </div>
 
-            <button type="submit" class="lookup-submit">Submit Review</button>
+            <button type="submit" class="lookup-submit">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+              Submit Review
+            </button>
           </form>
 
-          <!-- CAMERA MODAL -->
           <div class="camera-modal" id="camera-modal">
             <div class="camera-modal-inner">
               <video id="camera-video" autoplay playsinline muted></video>
@@ -298,7 +300,6 @@
             </div>
           </div>
 
-          <!-- PREVIEW LIGHTBOX (klik preview untuk besarkan, dari upload ATAU camera capture) -->
           <div class="photo-lightbox" id="review-lightbox">
             <button type="button" class="photo-lightbox-close" id="review-lightbox-close" aria-label="Close">&times;</button>
             <img id="review-lightbox-img" src="" alt="Room photo, enlarged">
@@ -306,7 +307,6 @@
           </div>
 
           <?php
-          // cache-bust supaya browser customer tak terus guna versi lama review-photo.js yang dah di-cache
           $reviewPhotoJsPath = __DIR__ . '/../../assets/js/review-photo.js';
           $reviewPhotoJsVer = is_file($reviewPhotoJsPath) ? '?v=' . filemtime($reviewPhotoJsPath) : '';
           ?>
@@ -352,7 +352,6 @@
 
   <?php else: ?>
 
-  <!-- LOOKUP FORM -->
   <section class="lookup-section">
     <div class="container">
       <div class="lookup-card">

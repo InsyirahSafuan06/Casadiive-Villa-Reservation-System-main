@@ -1,10 +1,6 @@
 <?php
-/**
- * Halaman Privacy Policy.
- * Fail ini memaparkan dasar privasi — apa data dikumpul dan macam mana ia digunakan.
- */
-$base = '../'; // page ni dalam folder customer/, naik satu tahap untuk pergi root
-$active = ''; // page ni bukan salah satu menu utama navbar
+$base = '../';
+$active = '';
 $pageTitle = 'Privacy Policy — Casadive Villa';
 $pageCss = 'style/info_page.css';
 

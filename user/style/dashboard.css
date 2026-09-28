@@ -30,7 +30,6 @@
     padding: 0 40px;
   }
 
-  /* ---------- TOPBAR ---------- */
   .dash-topbar{
     background: var(--sand-light);
     position: sticky;
@@ -96,7 +95,6 @@
   .tr-due{ background:#fff4e5; }
   .section-heading{ display:flex; align-items:center; justify-content:space-between; gap:16px; }
 
-  /* ---------- MAIN ---------- */
   .dash-main{ padding: 40px 0 80px; }
   .dash-heading{
     font-family:'Mulish', sans-serif;
@@ -140,7 +138,6 @@
     margin-bottom: 18px;
   }
 
-  /* ---------- STAT TILES ---------- */
   .stat-grid{
     display:grid;
     grid-template-columns: repeat(4, 1fr);
@@ -169,7 +166,6 @@
     color: var(--brown-price);
   }
 
-  /* ---------- SECTION / TABLE ---------- */
   .dash-section{
     background: var(--card);
     border: 1px solid var(--border);
@@ -225,7 +221,7 @@
   .pbi-embed-wrap{
     position:relative;
     width:100%;
-    padding-top:47.5%; /* nisbah 1140:541.25 dari embed code Power BI */
+    padding-top:47.5%;
     border-radius:8px;
     overflow:hidden;
   }
@@ -274,6 +270,16 @@
   .status-failed{ background:#fbdada; color:#8f2020; }
   .status-refund_due{ background:#fbdada; color:#8f2020; font-weight:700; }
 
+  .refund-form{ display:flex; gap:6px; align-items:center; margin-top:6px; }
+  .refund-form input[type="number"]{
+    width: 90px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 6px 8px;
+    font-family:'Raleway', sans-serif;
+    font-size: 13px;
+  }
+
   .status-form{ display:flex; gap:8px; align-items:center; }
   .status-form select{
     border: 1px solid var(--border);
@@ -292,12 +298,9 @@
   }
   .status-form button:hover{ background: var(--brown); }
 
-  /* two-column form field rows (Role/Status, Type/Status, price pairs, etc.)
-     used by manage_account.view.php and manage_accommodation.view.php */
   .form-row-2{ display:flex; gap:18px; }
   .form-row-2 > div{ flex:1; }
 
-  /* ---------- GALLERY MANAGEMENT ---------- */
   .gallery-upload-form{
     display:flex;
     flex-wrap:wrap;

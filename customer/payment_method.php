@@ -1,9 +1,4 @@
 <?php
-/**
- * Halaman pengesahan pembayaran.
- * Paparkan tempahan dan kaedah pembayaran yang dipilih pada payment.php untuk semakan
- * sebelum deposit benar-benar dicaj dalam process_payment.php.
- */
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/helpers.php';
@@ -19,8 +14,6 @@ $errors = [];
 $paid = false;
 $nights = 0;
 
-// value ni datang dari URL yang payment.php bina, tapi kita check balik sini —
-// jangan sekali percaya value tu betul just sebab dia sampai melalui redirect "Location:"
 if (!in_array($method, ['toyyibpay', 'qr'], true)) {
     $method = '';
 }
@@ -53,13 +46,11 @@ if ($bookingId !== false) {
         $checkIn = DateTime::createFromFormat('Y-m-d', (string) $booking['check_in']);
         $checkOut = DateTime::createFromFormat('Y-m-d', (string) $booking['check_out']);
         if ($checkIn && $checkOut) {
-            $nights = (int) $checkIn->diff($checkOut)->days; // untuk papar "X night(s)" kat summary
+            $nights = (int) $checkIn->diff($checkOut)->days;
         }
     }
 }
 
-// pelanggan kena tick "I confirm" dulu sebelum kita teruskan cas deposit —
-// page ni sendiri tak sentuh database, cuma redirect ke process_payment.php
 if ($booking && !$paid && $method !== '' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!csrf_verify()) {
         $errors[] = 'Your session expired. Please try again.';
@@ -69,15 +60,11 @@ if ($booking && !$paid && $method !== '' && $_SERVER['REQUEST_METHOD'] === 'POST
     }
 
     if (!$errors && $method === 'toyyibpay') {
-        // ToyyibPay sendiri yang layan page bayaran & pengesahan — kita cuma cipta bil
-        // sebenar dan redirect ke sana
         header('Location: toyyibpay_pay.php?ref=' . urlencode(format_booking_ref($bookingId)) . '&phone=' . urlencode($booking['phone']));
         exit;
     }
 
     if (!$errors && $method === 'qr') {
-        // bayaran QR ni manual (customer scan & bayar sendiri di luar sistem) — kita cuma
-        // simpan bukti bayaran yang dia upload, terus tanda booking 'confirmed'/'paid'
         $receiptPath = null;
 
         if (empty($_FILES['payment_proof']['name']) || $_FILES['payment_proof']['error'] !== UPLOAD_ERR_OK) {
@@ -86,13 +73,10 @@ if ($booking && !$paid && $method !== '' && $_SERVER['REQUEST_METHOD'] === 'POST
             $file = $_FILES['payment_proof'];
             $allowedExt = ['jpg', 'jpeg', 'png', 'webp', 'pdf'];
             $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-            $maxSize = 5 * 1024 * 1024; // 5MB
+            $maxSize = 5 * 1024 * 1024;
 
             $isValid = in_array($ext, $allowedExt, true) && $file['size'] > 0 && $file['size'] <= $maxSize;
             if ($isValid) {
-                // sahkan kandungan fail sebenar padan dengan sangkaan (bukan cuma percaya extension) —
-                // PDF disahkan guna MIME type kalau extension fileinfo ada, kalau tak (sesetengah
-                // hosting disable dia) baca 5 byte pertama fail terus (semua PDF sah mula dengan "%PDF-")
                 if ($ext === 'pdf') {
                     $isValid = function_exists('mime_content_type')
                         ? mime_content_type($file['tmp_name']) === 'application/pdf'
@@ -133,11 +117,9 @@ if ($booking && !$paid && $method !== '' && $_SERVER['REQUEST_METHOD'] === 'POST
     }
 }
 
-$base = '../'; // page ni dalam folder customer/, naik satu tahap untuk pergi root
-$active = ''; // takde menu navbar yang perlu di-highlight untuk page ni
+$base = '../';
+$active = '';
 $pageTitle = 'Payment Confirmation — Casadive Villa';
 $pageCss = 'style/payment_method.css';
 
-// semua logic dah selesai kat atas ni — baris bawah papar HTML page dia.
-// HTML/borang tu disimpan berasingan dalam folder views/ supaya file ni tak jadi terlalu panjang.
 require __DIR__ . '/views/payment_method.view.php';
