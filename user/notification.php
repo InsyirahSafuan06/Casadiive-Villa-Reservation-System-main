@@ -124,6 +124,8 @@ We regret to inform you that your booking has been cancelled.
  Check-in : $checkin
  Check-out : $checkout
 
+Please provide your bank account number or QR code so we can process your refund.
+
 If you have any questions or wish to make a new booking, feel free to contact us. Thank you! ";
 
     break;
