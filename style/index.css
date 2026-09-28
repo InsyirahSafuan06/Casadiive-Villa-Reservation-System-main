@@ -973,7 +973,6 @@
       flex: 1;
       min-height: 0;
       overflow-y: auto;
-      -webkit-overflow-scrolling: touch;
       overscroll-behavior: contain;
       touch-action: pan-y;
       display: flex;
@@ -1046,39 +1045,6 @@
   @keyframes chatTypingDot {
       0%, 60%, 100% { opacity: .4; transform: translateY(0); }
       30% { opacity: 1; transform: translateY(-3px); }
-  }
-
-  .chat-bubble-actions {
-      display: flex;
-      gap: 4px;
-      align-self: flex-start;
-      margin: -3px 0 6px 2px;
-  }
-
-  .chat-bubble-action {
-      width: 24px;
-      height: 24px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--text-soft);
-      opacity: .6;
-  }
-
-  .chat-bubble-action:hover {
-      opacity: 1;
-      background: var(--sand-light);
-  }
-
-  .chat-bubble-action svg {
-      width: 13px;
-      height: 13px;
-  }
-
-  .chat-bubble-action.is-active {
-      opacity: 1;
-      color: var(--orange);
   }
 
   .chatbot-listening {
