@@ -17,6 +17,7 @@
     </div>
   </div>
 
+  <?php # check kalau $booking kosong/tak jumpa untuk suruh user cari balik kat mybooking ?>
   <?php if (!$booking): ?>
 
     <div class="container page-title">
@@ -86,21 +87,32 @@
             <svg viewBox="0 0 20 20"><path d="M4 10.5l3.5 3.5L16 5.5" fill="none" stroke="#F5F5F5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </div>
 
+          <?php # ambil deposit_paid kalau ada, kalau tak calling function booking_grand_total() that assign to $amountPaid ?>
           <?php $amountPaid = (float) ($payment['deposit_paid'] ?? booking_grand_total($booking)); ?>
           <p class="success-lead">
             Thank you, <strong><?= htmlspecialchars($booking['full_name']) ?></strong> — your payment has been
+            <?php # calling function format_booking_ref() & htmlspecialchars() untuk papar nombor rujukan booking yang selamat ?>
             received and booking <strong><?= htmlspecialchars(format_booking_ref((int) $booking['booking_id'])) ?></strong> is now
+            <?php # calling function format_status() & htmlspecialchars() untuk papar status booking dalam bentuk senang dibaca ?>
             <strong><?= htmlspecialchars(format_status($booking['booking_status'])) ?></strong>.
           </p>
 
           <dl class="success-grid">
+            <?php # calling function strtotime() & date() untuk tukar tarikh check_in ke format d/m/Y ?>
             <div><dt>Check-in</dt><dd><?= htmlspecialchars(date('d/m/Y', strtotime($booking['check_in']))) ?></dd></div>
+            <?php # calling function strtotime() & date() untuk tukar tarikh check_out ke format d/m/Y ?>
             <div><dt>Check-out</dt><dd><?= htmlspecialchars(date('d/m/Y', strtotime($booking['check_out']))) ?></dd></div>
+            <?php # calling function array_column() & implode() untuk gabung semua nama accommodation jadi satu string, kalau kosong papar '—' ?>
             <div><dt>Accommodation</dt><dd><?= htmlspecialchars(implode(', ', array_column($items, 'accommodation_name')) ?: '—') ?></dd></div>
+            <?php # check kalau $payment wujud untuk papar label method, kalau tak papar '—' ?>
             <div><dt>Payment Method</dt><dd><?= $payment ? htmlspecialchars($methodLabels[$payment['payment_method']] ?? $payment['payment_method']) : '—' ?></dd></div>
+            <?php # calling function number_format() untuk papar $amountPaid dgn 2 titik perpuluhan ?>
             <div><dt>Amount Paid</dt><dd>RM <?= number_format($amountPaid, 2) ?></dd></div>
+            <?php # calling function booking_grand_total() & number_format() untuk kira & papar jumlah keseluruhan ?>
             <div><dt>Total Amount</dt><dd>RM <?= number_format(booking_grand_total($booking), 2) ?></dd></div>
+            <?php # kira baki belum bayar (grand total tolak amount paid) that assign display guna number_format() ?>
             <div><dt>Balance Due</dt><dd>RM <?= number_format(booking_grand_total($booking) - $amountPaid, 2) ?></dd></div>
+            <?php # calling function format_booking_ref() & htmlspecialchars() untuk papar nombor rujukan booking yang selamat ?>
             <div><dt>Booking ID</dt><dd><?= htmlspecialchars(format_booking_ref((int) $booking['booking_id'])) ?></dd></div>
           </dl>
 
@@ -114,6 +126,7 @@
           </div>
 
           <div class="success-actions">
+            <?php # calling function urlencode() untuk selamatkan nombor phone sebelum letak dalam url ?>
             <a href="mybooking.php?ref=<?= (int) $booking['booking_id'] ?>&phone=<?= urlencode($booking['phone']) ?>" class="success-btn">View / Print Receipt</a>
             <a href="<?= $base ?>index.php" class="success-btn success-btn-outline">Back to Home</a>
           </div>

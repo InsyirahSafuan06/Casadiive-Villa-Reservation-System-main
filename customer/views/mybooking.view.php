@@ -15,13 +15,16 @@
     <p>Enter your phone number you used to book with us to view or print your receipt.</p>
   </div>
 
+  <?php # check kalau $booking dah jumpa (lookup berjaya), papar receipt, kalau tak papar form cari booking ?>
   <?php if ($booking): ?>
 
   <section class="receipt-section">
     <div class="container">
+      <?php # check kalau ada reviewError & booking tu belum checked_out, papar mesej error review ?>
       <?php if ($reviewError && $booking['booking_status'] !== 'checked_out'): ?>
         <p class="lookup-error" style="max-width:700px;margin:0 auto 24px;"><?= htmlspecialchars($reviewError) ?></p>
       <?php endif; ?>
+      <?php # check kalau ada cancelError, papar mesej error cancel ?>
       <?php if ($cancelError): ?>
         <p class="lookup-error" style="max-width:700px;margin:0 auto 24px;"><?= htmlspecialchars($cancelError) ?></p>
       <?php endif; ?>
@@ -29,16 +32,21 @@
         <div class="receipt-head">
           <div>
             <p class="brand">Casadive Villa</p>
+            <?php # calling function format_booking_ref() untuk format nombor booking jadi reference, calling function date()+strtotime() untuk format tarikh booking ?>
             <p class="receipt-ref">Booking Reference <?= htmlspecialchars(format_booking_ref((int) $booking['booking_id'])) ?> &middot; Booked on <?= htmlspecialchars(date('d M Y', strtotime($booking['booking_date']))) ?></p>
           </div>
+          <?php # calling function format_status() untuk tukar status booking jadi label senang baca ?>
           <span class="status-badge status-<?= htmlspecialchars($booking['booking_status']) ?>"><?= htmlspecialchars(format_status($booking['booking_status'])) ?></span>
         </div>
 
+        <?php # check kalau booking dah cancelled & ada latest payment status, baru papar block refund ?>
         <?php if ($booking['booking_status'] === 'cancelled' && $latestPaymentStatus): ?>
         <div class="receipt-block">
           <h3>Deposit Refund</h3>
+          <?php # check kalau payment status 'refunded', papar mesej dah refund ?>
           <?php if ($latestPaymentStatus === 'refunded'): ?>
             <p>Your payment of RM <?= number_format($amountPaid, 2) ?> has been refunded.</p>
+          <?php # calling function in_array() untuk check payment status masih 'paid' atau 'partial', kalau ya tunjuk mesej proses refund ?>
           <?php elseif (in_array($latestPaymentStatus, ['paid', 'partial'], true)): ?>
             <p>Your payment of RM <?= number_format($amountPaid, 2) ?> is being processed for refund. Since refunds are handled manually (bank transfer/cash), please allow a few business days, or contact us directly if you need it sooner.</p>
           <?php endif; ?>
@@ -58,16 +66,21 @@
         <div class="receipt-block">
           <h3>Stay Details</h3>
           <dl class="receipt-grid">
+            <?php # calling function date()+strtotime() untuk format tarikh check-in ikut format d/m/Y ?>
             <div><dt>Check-in</dt><dd><?= htmlspecialchars(date('d/m/Y', strtotime($booking['check_in']))) ?></dd></div>
+            <?php # calling function date()+strtotime() untuk format tarikh check-out ikut format d/m/Y ?>
             <div><dt>Check-out</dt><dd><?= htmlspecialchars(date('d/m/Y', strtotime($booking['check_out']))) ?></dd></div>
             <div><dt>Nights</dt><dd><?= $nights ?></dd></div>
+            <?php # calling function array_column() untuk ambil semua nama accommodation dari $items, calling function implode() untuk gabung jadi satu string ?>
             <div><dt>Accommodation</dt><dd><?= htmlspecialchars(implode(', ', array_column($items, 'accommodation_name')) ?: '—') ?></dd></div>
           </dl>
         </div>
 
+        <?php # calling function empty() untuk check ada special request ke tak, kalau ada baru papar section ni ?>
         <?php if (!empty($booking['special_request'])): ?>
         <div class="receipt-block">
           <h3>Special Request</h3>
+          <?php # calling function nl2br() untuk tukar baris baru dalam special request jadi <br> ?>
           <p class="receipt-request"><?= nl2br(htmlspecialchars($booking['special_request'])) ?></p>
         </div>
         <?php endif; ?>
@@ -75,8 +88,11 @@
         <div class="receipt-block">
           <h3>Price Breakdown</h3>
           <div class="receipt-rows">
-            <?php foreach ($items as $item):
+            <?php # loop setiap item dalam $items untuk papar setiap accommodation yg dibooking
+            foreach ($items as $item):
+              # check kalau ada nightly_price_weekend, guna tu, kalau tak guna nightly_price biasa
               $weekendRate = $item['nightly_price_weekend'] !== null ? (float) $item['nightly_price_weekend'] : (float) $item['nightly_price'];
+              # check kalau stay ada malam weekend & rate weekend lain dari weekday, bina label breakdown weekday+weekend, kalau tak bina label ringkas je
               $rateLabel = $stay['weekend_nights'] > 0 && $weekendRate !== (float) $item['nightly_price']
                   ? "{$stay['weekday_nights']} weekday night" . ($stay['weekday_nights'] !== 1 ? 's' : '') . " &times; RM " . number_format((float) $item['nightly_price'], 2)
                     . " + {$stay['weekend_nights']} weekend night" . ($stay['weekend_nights'] !== 1 ? 's' : '') . " &times; RM " . number_format($weekendRate, 2)
@@ -87,18 +103,21 @@
                 <span>RM <?= number_format((float) $item['price'], 2) ?></span>
               </div>
             <?php endforeach; ?>
+            <?php # check kalau booking ni ada addon bbq, papar row bbq ?>
             <?php if ($booking['addon_bbq']): ?>
               <div class="receipt-row">
                 <span>Add-on: BBQ Set</span>
                 <span>RM <?= number_format(ADDON_BBQ_PRICE, 2) ?></span>
               </div>
             <?php endif; ?>
+            <?php # check kalau booking ni ada addon mattress, papar row mattress ?>
             <?php if ($booking['addon_mattress']): ?>
               <div class="receipt-row">
                 <span>Add-on: Extra Mattress</span>
                 <span>RM <?= number_format(ADDON_MATTRESS_PRICE, 2) ?></span>
               </div>
             <?php endif; ?>
+            <?php # check kalau discount_amount lebih dari 0, papar row long stay discount ?>
             <?php if ((float) $booking['discount_amount'] > 0): ?>
               <div class="receipt-row">
                 <span>Long Stay Discount</span>
@@ -111,6 +130,7 @@
             </div>
             <div class="receipt-row total">
               <span>Total Price</span>
+              <?php # calling function booking_grand_total() untuk kira jumlah keseluruhan harga booking ?>
               <span>RM <?= number_format(booking_grand_total($booking), 2) ?></span>
             </div>
             <div class="receipt-row">
@@ -119,24 +139,30 @@
             </div>
             <div class="receipt-row balance">
               <span>Balance Due</span>
+              <?php # calling function booking_grand_total() untuk tolak amount paid dari total, dapat baki yg perlu bayar ?>
               <span>RM <?= number_format(booking_grand_total($booking) - $amountPaid, 2) ?></span>
             </div>
           </div>
         </div>
 
         <?php
+          # check kalau latest payment status kosong atau 'pending', maksudnya booking ni belum bayar
           $isUnpaid = $latestPaymentStatus === null || $latestPaymentStatus === 'pending';
+          # calling function in_array() untuk check status booking masih pending/confirmed, gabung dgn $isUnpaid untuk decide papar butang Pay Now ke tak
           $showPayNow = $isUnpaid && in_array($booking['booking_status'], ['pending', 'confirmed'], true);
         ?>
         <div class="receipt-actions">
+          <?php # check $showPayNow, kalau true papar butang Pay Now, kalau tak papar butang print receipt ?>
           <?php if ($showPayNow): ?>
             <a href="payment.php?booking_id=<?= (int) $booking['booking_id'] ?>" class="receipt-print">Pay Now</a>
           <?php else: ?>
             <button type="button" class="receipt-print" onclick="window.print()">Print Receipt</button>
             <a href="<?= htmlspecialchars($base) ?>index.php" class="receipt-back">Look Up Another Booking</a>
           <?php endif; ?>
+          <?php # calling function in_array() untuk check status booking masih pending/confirmed, kalau ya papar butang cancel booking ?>
           <?php if (in_array($booking['booking_status'], ['pending', 'confirmed'], true)): ?>
             <form method="post" id="cancel-booking-form">
+              <?php # calling function csrf_field() untuk bina hidden input token, elak CSRF masa submit cancel ?>
               <?= csrf_field() ?>
               <input type="hidden" name="form" value="cancel">
               <input type="hidden" name="ref" value="<?= (int) $booking['booking_id'] ?>">
@@ -186,6 +212,7 @@
         </div>
       </div>
 
+      <?php # check kalau review baru je submit & memang ada existing review, papar popup thanks ?>
       <?php if ($reviewSubmitted && $existingReview): ?>
       <div class="purchase-modal-overlay" id="review-thanks-overlay">
         <div class="purchase-modal" role="dialog" aria-modal="true" aria-labelledby="review-thanks-title">
@@ -221,35 +248,47 @@
       </script>
       <?php endif; ?>
 
+      <?php # check kalau booking dah checked_out, baru papar section review (tengok review lama atau leave review baru) ?>
       <?php if ($booking['booking_status'] === 'checked_out'): ?>
       <div class="receipt-card review-card">
+        <?php # check kalau dah ada existing review, papar review tu, kalau belum papar form untuk leave review ?>
         <?php if ($existingReview): ?>
           <h3>Your Review</h3>
           <div class="stars" aria-label="<?= (int) $existingReview['rating'] ?> out of 5 stars">
+            <?php # loop dari 1 sampai 5 untuk papar 5 bintang ?>
             <?php for ($i = 1; $i <= 5; $i++): ?>
+              <?php # check kalau $i tak lebih dari rating sebenar, bintang penuh, kalau lebih bintang kosong ?>
               <svg viewBox="0 0 20 19" class="<?= $i <= (int) $existingReview['rating'] ? '' : 'star-empty' ?>"><polygon points="10,0 12.5,7 20,7 14,11.5 16,19 10,14.5 4,19 6,11.5 0,7 7.5,7"/></svg>
             <?php endfor; ?>
           </div>
+          <?php # check kalau display_name takde, papar 'Anonymous' sebagai default ?>
           <p class="review-date">Shown publicly as: <strong><?= htmlspecialchars($existingReview['display_name'] ?: 'Anonymous') ?></strong></p>
+          <?php # check kalau ada comment, baru papar, calling function nl2br() untuk tukar baris baru jadi <br> ?>
           <?php if ($existingReview['comment']): ?>
             <p class="review-comment"><?= nl2br(htmlspecialchars($existingReview['comment'])) ?></p>
           <?php endif; ?>
+          <?php # check kalau ada image_path, baru papar gambar review ?>
           <?php if ($existingReview['image_path']): ?>
             <img class="review-photo" src="../<?= htmlspecialchars($existingReview['image_path']) ?>" alt="Room photo shared by the guest">
           <?php endif; ?>
+          <?php # calling function date()+strtotime() untuk format tarikh review ?>
           <p class="review-date">Reviewed on <?= htmlspecialchars(date('d M Y', strtotime($existingReview['review_date']))) ?></p>
         <?php else: ?>
           <h3>Leave a Review</h3>
+          <?php # check kalau ada reviewError, papar mesej error kat atas form ?>
           <?php if ($reviewError): ?>
             <p class="lookup-error"><?= htmlspecialchars($reviewError) ?></p>
           <?php endif; ?>
           <form method="post" class="review-form" id="review-form" enctype="multipart/form-data">
+            <?php # calling function csrf_field() untuk bina hidden input token, elak CSRF masa submit review ?>
             <?= csrf_field() ?>
             <input type="hidden" name="form" value="review">
             <input type="hidden" name="ref" value="<?= (int) $booking['booking_id'] ?>">
             <input type="hidden" name="phone" value="<?= htmlspecialchars($booking['phone']) ?>">
             <div class="rating-picker" role="radiogroup" aria-label="Rating">
+              <?php # loop dari 5 turun ke 1 untuk papar pilihan bintang rating (5 star tersusun dulu sbb reverse untuk css) ?>
               <?php for ($i = 5; $i >= 1; $i--): ?>
+                <?php # check kalau $i ni 5, set default checked untuk rating penuh ?>
                 <input type="radio" name="rating" id="rating-<?= $i ?>" value="<?= $i ?>" <?= $i === 5 ? 'checked' : '' ?>>
                 <label for="rating-<?= $i ?>" title="<?= $i ?> stars">&#9733;</label>
               <?php endfor; ?>
@@ -307,7 +346,9 @@
           </div>
 
           <?php
+          # assign path fail js review-photo.js ke $reviewPhotoJsPath
           $reviewPhotoJsPath = __DIR__ . '/../../assets/js/review-photo.js';
+          # calling function is_file() untuk check fail tu wujud, calling function filemtime() untuk ambil masa fail last update, supaya browser cache-bust bila fail berubah
           $reviewPhotoJsVer = is_file($reviewPhotoJsPath) ? '?v=' . filemtime($reviewPhotoJsPath) : '';
           ?>
           <script src="../assets/js/review-photo.js<?= $reviewPhotoJsVer ?>"></script>
@@ -355,6 +396,7 @@
   <section class="lookup-section">
     <div class="container">
       <div class="lookup-card">
+        <?php # check kalau ada lookupError (contoh phone number tak jumpa), papar mesej error ?>
         <?php if ($lookupError): ?>
           <p class="lookup-error"><?= htmlspecialchars($lookupError) ?></p>
         <?php endif; ?>

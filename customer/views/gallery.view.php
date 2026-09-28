@@ -8,12 +8,16 @@
 
   <section class="gallery" id="gallery-grid">
     <div class="container gallery-grid">
+      <?php # check kalau $images kosong, papar mesej takde gambar, kalau ada papar grid ?>
       <?php if (!$images): ?>
         <p>No gallery photos yet — check back soon!</p>
       <?php else: ?>
         <?php
+          # assign array static $ratios untuk senarai class css ratio yg akan diulang-ulang
           $ratios = ['ratio-tall', 'ratio-tall', 'ratio-short', 'ratio-portrait'];
+          # loop setiap gambar dalam $images dgn index $i untuk papar satu-satu
           foreach ($images as $i => $img):
+            # calling function count() untuk modulus index $i supaya ratio berulang ikut giliran
             $ratio = $ratios[$i % count($ratios)];
         ?>
           <figure class="gallery-item <?= $ratio ?>"><img src="../<?= htmlspecialchars($img['image_path']) ?>" alt="<?= htmlspecialchars($img['caption'] ?: 'Casadive Villa gallery photo') ?>" loading="lazy"></figure>

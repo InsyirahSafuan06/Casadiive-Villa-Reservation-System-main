@@ -10,6 +10,7 @@
       <div class="info-card">
 
         <?php
+        # assign array static $faqs untuk simpan senarai soalan & jawapan FAQ terus dalam kod
         $faqs = [
             [
                 'q' => 'How do I make a booking?',
@@ -50,7 +51,9 @@
         ];
         ?>
 
+        <?php # loop setiap $faqs dgn index $i untuk papar soalan & jawapan satu-satu ?>
         <?php foreach ($faqs as $i => $faq): ?>
+          <?php # check kalau ni item pertama ($i === 0), auto bukak accordion tu je ?>
           <div class="faq-item<?= $i === 0 ? ' is-open' : '' ?>">
             <button type="button" class="faq-question">
               <span><?= htmlspecialchars($faq['q']) ?></span>

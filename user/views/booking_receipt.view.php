@@ -29,8 +29,10 @@
         <div class="receipt-head">
           <div>
             <p class="brand">Casadive Villa</p>
+            <?php # calling function format_booking_ref(), date() & strtotime() untuk papar rujukan booking & tarikh booking dibuat ?>
             <p class="receipt-ref">Booking Reference <?= htmlspecialchars(format_booking_ref((int) $booking['booking_id'])) ?> &middot; Booked on <?= htmlspecialchars(date('d M Y', strtotime($booking['booking_date']))) ?></p>
           </div>
+          <?php # calling function format_status() untuk papar status booking dalam label senang faham ?>
           <span class="status-badge status-<?= htmlspecialchars($booking['booking_status']) ?>"><?= htmlspecialchars(format_status($booking['booking_status'])) ?></span>
         </div>
 
@@ -47,16 +49,21 @@
         <div class="receipt-block">
           <h3>Stay Details</h3>
           <dl class="receipt-grid">
+            <?php # calling function date() & strtotime() untuk tukar format tarikh check-in ke d/m/Y ?>
             <div><dt>Check-in</dt><dd><?= htmlspecialchars(date('d/m/Y', strtotime($booking['check_in']))) ?></dd></div>
+            <?php # calling function date() & strtotime() untuk tukar format tarikh check-out ke d/m/Y ?>
             <div><dt>Check-out</dt><dd><?= htmlspecialchars(date('d/m/Y', strtotime($booking['check_out']))) ?></dd></div>
             <div><dt>Nights</dt><dd><?= $nights ?></dd></div>
+            <?php # calling function implode() & array_column() untuk gabung semua nama accommodation dalam booking ni jadi satu string ?>
             <div><dt>Accommodation</dt><dd><?= htmlspecialchars(implode(', ', array_column($items, 'accommodation_name')) ?: '—') ?></dd></div>
           </dl>
         </div>
 
+        <?php # check ada special_request ke tak sblm papar section ni ?>
         <?php if (!empty($booking['special_request'])): ?>
         <div class="receipt-block">
           <h3>Special Request</h3>
+          <?php # calling function nl2br() & htmlspecialchars() untuk papar special request dgn line break dikekalkan ?>
           <p class="receipt-request"><?= nl2br(htmlspecialchars($booking['special_request'])) ?></p>
         </div>
         <?php endif; ?>
@@ -64,8 +71,11 @@
         <div class="receipt-block">
           <h3>Price Breakdown</h3>
           <div class="receipt-rows">
+            <?php # loop setiap item accommodation dalam $items untuk papar baris harga masing-masing ?>
             <?php foreach ($items as $item):
+              # calling ternary that assign to variable name $weekendRate untuk tentukan harga weekend, guna harga biasa kalau takde harga weekend
               $weekendRate = $item['nightly_price_weekend'] !== null ? (float) $item['nightly_price_weekend'] : (float) $item['nightly_price'];
+              # check ada malam weekend & harga weekend lain dari harga biasa, then bina label rate ikut kes (mix weekday+weekend atau flat rate je) that assign to variable name $rateLabel
               $rateLabel = $stay['weekend_nights'] > 0 && $weekendRate !== (float) $item['nightly_price']
                   ? "{$stay['weekday_nights']} weekday night" . ($stay['weekday_nights'] !== 1 ? 's' : '') . " &times; RM " . number_format((float) $item['nightly_price'], 2)
                     . " + {$stay['weekend_nights']} weekend night" . ($stay['weekend_nights'] !== 1 ? 's' : '') . " &times; RM " . number_format($weekendRate, 2)
@@ -76,18 +86,21 @@
                 <span>RM <?= number_format((float) $item['price'], 2) ?></span>
               </div>
             <?php endforeach; ?>
+            <?php # check ada addon bbq untuk papar baris harga bbq ?>
             <?php if ($booking['addon_bbq']): ?>
               <div class="receipt-row">
                 <span>Add-on: BBQ Set</span>
                 <span>RM <?= number_format(ADDON_BBQ_PRICE, 2) ?></span>
               </div>
             <?php endif; ?>
+            <?php # check ada addon mattress untuk papar baris harga mattress ?>
             <?php if ($booking['addon_mattress']): ?>
               <div class="receipt-row">
                 <span>Add-on: Extra Mattress</span>
                 <span>RM <?= number_format(ADDON_MATTRESS_PRICE, 2) ?></span>
               </div>
             <?php endif; ?>
+            <?php # check ada discount amount lebih dari 0 untuk papar baris diskaun ?>
             <?php if ((float) $booking['discount_amount'] > 0): ?>
               <div class="receipt-row">
                 <span>Long Stay Discount</span>
@@ -98,6 +111,7 @@
               <span>Booking Deposit</span>
               <span>RM <?= number_format((float) $booking['deposit_amount'], 2) ?></span>
             </div>
+            <?php # calling function booking_grand_total() untuk kira jumlah total keseluruhan booking ?>
             <div class="receipt-row total">
               <span>Total Price</span>
               <span>RM <?= number_format(booking_grand_total($booking), 2) ?></span>
@@ -106,6 +120,7 @@
               <span>Amount Paid</span>
               <span>RM <?= number_format($amountPaid, 2) ?></span>
             </div>
+            <?php # calling function booking_grand_total() untuk kira baki yang belum dibayar (total tolak amount paid) ?>
             <div class="receipt-row balance">
               <span>Balance Due</span>
               <span>RM <?= number_format(booking_grand_total($booking) - $amountPaid, 2) ?></span>

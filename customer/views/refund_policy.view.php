@@ -9,6 +9,7 @@
     <div class="container">
       <div class="info-card">
 
+        <?php # calling function date() untuk papar tarikh hari ni ikut format 'd M Y' ?>
         <p class="info-updated">Last updated: <?= date('d M Y') ?></p>
 
         <h2>Cancelling a Booking</h2>

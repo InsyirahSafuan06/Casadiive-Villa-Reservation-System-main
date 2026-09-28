@@ -1,30 +1,43 @@
 <?php
 declare(strict_types=1);
+# calling require_once untuk masukkan fail auth.php supaya boleh guna fungsi login macam current_user()
 require_once __DIR__ . '/auth.php';
 
+# assign value kosong ke $base kalau belum wujud, untuk elak error undefined variable
 $base ??= '';
+# assign value kosong ke $active kalau belum wujud, untuk tentukan nav link mana yang aktif
 $active ??= '';
+# assign value default tajuk page ke $pageTitle kalau belum wujud
 $pageTitle ??= 'Casadive Villa';
+# assign value kosong ke $pageCss kalau belum wujud
 $pageCss ??= '';
+# calling function current_user() that assign to variable name $loggedInUser untuk tahu siapa yang sedang login (kalau ada)
 $loggedInUser = current_user();
 
 $pageCssHref = $pageCss;
+# check kalau page ni ada css sendiri, kena tentukan path fail & tambah cache busting
 if ($pageCss !== '') {
     $pageCssPath = dirname($_SERVER['SCRIPT_FILENAME']) . '/' . $pageCss;
+    # check kalau fail css tu wujud, tambah version string supaya browser cache dikemaskini bila fail berubah
     if (is_file($pageCssPath)) {
+        # calling function filemtime() untuk ambil masa fail terakhir diubah, tambah kat href sbb cache busting
         $pageCssHref .= '?v=' . filemtime($pageCssPath);
     }
 }
 
 $navCssHref = $base . 'assets/css/nav-responsive.css';
 $navCssPath = __DIR__ . '/../assets/css/nav-responsive.css';
+# check kalau fail css nav wujud, tambah version string supaya browser cache dikemaskini bila fail berubah
 if (is_file($navCssPath)) {
+    # calling function filemtime() untuk ambil masa fail terakhir diubah, tambah kat href sbb cache busting
     $navCssHref .= '?v=' . filemtime($navCssPath);
 }
 
 $navJsHref = $base . 'assets/js/nav-toggle.js';
 $navJsPath = __DIR__ . '/../assets/js/nav-toggle.js';
+# check kalau fail js nav wujud, tambah version string supaya browser cache dikemaskini bila fail berubah
 if (is_file($navJsPath)) {
+    # calling function filemtime() untuk ambil masa fail terakhir diubah, tambah kat href sbb cache busting
     $navJsHref .= '?v=' . filemtime($navJsPath);
 }
 ?>
@@ -77,6 +90,7 @@ if (is_file($navJsPath)) {
           Contact Us
         </a>
       </nav>
+      <?php # check kalau ada user yang login, papar link Dashboard, kalau tak papar link Sign In ?>
       <?php if ($loggedInUser): ?>
         <a href="<?= $base ?>user/<?= $loggedInUser['role'] === 'manager' ? 'admin_dashboard.php' : 'staff_dashboard.php' ?>" class="btn btn-primary">Dashboard</a>
       <?php else: ?>

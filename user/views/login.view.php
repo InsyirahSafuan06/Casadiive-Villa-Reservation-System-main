@@ -22,6 +22,7 @@
       <h1 class="login-title">Manager Sign In</h1>
       <p class="login-sub">Secure access to reservations, villas, campsite, and reports.</p>
 
+      <?php # check ada mesej $error untuk papar box ralat login ?>
       <?php if ($error): ?>
         <p style="background:#fdecea;border:1px solid #f5c2c0;color:#9a3226;border-radius:8px;padding:14px 18px;font-family:'Raleway',sans-serif;font-weight:600;margin-bottom:24px;">
           <?= htmlspecialchars($error) ?>
@@ -29,6 +30,7 @@
       <?php endif; ?>
 
       <form id="login-form" method="post" novalidate>
+        <?php # calling function csrf_field() untuk letak token keselamatan dalam form login ?>
         <?= csrf_field() ?>
         <div class="login-field">
           <label for="login-username">Username</label>

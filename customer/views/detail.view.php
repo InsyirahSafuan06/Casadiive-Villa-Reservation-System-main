@@ -2,6 +2,7 @@
 
   <section class="detail-section">
     <div class="container">
+      <?php # check kalau $accommodation takde (null/false) papar page not found, kalau ada papar detail ?>
       <?php if (!$accommodation): ?>
 
         <div class="not-found">
@@ -12,7 +13,9 @@
         </div>
 
       <?php else:
+        # check jenis accommodation, kalau Campsite balik ke campsite.php, kalau tak balik ke villa.php
         $backHref = $accommodation['accommodation_type'] === 'Campsite' ? 'campsite.php' : 'villa.php';
+        # check kalau pax_label takde value, bina label default guna capacity punya angka
         $paxLabel = $accommodation['pax_label'] ?: ('Max ' . (int) $accommodation['capacity'] . ' guests');
       ?>
 
@@ -20,6 +23,7 @@
 
         <div class="detail-card">
 
+          <?php # check kalau accommodation ni ada image, baru papar gambar ?>
           <?php if ($accommodation['image']): ?>
             <div class="detail-media">
               <img src="<?= htmlspecialchars($accommodation['image']) ?>" alt="<?= htmlspecialchars($accommodation['accommodation_name']) ?>" loading="lazy">
@@ -31,13 +35,16 @@
             <span class="detail-pax"><?= htmlspecialchars($paxLabel) ?></span>
           </div>
 
+          <?php # check kalau description takde, guna default text, calling function nl2br() untuk tukar baris baru jadi <br> ?>
           <p class="detail-description"><?= nl2br(htmlspecialchars($accommodation['description'] ?: 'No additional description available for this package.')) ?></p>
 
           <hr class="detail-divider">
 
+          <?php # check kalau $features ada isi, baru papar section room features ?>
           <?php if ($features): ?>
           <h2 class="detail-heading">Room Features</h2>
           <div class="detail-features">
+            <?php # loop setiap feature dalam $features untuk papar satu-satu ?>
             <?php foreach ($features as $feature): ?>
               <div class="detail-feature">
                 <svg viewBox="0 0 24 24"><path d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z"/></svg>
@@ -53,12 +60,14 @@
               <span class="rates-label">Weekday</span>
               <span class="rates-value">RM <?= number_format((float) $accommodation['price'], 0) ?> /night</span>
             </div>
+            <?php # check kalau ada price_weekend punya rate, baru papar row weekend ?>
             <?php if ($accommodation['price_weekend'] !== null): ?>
             <div class="rates-row">
               <span class="rates-label">Weekend</span>
               <span class="rates-value">RM <?= number_format((float) $accommodation['price_weekend'], 0) ?> /night</span>
             </div>
             <?php endif; ?>
+            <?php # check kalau ada price_holiday punya rate, baru papar row public holiday ?>
             <?php if ($accommodation['price_holiday'] !== null): ?>
             <div class="rates-row">
               <span class="rates-label">Public Holiday</span>
@@ -67,11 +76,13 @@
             <?php endif; ?>
           </div>
 
+          <?php # check kalau status accommodation bukan 'available', papar mesej tak boleh book ?>
           <?php if ($accommodation['status'] !== 'available'): ?>
             <p class="detail-unavailable">This package is currently <?= htmlspecialchars($accommodation['status']) ?> and not open for booking right now. Please check back later or browse other packages.</p>
           <?php endif; ?>
 
           <div class="detail-actions">
+            <?php # check kalau status 'available' baru papar butang Book Now ?>
             <?php if ($accommodation['status'] === 'available'): ?>
               <a href="bookingform.php?accommodation=<?= urlencode($accommodation['accommodation_name']) ?>" class="detail-book">Book Now</a>
             <?php endif; ?>

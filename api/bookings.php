@@ -1,11 +1,17 @@
 <?php
+# declare strict_types=1 untuk php check jenis data dgn ketat dalam fail ni
 declare(strict_types=1);
+# calling function require_once() untuk load fail db.php, dapatkan sambungan $pdo
 require_once __DIR__ . '/../includes/db.php';
+# calling function require_once() untuk load fail api_auth.php, dapatkan function api_authenticate()
 require_once __DIR__ . '/../includes/api_auth.php';
+# calling function require_once() untuk load fail helpers.php, dapatkan function format_booking_ref()
 require_once __DIR__ . '/../includes/helpers.php';
 
+# calling function api_authenticate() untuk check api key valid ke tak, kalau tak valid terus stop
 api_authenticate();
 
+# calling method query() & fetchAll() dari object $pdo that assign to variable name $rows untuk ambil semua data booking join dgn customer & accommodation
 $rows = $pdo->query(
     "SELECT b.booking_id,
             b.booking_date,
@@ -31,8 +37,11 @@ $rows = $pdo->query(
      ORDER BY b.booking_id"
 )->fetchAll();
 
+# loop setiap row dalam $rows (guna reference &) untuk tukar jenis data & tambah field baru sebelum hantar output
 foreach ($rows as &$row) {
+    # calling function format_booking_ref() untuk jana kod rujukan booking dari booking_id
     $row['booking_ref'] = format_booking_ref((int) $row['booking_id']);
+    # tukar baki value dalam row ni ke jenis int/float/bool yang betul supaya output json tepat
     $row['nights'] = (int) $row['nights'];
     $row['total_guest'] = (int) $row['total_guest'];
     $row['deposit_amount'] = (float) $row['deposit_amount'];
@@ -42,6 +51,8 @@ foreach ($rows as &$row) {
     $row['discount_amount'] = (float) $row['discount_amount'];
     $row['grand_total'] = (float) $row['grand_total'];
 }
+# calling function unset() untuk buang reference $row lepas guna dalam foreach, elak bug
 unset($row);
 
+# calling function api_send() untuk hantar $rows sebagai output json
 api_send($rows);

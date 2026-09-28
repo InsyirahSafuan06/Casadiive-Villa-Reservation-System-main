@@ -1,24 +1,32 @@
 <?php
 declare(strict_types=1);
 
-$base ??= ''; 
-$showWhatsapp ??= false; 
+# assign value kosong ke $base kalau belum wujud, untuk elak error undefined variable
+$base ??= '';
+# assign value false ke $showWhatsapp kalau belum wujud, untuk default takyah tunjuk butang whatsapp
+$showWhatsapp ??= false;
 
 $footerCssHref = 'assets/css/footer.css';
 $footerCssPath = __DIR__ . '/../assets/css/footer.css';
+# check kalau fail css footer wujud, tambah version string supaya browser cache dikemaskini bila fail berubah
 if (is_file($footerCssPath)) {
+    # calling function filemtime() untuk ambil masa fail terakhir diubah, tambah kat href sbb cache busting
     $footerCssHref .= '?v=' . filemtime($footerCssPath);
 }
 
 $reviewPhotoJsHref = 'assets/js/review-photo.js';
 $reviewPhotoJsPath = __DIR__ . '/../assets/js/review-photo.js';
+# check kalau fail js review-photo wujud, tambah version string supaya browser cache dikemaskini bila fail berubah
 if (is_file($reviewPhotoJsPath)) {
+    # calling function filemtime() untuk ambil masa fail terakhir diubah, tambah kat href sbb cache busting
     $reviewPhotoJsHref .= '?v=' . filemtime($reviewPhotoJsPath);
 }
 
 $footerReviewInitJsHref = 'assets/js/footer-review-init.js';
 $footerReviewInitJsPath = __DIR__ . '/../assets/js/footer-review-init.js';
+# check kalau fail js footer-review-init wujud, tambah version string supaya browser cache dikemaskini bila fail berubah
 if (is_file($footerReviewInitJsPath)) {
+    # calling function filemtime() untuk ambil masa fail terakhir diubah, tambah kat href sbb cache busting
     $footerReviewInitJsHref .= '?v=' . filemtime($footerReviewInitJsPath);
 }
 ?>
@@ -77,6 +85,7 @@ if (is_file($footerReviewInitJsPath)) {
             <input type="hidden" name="form" value="review">
 
             <div class="footer-review-stars" role="radiogroup" aria-label="Rating">
+              <?php # loop dari 5 turun ke 1 untuk papar bintang rating secara terbalik ?>
               <?php for ($i = 5; $i >= 1; $i--): ?>
                 <input type="radio" name="rating" id="footer-rating-<?= $i ?>" value="<?= $i ?>" <?= $i === 5 ? 'checked' : '' ?>>
                 <label for="footer-rating-<?= $i ?>" title="<?= $i ?> stars">★</label>
@@ -151,6 +160,7 @@ if (is_file($footerReviewInitJsPath)) {
     </div>
   </footer>
 
+  <?php # check kalau $showWhatsapp true, papar butang whatsapp floating kat page ni ?>
   <?php if ($showWhatsapp): ?>
   <a class="whatsapp-card" href="https://wa.me/60103851892" aria-label="Chat with us on WhatsApp">
     <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">

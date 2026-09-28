@@ -17,6 +17,7 @@
     </div>
   </div>
 
+  <?php # check kalau ada $errors atau $paid tak true untuk papar page payment gagal ?>
   <?php if ($errors || !$paid): ?>
 
     <div class="container page-title">
@@ -25,9 +26,11 @@
     <section class="payment-section">
       <div class="container">
         <div class="processing-card" style="text-align:center;">
+          <?php # loop setiap $error dalam $errors untuk papar semua mesej error satu-satu ?>
           <?php foreach ($errors as $error): ?>
             <p class="process-note" style="color:#9a3226;"><?= htmlspecialchars($error) ?></p>
           <?php endforeach; ?>
+          <?php # check kalau $booking wujud untuk tentukan link balik ke payment.php ke bookingform.php ?>
           <a href="<?= $booking ? 'payment.php?booking_id=' . $bookingId : 'bookingform.php' ?>" class="process-btn" style="max-width:320px;margin:20px auto 0;">Back to Payment</a>
         </div>
       </div>
@@ -55,6 +58,7 @@
               <span class="step-icon">
                 <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l3.5 3.5L16 5.5" fill="none" stroke="#F5F5F5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
               </span>
+              <?php # check kalau $method ialah 'online_banking' untuk papar nama bank, kalau tak papar gateway biasa ?>
               <span class="step-text"><?= $method === 'online_banking' ? 'Connecting to ' . htmlspecialchars($bank ?: 'your bank') : 'Connecting to payment gateway' ?></span>
             </li>
             <li class="process-step is-done">
@@ -84,6 +88,7 @@
       </div>
     </section>
 
+    <?php # calling function json_encode() untuk tukar $redirectUrl jadi string js yang selamat sebelum redirect ?>
     <script>
       setTimeout(function () {
         window.location.href = <?= json_encode($redirectUrl) ?>;

@@ -63,6 +63,7 @@
           referrerpolicy="strict-origin-when-cross-origin"
           title="Casadive Villa location on Google Maps"
         ></iframe>
+        <?php # calling function urlencode() untuk bina link google maps direction dgn alamat villa ?>
         <a href="https://www.google.com/maps/dir/?api=1&destination=<?= urlencode('Casadive Villa, PT 195, Kg Baru, Kampung Pulau Sayak, 08500 Kota Kuala Muda, Kedah') ?>" class="directions-btn" target="_blank" rel="noopener">Get Direction</a>
       </div>
 

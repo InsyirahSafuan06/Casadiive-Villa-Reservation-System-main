@@ -26,18 +26,23 @@
       <h1 class="dash-heading">Staff Dashboard</h1>
       <p class="dash-subheading">Manage bookings and daily check-ins / check-outs.</p>
 
+      <?php # check flag $updated true ke tak untuk papar mesej flash 'Booking status updated' ?>
       <?php if ($updated): ?>
         <p class="flash">Booking status updated.</p>
       <?php endif; ?>
+      <?php # check flag $accUpdated untuk papar mesej flash accommodation status dah diupdate ?>
       <?php if ($accUpdated): ?>
         <p class="flash">Accommodation status updated.</p>
       <?php endif; ?>
+      <?php # check flag $paymentRecorded untuk papar mesej flash payment dah direkod ?>
       <?php if ($paymentRecorded): ?>
         <p class="flash">Payment recorded.</p>
       <?php endif; ?>
+      <?php # check flag $galleryAdded untuk papar mesej flash gambar gallery dah ditambah ?>
       <?php if ($galleryAdded): ?>
         <p class="flash">Image added to gallery.</p>
       <?php endif; ?>
+      <?php # check flag $galleryDeleted untuk papar mesej flash gambar gallery dah dibuang ?>
       <?php if ($galleryDeleted): ?>
         <p class="flash">Image removed from gallery.</p>
       <?php endif; ?>
@@ -70,20 +75,26 @@
             </tr>
           </thead>
           <tbody>
+            <?php # check array $bookings kosong ke tak, kalau kosong papar 'No bookings yet' ?>
             <?php if (!$bookings): ?>
               <tr class="empty-row"><td colspan="13">No bookings yet.</td></tr>
-            <?php else: foreach ($bookings as $b): ?>
+            <?php else: /* loop setiap booking dalam $bookings untuk papar dalam table */ foreach ($bookings as $b): ?>
               <tr>
+                <?php # calling function format_booking_ref() & htmlspecialchars() untuk papar booking ID dalam format rujukan ?>
                 <td><?= htmlspecialchars(format_booking_ref((int) $b['booking_id'])) ?></td>
                 <td><?= htmlspecialchars($b['full_name']) ?></td>
                 <td><?= htmlspecialchars($b['phone']) ?></td>
                 <td><?= htmlspecialchars($b['plate_num'] ?? '—') ?></td>
                 <td><?= htmlspecialchars($b['accommodations'] ?? '—') ?></td>
+                <?php # calling function date() & strtotime() untuk tukar format tarikh check-in ke d/m/Y ?>
                 <td><?= htmlspecialchars(date('d/m/Y', strtotime($b['check_in']))) ?></td>
+                <?php # calling function date() & strtotime() untuk tukar format tarikh check-out ke d/m/Y ?>
                 <td><?= htmlspecialchars(date('d/m/Y', strtotime($b['check_out']))) ?></td>
                 <td><?= (int) $b['total_guest'] ?></td>
                 <td>
+                  <?php # calling function number_format() untuk papar total amount dengan 2 titik perpuluhan ?>
                   <?= number_format((float) $b['total_amount'], 2) ?>
+                  <?php # check ada addon bbq/mattress/discount untuk papar badge tambahan ?>
                   <?php if ($b['addon_bbq'] || $b['addon_mattress'] || (float) $b['discount_amount'] > 0): ?>
                     <div class="addon-badges">
                       <?php if ($b['addon_bbq']): ?><span class="addon-badge">BBQ</span><?php endif; ?>
@@ -92,8 +103,10 @@
                     </div>
                   <?php endif; ?>
                 </td>
+                <?php # calling function format_status() & htmlspecialchars() untuk papar status booking dalam label senang faham ?>
                 <td><span class="status-badge status-<?= htmlspecialchars($b['booking_status']) ?>"><?= htmlspecialchars(format_status($b['booking_status'])) ?></span></td>
                 <td>
+                  <?php # calling function payment_needs_refund() untuk check kalau booking ni perlu refund ?>
                   <?php if (payment_needs_refund($b['booking_status'], $b['latest_payment_status'])): ?>
                     <span class="status-badge status-refund_due">Refund Due</span>
                     <a href="#record-payment" class="btn btn-outline" style="padding:4px 10px;font-size:12px;margin-left:6px;">Refund</a>
@@ -105,10 +118,12 @@
                 </td>
                 <td>
                   <form class="status-form" method="post">
+                    <?php # calling function csrf_field() untuk letak token keselamatan dalam form update status ?>
                     <?= csrf_field() ?>
                     <input type="hidden" name="action" value="update_status">
                     <input type="hidden" name="booking_id" value="<?= (int) $b['booking_id'] ?>">
                     <select name="booking_status">
+                      <?php # loop setiap status dalam $validStatuses untuk bina dropdown pilihan status booking ?>
                       <?php foreach ($validStatuses as $status): ?>
                         <option value="<?= $status ?>" <?= $status === $b['booking_status'] ? 'selected' : '' ?>><?= format_status($status) ?></option>
                       <?php endforeach; ?>
@@ -137,6 +152,7 @@
             </tr>
           </thead>
           <tbody>
+            <?php # loop setiap accommodation dalam $accommodations untuk papar dalam table ?>
             <?php foreach ($accommodations as $a): ?>
               <tr>
                 <td>#<?= (int) $a['accommodation_id'] ?></td>
@@ -146,10 +162,12 @@
                 <td><span class="status-badge status-<?= htmlspecialchars($a['status']) ?>"><?= htmlspecialchars(ucfirst($a['status'])) ?></span></td>
                 <td>
                   <form class="status-form" method="post">
+                    <?php # calling function csrf_field() untuk letak token keselamatan dalam form update acc status ?>
                     <?= csrf_field() ?>
                     <input type="hidden" name="action" value="update_acc_status">
                     <input type="hidden" name="accommodation_id" value="<?= (int) $a['accommodation_id'] ?>">
                     <select name="acc_status">
+                      <?php # loop setiap status dalam $validAccStatuses untuk bina dropdown pilihan status accommodation ?>
                       <?php foreach ($validAccStatuses as $status): ?>
                         <option value="<?= $status ?>" <?= $status === $a['status'] ? 'selected' : '' ?>><?= ucfirst($status) ?></option>
                       <?php endforeach; ?>
@@ -165,16 +183,19 @@
 
       <section class="dash-section" id="record-payment">
         <h2>Record a Payment</h2>
+        <?php # check ada $refundBookingId untuk papar notice bantu staff isi form refund ?>
         <?php if ($refundBookingId): ?>
           <p class="notice-info">Recording a refund for booking <?= htmlspecialchars(format_booking_ref((int) $refundBookingId)) ?> — set Amount to the deposit refunded and Status to "Refunded".</p>
         <?php endif; ?>
         <form method="post" style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;margin-bottom:30px;font-family:'Raleway',sans-serif;">
+          <?php # calling function csrf_field() untuk letak token keselamatan dalam form record payment ?>
           <?= csrf_field() ?>
           <input type="hidden" name="action" value="record_payment">
           <div>
             <label style="display:block;font-weight:600;font-size:13px;color:var(--brown-price);margin-bottom:6px;">Booking</label>
             <select name="booking_id" style="padding:10px 14px;border:1px solid var(--border);border-radius:6px;font-family:inherit;" required>
               <option value="">Select a booking</option>
+              <?php # loop setiap booking dalam $bookings untuk bina dropdown pilihan booking nak rekod payment ?>
               <?php foreach ($bookings as $b): ?>
                 <option value="<?= (int) $b['booking_id'] ?>" <?= $refundBookingId === (int) $b['booking_id'] ? 'selected' : '' ?>><?= htmlspecialchars(format_booking_ref((int) $b['booking_id'])) ?> — <?= htmlspecialchars($b['full_name']) ?> (RM <?= number_format((float) $b['deposit_amount'], 2) ?> deposit due)</option>
               <?php endforeach; ?>
@@ -187,6 +208,7 @@
           <div>
             <label style="display:block;font-weight:600;font-size:13px;color:var(--brown-price);margin-bottom:6px;">Status</label>
             <select name="payment_status" style="padding:10px 14px;border:1px solid var(--border);border-radius:6px;font-family:inherit;">
+              <?php # loop setiap status dalam $validPaymentStatuses untuk bina dropdown pilihan status payment ?>
               <?php foreach ($validPaymentStatuses as $status): ?>
                 <option value="<?= $status ?>" <?= $refundBookingId && $status === 'refunded' ? 'selected' : '' ?>><?= ucfirst($status) ?></option>
               <?php endforeach; ?>
@@ -213,16 +235,19 @@
             </tr>
           </thead>
           <tbody>
+            <?php # check array $recentPayments kosong, kalau tak loop setiap payment untuk papar dalam table ?>
             <?php if (!$recentPayments): ?>
               <tr class="empty-row"><td colspan="7">No payments recorded yet.</td></tr>
             <?php else: foreach ($recentPayments as $p): ?>
               <tr>
                 <td>#<?= (int) $p['payment_id'] ?></td>
+                <?php # calling function format_booking_ref() untuk papar rujukan booking pada rekod payment ?>
                 <td><?= htmlspecialchars(format_booking_ref((int) $p['booking_id'])) ?></td>
                 <td><?= htmlspecialchars($p['full_name']) ?></td>
                 <td><?= number_format((float) $p['deposit_paid'], 2) ?></td>
                 <td><?= htmlspecialchars($p['payment_date']) ?></td>
                 <td><span class="status-badge status-<?= htmlspecialchars($p['payment_status']) ?>"><?= htmlspecialchars(ucfirst($p['payment_status'])) ?></span></td>
+                <?php # calling function str_starts_with() untuk check kalau receipt ni sebenarnya fail proof upload, papar link View Proof kalau ya ?>
                 <td><?php if ($p['receipt'] && str_starts_with($p['receipt'], 'assets/uploads/payments/')): ?>
                   <a href="../<?= htmlspecialchars($p['receipt']) ?>" target="_blank" rel="noopener" class="btn btn-outline" style="padding:4px 10px;font-size:12px;">View Proof</a>
                 <?php else: ?>
@@ -236,10 +261,12 @@
 
       <section class="dash-section">
         <h2 class="section-heading">Gallery</h2>
+        <?php # check ada $galleryError untuk papar mesej ralat upload gambar ?>
         <?php if ($galleryError): ?>
           <p class="flash flash-error"><?= htmlspecialchars($galleryError) ?></p>
         <?php endif; ?>
         <form method="post" enctype="multipart/form-data" class="gallery-upload-form">
+          <?php # calling function csrf_field() untuk letak token keselamatan dalam form upload gallery ?>
           <?= csrf_field() ?>
           <input type="hidden" name="action" value="add_gallery_image">
           <input type="file" name="gallery_image" accept=".jpg,.jpeg,.png,.webp,image/*" required>
@@ -247,12 +274,14 @@
           <button type="submit" class="btn btn-md btn-primary">+ Add Image</button>
         </form>
         <div class="gallery-grid">
+          <?php # check array $galleryImages kosong, kalau tak loop setiap gambar untuk papar dalam grid ?>
           <?php if (!$galleryImages): ?>
             <p class="text-muted">No gallery images yet.</p>
           <?php else: foreach ($galleryImages as $g): ?>
             <div class="gallery-thumb">
               <img src="../<?= htmlspecialchars($g['image_path']) ?>" alt="<?= htmlspecialchars($g['caption'] ?: 'Gallery image') ?>">
               <form method="post" onsubmit="return confirm('Remove this image from the gallery?');">
+                <?php # calling function csrf_field() untuk letak token keselamatan dalam form delete gallery image ?>
                 <?= csrf_field() ?>
                 <input type="hidden" name="action" value="delete_gallery_image">
                 <input type="hidden" name="gallery_id" value="<?= (int) $g['gallery_id'] ?>">

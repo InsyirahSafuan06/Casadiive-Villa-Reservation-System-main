@@ -144,13 +144,17 @@
         </svg>
       </div>
 
+      <?php # check array $reviews ada isi ke tak untuk papar testimonial ke mesej 'no reviews' ?>
       <?php if ($reviews): ?>
       <div class="testimonial-track">
+        <?php # loop setiap review dalam $reviews untuk papar sebagai testimonial card ?>
         <?php foreach ($reviews as $review):
+          # ternary check display_name kosong ke tak that assign to variable name $displayName, guna 'Anonymous' kalau takde
           $displayName = $review['display_name'] !== null && $review['display_name'] !== '' ? $review['display_name'] : 'Anonymous';
         ?>
         <article class="testimonial-card">
           <div class="testimonial-photo-frame">
+            <?php # check review ada gambar ke tak untuk papar gambar ke placeholder ?>
             <?php if ($review['image_path']): ?>
               <img class="testimonial-photo" src="<?= htmlspecialchars($review['image_path']) ?>" alt="Room photo shared by <?= htmlspecialchars($displayName) ?>">
             <?php else: ?>
@@ -163,16 +167,19 @@
           <div class="testimonial-footer">
             <div class="testimonial-person-info">
               <span class="testimonial-person-name"><?= htmlspecialchars($displayName) ?></span>
+              <?php # check review ada location ke tak sblm papar ?>
               <?php if ($review['location']): ?>
                 <span class="testimonial-person-location"><?= htmlspecialchars($review['location']) ?></span>
               <?php endif; ?>
             </div>
             <div class="stars" data-rating="<?= (int) $review['rating'] ?>" aria-label="<?= (int) $review['rating'] ?> out of 5 stars">
+              <?php # loop dari 1 hingga 5 untuk papar 5 bintang rating (styling ikut data-rating guna css) ?>
               <?php for ($i = 1; $i <= 5; $i++): ?>
                 <span class="star">&#9733;</span>
               <?php endfor; ?>
             </div>
           </div>
+          <?php # calling function date() & strtotime() untuk tukar format tarikh review ke 'j M. Y' ?>
           <p class="testimonial-date"><?= htmlspecialchars(date('j M. Y', strtotime($review['review_date']))) ?></p>
         </article>
         <?php endforeach; ?>
@@ -262,18 +269,25 @@
   </div>
 
 <?php
+# calling function dirname() that assign to variable name $indexJsPath untuk dapatkan path penuh fail index.js
 $indexJsPath = dirname(__DIR__) . '/assets/js/index.js';
+# calling function is_file() & filemtime() untuk elak browser guna cache js lama, that assign to variable name $indexJsVer
 $indexJsVer = is_file($indexJsPath) ? '?v=' . filemtime($indexJsPath) : '';
+# calling function dirname() that assign to variable name $chatbotJsPath untuk dapatkan path penuh fail chatbot.js
 $chatbotJsPath = dirname(__DIR__) . '/assets/js/chatbot.js';
+# calling function is_file() & filemtime() untuk elak browser guna cache js lama, that assign to variable name $chatbotJsVer
 $chatbotJsVer = is_file($chatbotJsPath) ? '?v=' . filemtime($chatbotJsPath) : '';
 ?>
 <script src="assets/js/index.js<?= $indexJsVer ?>"></script>
 
+<?php # calling function json_encode() untuk tukar array $chatbotData jadi JSON supaya boleh guna dalam javascript ?>
 <script>
   var CHATBOT_DATA = <?= json_encode($chatbotData) ?>;
 </script>
 <script src="assets/js/chatbot.js<?= $chatbotJsVer ?>"></script>
 
 <?php
+# assign value true ke $showWhatsapp supaya footer papar butang whatsapp floating
 $showWhatsapp = true;
+# calling function include() untuk load fail footer.php kat bawah homepage
 include __DIR__ . '/../includes/footer.php';

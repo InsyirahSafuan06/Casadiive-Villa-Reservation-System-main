@@ -32,18 +32,21 @@
   <section class="payment-section">
     <div class="container">
 
+      <?php # check kalau $booking kosong/tak jumpa untuk papar mesej booking tak wujud ?>
       <?php if (!$booking): ?>
         <div class="payment-card" style="text-align:center;">
           <p class="payment-error">We couldn't find that booking. Please start again from the booking form.</p>
           <a href="bookingform.php" class="pay-btn" style="max-width:320px;margin:24px auto 0;">Back to Booking Details</a>
         </div>
 
+      <?php # check kalau $paid true (booking dah bayar) untuk papar mesej dah paid ?>
       <?php elseif ($paid): ?>
         <div class="payment-card" style="text-align:center;">
           <p class="payment-error" style="background:#e3f7e8;border-color:#bfe6c9;color:#1e6b34;">This booking has already been paid for.</p>
           <a href="sucess_payment.php?ref=<?= $bookingId ?>&phone=<?= urlencode($booking['phone']) ?>" class="pay-btn" style="max-width:320px;margin:24px auto 0;">View Confirmation</a>
         </div>
 
+      <?php # check kalau $method kosong (belum pilih method) untuk suruh user balik pilih dulu ?>
       <?php elseif ($method === ''): ?>
         <div class="payment-card" style="text-align:center;">
           <p class="payment-error">Please choose a payment method first.</p>
@@ -52,8 +55,10 @@
 
       <?php else: ?>
 
+        <?php # check kalau ada $errors untuk papar mesej error kat atas form ?>
         <?php if ($errors): ?>
           <div class="payment-error" style="max-width:951px;margin:0 auto 24px;">
+            <?php # loop setiap $error dalam $errors untuk papar semua mesej error satu-satu ?>
             <?php foreach ($errors as $error): ?>
               <p><?= htmlspecialchars($error) ?></p>
             <?php endforeach; ?>
@@ -61,6 +66,7 @@
         <?php endif; ?>
 
         <form class="payment-card" method="post" id="confirm-form" enctype="multipart/form-data">
+          <?php # calling function csrf_field() untuk papar hidden input token csrf, elak serangan CSRF ?>
           <?= csrf_field() ?>
           <input type="hidden" name="booking_id" value="<?= $bookingId ?>">
           <input type="hidden" name="method" value="<?= htmlspecialchars($method) ?>">
@@ -72,15 +78,19 @@
             </h2>
 
             <div class="summary-row">
+              <?php # calling function array_column() & implode() untuk gabung semua nama accommodation jadi satu string, kalau kosong papar '—' ?>
               <span class="summary-label"><?= htmlspecialchars(implode(', ', array_column($items, 'accommodation_name')) ?: '—') ?></span>
+              <?php # check $nights sama dgn 1 untuk tentukan 'night' ke 'nights' (singular/plural) ?>
               <span class="summary-value"><?= $nights ?> night<?= $nights === 1 ? '' : 's' ?></span>
             </div>
             <div class="summary-row">
               <span class="summary-label">Check In</span>
+              <?php # calling function strtotime() & date() untuk tukar tarikh check_in ke format d/m/Y ?>
               <span class="summary-value"><?= htmlspecialchars(date('d/m/Y', strtotime($booking['check_in']))) ?></span>
             </div>
             <div class="summary-row">
               <span class="summary-label">Check Out</span>
+              <?php # calling function strtotime() & date() untuk tukar tarikh check_out ke format d/m/Y ?>
               <span class="summary-value"><?= htmlspecialchars(date('d/m/Y', strtotime($booking['check_out']))) ?></span>
             </div>
             <div class="summary-row">
@@ -89,6 +99,7 @@
             </div>
             <div class="summary-row">
               <span class="summary-label">Booking ID</span>
+              <?php # calling function format_booking_ref() & htmlspecialchars() untuk papar nombor rujukan booking yang selamat ?>
               <span class="summary-value"><?= htmlspecialchars(format_booking_ref((int) $bookingId)) ?></span>
             </div>
             <div class="summary-row">
@@ -101,10 +112,12 @@
             </div>
             <div class="summary-row summary-total">
               <span class="summary-label">Amount to Pay</span>
+              <?php # calling function booking_grand_total() & number_format() untuk kira & papar jumlah bayaran perlu dibayar ?>
               <span class="summary-value">RM <?= number_format(booking_grand_total($booking), 2) ?></span>
             </div>
           </div>
 
+          <?php # check kalau $method dipilih ialah 'qr' untuk papar bahagian scan & upload resit ?>
           <?php if ($method === 'qr'): ?>
             <div class="qr-payment-block">
               <h2 class="summary-heading">
@@ -164,6 +177,7 @@
 
           <div class="confirm-actions">
             <button type="submit" class="pay-btn">
+              <?php # check kalau $method ialah 'qr' untuk tukar label butang submit ?>
               <?php if ($method === 'qr'): ?>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4M12 4 7 9M12 4l5 5"></path><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"></path></svg>
                 Submit Payment Proof

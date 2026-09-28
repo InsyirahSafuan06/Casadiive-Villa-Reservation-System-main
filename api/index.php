@@ -1,7 +1,10 @@
 <?php
+# declare strict_types=1 untuk php check jenis data dgn ketat dalam fail ni
 declare(strict_types=1);
+# calling function header() untuk set response type json supaya browser/power bi tau ni data json
 header('Content-Type: application/json; charset=utf-8');
 
+# calling function json_encode() untuk tukar array jadi json then echo terus output ke browser
 echo json_encode([
     'description' => 'Read-only reporting API for Casadive Villa — built for Power BI.',
     'auth' => 'Every endpoint below requires the API key, sent as either the "X-Api-Key" header or a "?key=" query parameter.',

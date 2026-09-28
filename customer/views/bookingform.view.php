@@ -43,9 +43,11 @@
 
   <section class="booking-section">
     <div class="container">
+      <?php # check kalau $errors ada isi, kalau ada baru papar kotak error ni ?>
       <?php if ($errors): ?>
         <div style="background:#fdecea;border:1px solid #f5c2c0;color:#9a3226;border-radius:8px;padding:16px 20px;margin-bottom:28px;font-family:'Raleway',sans-serif;font-weight:600;">
           <ul style="margin-left:18px;">
+            <?php # loop setiap error dalam $errors untuk papar mesej satu-satu ?>
             <?php foreach ($errors as $error): ?>
               <li><?= htmlspecialchars($error) ?></li>
             <?php endforeach; ?>
@@ -54,6 +56,7 @@
       <?php endif; ?>
 
       <form id="booking-form" method="post" novalidate>
+        <?php # calling function csrf_field() untuk bina hidden input token, elak CSRF attack masa submit form ?>
         <?= csrf_field() ?>
         <div class="booking-grid">
 
@@ -108,15 +111,18 @@
                 <label for="accommodation">Accommodation</label>
                 <select id="accommodation" name="accommodation_id" required>
                   <option value="">Select a package</option>
+                  <?php # loop setiap accommodation dalam $accommodations untuk papar pilihan dalam dropdown ?>
                   <?php foreach ($accommodations as $acc): ?>
                     <option
                       value="<?= (int) $acc['accommodation_id'] ?>"
                       data-name="<?= htmlspecialchars($acc['accommodation_name']) ?>"
                       data-type="<?= htmlspecialchars($acc['accommodation_type']) ?>"
                       data-price="<?= (float) $acc['price'] ?>"
+                      <?php # check kalau price_weekend takde punya, guna price biasa je sbb fallback ?>
                       data-price-weekend="<?= $acc['price_weekend'] !== null ? (float) $acc['price_weekend'] : (float) $acc['price'] ?>"
                       data-capacity="<?= (int) $acc['capacity'] ?>"
                       data-image="<?= htmlspecialchars($acc['image'] ?? '') ?>"
+                      <?php # check kalau accommodation ni sama dengan $old['accommodation_id'] punya value lama untuk mark 'selected' balik lepas submit gagal ?>
                       <?= $old['accommodation_id'] !== '' && (int) $old['accommodation_id'] === (int) $acc['accommodation_id'] ? 'selected' : '' ?>
                     ><?= htmlspecialchars($acc['accommodation_name']) ?> — RM <?= number_format((float) $acc['price'], 2) ?></option>
                   <?php endforeach; ?>
@@ -128,10 +134,12 @@
               <label>Add-ons (optional)</label>
               <div class="addon-options">
                 <label class="addon-option">
+                  <?php # check $old['addon_bbq'] untuk kekalkan checkbox tercentang lepas submit gagal ?>
                   <input type="checkbox" id="addon-bbq" name="addon_bbq" <?= $old['addon_bbq'] ? 'checked' : '' ?>>
                   BBQ Set <span class="addon-price">+RM <?= number_format(ADDON_BBQ_PRICE, 2) ?></span>
                 </label>
                 <label class="addon-option">
+                  <?php # check $old['addon_mattress'] untuk kekalkan checkbox tercentang lepas submit gagal ?>
                   <input type="checkbox" id="addon-mattress" name="addon_mattress" <?= $old['addon_mattress'] ? 'checked' : '' ?>>
                   Extra Mattress <span class="addon-price">+RM <?= number_format(ADDON_MATTRESS_PRICE, 2) ?></span>
                 </label>
@@ -181,10 +189,12 @@
 
         <div class="form-checks">
           <label class="form-check">
+            <?php # check $old['agree_terms'] untuk kekalkan checkbox tercentang lepas submit gagal ?>
             <input type="checkbox" name="agree_terms" <?= $old['agree_terms'] ? 'checked' : '' ?> required>
             I agree to the Terms &amp; Conditions
           </label>
           <label class="form-check">
+            <?php # check $old['whatsapp_optin'] untuk kekalkan checkbox tercentang lepas submit gagal ?>
             <input type="checkbox" name="whatsapp_optin" <?= $old['whatsapp_optin'] ? 'checked' : '' ?>>
             Receive updates via WhatsApp
           </label>
@@ -211,6 +221,7 @@
   const accommodationSelect = document.getElementById('accommodation');
   const addonBbq = document.getElementById('addon-bbq');
   const addonMattress = document.getElementById('addon-mattress');
+  <?php # calling function json_encode() 4x untuk hantar constant PHP ni ke JS supaya boleh kira harga kat client side ?>
   const ADDON_BBQ_PRICE = <?= json_encode(ADDON_BBQ_PRICE) ?>;
   const ADDON_MATTRESS_PRICE = <?= json_encode(ADDON_MATTRESS_PRICE) ?>;
   const LONG_STAY_DISCOUNT_MIN_NIGHTS = <?= json_encode(LONG_STAY_DISCOUNT_MIN_NIGHTS) ?>;
