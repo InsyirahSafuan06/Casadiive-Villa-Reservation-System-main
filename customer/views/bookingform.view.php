@@ -31,13 +31,26 @@
 
   <div class="container">
     <div class="policy-notice">
-      <h3>Good to know before you book</h3>
-      <ul>
-        <li><strong>Deposit:</strong> RM 1 to confirm your reservation</li>
-        <li><strong>Check-in:</strong> After 3.00 PM</li>
-        <li><strong>Check-out:</strong> Before 12.00 PM</li>
-        <li><strong>Check-in Method:</strong> Self Check-in</li>
+      <h3>Sila baca sebelum membuat tempahan</h3>
+      <p class="policy-location">CASADIVE VILLA | Kg Baru Pulau Sayak, Kedah</p>
+      <ul class="policy-detail-list">
+        <li>Deposit tempahan RM<?= number_format(BOOKING_DEPOSIT_AMOUNT, 0) ?> untuk satu villa perlu dibayar dalam masa 24 jam untuk mengesahkan tempahan.</li>
+        <li>Tempahan hanya disahkan selepas pihak kami menerima deposit. Bayaran penuh perlu dijelaskan sebelum tarikh daftar masuk.</li>
+        <li>Deposit tempahan tidak akan dipulangkan jika tempahan dibatalkan.</li>
+        <li>Deposit RM<?= number_format(BOOKING_DEPOSIT_AMOUNT, 0) ?> bagi setiap villa akan dipulangkan dalam masa 24 jam selepas daftar keluar jika tiada kerosakan atau kehilangan barang.</li>
+        <li>Add-on set BBQ boleh disewa dengan harga RM<?= number_format(ADDON_BBQ_PRICE, 0) ?>.</li>
+        <li>Untuk mandi kolam, sila pakai pakaian renang bagi menjaga kualiti air dan mengelakkan kerosakan pam serta penapis kolam.</li>
+        <li>Makan dan minum di dalam kolam adalah dilarang.</li>
+        <li>Kos kerosakan atau kehilangan barang akan dicaj kepada tetamu.</li>
+        <li>Daftar masuk selepas 3.00 petang; daftar keluar sebelum 12.00 tengah hari.</li>
+        <li>Daftar masuk adalah secara kendiri. Sila hubungi admin sehari sebelum daftar masuk untuk mendapatkan kod kotak kunci.</li>
       </ul>
+      <div class="policy-bank-details">
+        <strong>Bayaran melalui perbankan dalam talian</strong>
+        <span>MAYBANK BERHAD</span>
+        <span>ATHIRAH FIKRIYAH BINTI AHMAD FUAD</span>
+        <span>0080 3864 7569</span>
+      </div>
     </div>
   </div>
 
@@ -122,6 +135,7 @@
                       data-price-weekend="<?= $acc['price_weekend'] !== null ? (float) $acc['price_weekend'] : (float) $acc['price'] ?>"
                       data-capacity="<?= (int) $acc['capacity'] ?>"
                       data-image="<?= htmlspecialchars($acc['image'] ?? '') ?>"
+                      data-rate-periods="<?= htmlspecialchars(json_encode($ratePeriodsByAccommodation[(int) $acc['accommodation_id']] ?? [], JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_TAG | JSON_HEX_QUOT), ENT_QUOTES, 'UTF-8') ?>"
                       <?php # check kalau accommodation ni sama dengan $old['accommodation_id'] punya value lama untuk mark 'selected' balik lepas submit gagal ?>
                       <?= $old['accommodation_id'] !== '' && (int) $old['accommodation_id'] === (int) $acc['accommodation_id'] ? 'selected' : '' ?>
                     ><?= htmlspecialchars($acc['accommodation_name']) ?> — RM <?= number_format((float) $acc['price'], 2) ?></option>
@@ -191,7 +205,7 @@
           <label class="form-check">
             <?php # check $old['agree_terms'] untuk kekalkan checkbox tercentang lepas submit gagal ?>
             <input type="checkbox" name="agree_terms" <?= $old['agree_terms'] ? 'checked' : '' ?> required>
-            I agree to the Terms &amp; Conditions
+            Saya telah membaca dan bersetuju dengan syarat tempahan di atas.
           </label>
           <label class="form-check">
             <?php # check $old['whatsapp_optin'] untuk kekalkan checkbox tercentang lepas submit gagal ?>
@@ -227,23 +241,32 @@
   const LONG_STAY_DISCOUNT_MIN_NIGHTS = <?= json_encode(LONG_STAY_DISCOUNT_MIN_NIGHTS) ?>;
   const LONG_STAY_DISCOUNT_AMOUNT = <?= json_encode(LONG_STAY_DISCOUNT_AMOUNT) ?>;
 
-  function computeStay(checkInStr, checkOutStr, weekdayPrice, weekendPrice){
-    let weekdayNights = 0, weekendNights = 0;
+  function computeStay(checkInStr, checkOutStr, weekdayPrice, weekendPrice, ratePeriods){
+    let weekdayNights = 0, weekendNights = 0, specialNights = 0, total = 0;
     if (checkInStr && checkOutStr) {
       const cursor = new Date(checkInStr + 'T00:00:00');
       const end = new Date(checkOutStr + 'T00:00:00');
       while (cursor < end) {
-        const day = cursor.getDay();
-        (day === 5 || day === 6) ? weekendNights++ : weekdayNights++;
+        const nightDate = `${cursor.getFullYear()}-${String(cursor.getMonth() + 1).padStart(2, '0')}-${String(cursor.getDate()).padStart(2, '0')}`;
+        const specialRate = ratePeriods.find(period => nightDate >= period.start_date && nightDate <= period.end_date);
+        if (specialRate) {
+          specialNights++;
+          total += Number(specialRate.price);
+        } else if (cursor.getDay() === 5 || cursor.getDay() === 6) {
+          weekendNights++;
+          total += weekendPrice;
+        } else {
+          weekdayNights++;
+          total += weekdayPrice;
+        }
         cursor.setDate(cursor.getDate() + 1);
       }
     }
-    if (weekdayNights + weekendNights === 0) weekdayNights = 1;
-    return {
-      weekdayNights,
-      weekendNights,
-      total: weekdayNights * weekdayPrice + weekendNights * weekendPrice,
-    };
+    if (weekdayNights + weekendNights + specialNights === 0) {
+      weekdayNights = 1;
+      total = weekdayPrice;
+    }
+    return { weekdayNights, weekendNights, specialNights, total };
   }
 
   function updateSummary(){
@@ -251,6 +274,7 @@
     const hasPackage = Boolean(opt && opt.value);
     const weekdayPrice = hasPackage ? Number(opt.dataset.price) : 0;
     const weekendPrice = hasPackage ? Number(opt.dataset.priceWeekend) : 0;
+    const ratePeriods = hasPackage ? JSON.parse(opt.dataset.ratePeriods || '[]') : [];
     const capacity = hasPackage ? opt.dataset.capacity : null;
 
     document.getElementById('summary-type').textContent = hasPackage ? opt.dataset.type : 'Villa';
@@ -278,17 +302,20 @@
     document.getElementById('s-checkout').textContent = checkOut || '—';
     document.getElementById('s-guests').textContent = document.getElementById('guests').value || 1;
 
-    const stay = computeStay(checkIn, checkOut, weekdayPrice, weekendPrice);
-    const totalNights = stay.weekdayNights + stay.weekendNights;
-    const deposit = hasPackage ? 1 : 0;
+    const stay = computeStay(checkIn, checkOut, weekdayPrice, weekendPrice, ratePeriods);
+    const totalNights = stay.weekdayNights + stay.weekendNights + stay.specialNights;
+    const deposit = hasPackage && opt.dataset.type === 'Villa' ? <?= json_encode(BOOKING_DEPOSIT_AMOUNT) ?> : 0;
 
     document.getElementById('s-nights').textContent = totalNights;
 
     let priceLabel = `RM ${weekdayPrice.toFixed(2)} / night`;
     if (checkIn) {
       const checkInDay = new Date(checkIn + 'T00:00:00').getDay();
-      const checkInRate = (checkInDay === 5 || checkInDay === 6) ? weekendPrice : weekdayPrice;
-      priceLabel = `RM ${checkInRate.toFixed(2)} / night`;
+      const checkInPeriod = ratePeriods.find(period => checkIn >= period.start_date && checkIn <= period.end_date);
+      const checkInRate = checkInPeriod
+        ? Number(checkInPeriod.price)
+        : (checkInDay === 5 || checkInDay === 6) ? weekendPrice : weekdayPrice;
+      priceLabel = `RM ${checkInRate.toFixed(2)} / night${checkInPeriod ? ` (${checkInPeriod.label})` : ''}`;
     }
     const addonTotal = (addonBbq.checked ? ADDON_BBQ_PRICE : 0) + (addonMattress.checked ? ADDON_MATTRESS_PRICE : 0);
     const discount = (hasPackage && totalNights >= LONG_STAY_DISCOUNT_MIN_NIGHTS)

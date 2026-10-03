@@ -64,8 +64,6 @@ $checkIn = new DateTime($booking['check_in']);
 $checkOut = new DateTime($booking['check_out']);
 # calling method diff() untuk kira beza hari antara check-in & check-out that assign to variable name $nights, minimum 1 malam
 $nights = max(1, $checkOut->diff($checkIn)->days);
-# calling function compute_stay_price() that assign to variable name $stay untuk kira breakdown harga penginapan ikut hari biasa/weekend
-$stay = compute_stay_price(1, 1, $checkIn, $checkOut);
 
 # assign value ke $backUrl untuk tentukan link balik ikut role user (manager/staff)
 $backUrl = $currentUser['role'] === 'manager' ? 'admin_dashboard.php' : 'staff_dashboard.php';

@@ -136,6 +136,73 @@
     padding: 90px 0 110px;
   }
 
+  .villa-overview{
+    padding:52px 0;
+    background:#e9f2ef;
+    color:#254b47;
+  }
+  .villa-overview-heading{
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    gap:24px;
+  }
+  .villa-overview h2{
+    font-family:'Mulish', sans-serif;
+    font-size:26px;
+    color:var(--brown);
+    margin-bottom:8px;
+  }
+  .villa-overview-heading p,
+  .villa-checkin{
+    font-family:'Raleway', sans-serif;
+    font-size:14px;
+    line-height:1.6;
+  }
+  .villa-bbq{ white-space:nowrap; }
+  .villa-bbq strong{ color:var(--brown-price); }
+  .villa-facilities{
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:14px 28px;
+    margin:26px 0;
+  }
+  .villa-facilities li{
+    border-bottom:1px solid rgba(37,75,71,.18);
+    padding:0 0 10px 18px;
+    position:relative;
+    font-family:'Raleway', sans-serif;
+    font-weight:600;
+    font-size:15px;
+  }
+  .villa-facilities li::before{
+    content:'';
+    position:absolute;
+    left:0;
+    top:.55em;
+    width:7px;
+    height:7px;
+    border-radius:50%;
+    background:#32736c;
+  }
+  .villa-checkin{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:8px 24px;
+    border-top:1px solid rgba(37,75,71,.2);
+    padding-top:18px;
+  }
+  .villa-contact-links{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px 22px;
+    margin-top:20px;
+    font-family:'Raleway', sans-serif;
+    font-size:13px;
+    font-weight:700;
+  }
+  .villa-contact-links a{ color:#254b47; text-decoration:underline; text-underline-offset:3px; }
+
   .search-notice{
     font-family: 'Raleway', sans-serif;
     font-weight: 700;
@@ -244,14 +311,44 @@
   }
   .package-footer{
     display:flex;
-    align-items:center;
-    justify-content:space-between;
+    flex-direction:column;
+    align-items:stretch;
+    gap:18px;
   }
-  .package-price{
-    font-family:'Poppins', sans-serif;
-    font-weight:500;
-    font-size: 24px;
-    color: var(--brown-price);
+  .package-rates{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    font-family:'Raleway', sans-serif;
+  }
+  .package-rates-heading{
+    color:var(--brown);
+    font-size:15px;
+    margin-bottom:2px;
+  }
+  .package-rate-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:14px;
+    color:#454545;
+    font-size:14px;
+    line-height:1.45;
+  }
+  .package-rate-row strong{ color:var(--brown-price); white-space:nowrap; }
+  .package-rate-special{ color:#254b47; }
+  .package-rate-special small{
+    display:block;
+    color:#687b77;
+    font-size:12px;
+  }
+  .package-highlights{
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px 16px;
+    color:#555;
+    font-family:'Raleway', sans-serif;
+    font-size:13px;
   }
   .package-actions{
     display:flex;
@@ -387,9 +484,15 @@
     .container{ padding:0 20px; }
     .nav-links{ display:none; }
     .navbar .container{ height:80px; }
+    .villa-overview{ padding:36px 0; }
+    .villa-overview-heading{ align-items:flex-start; flex-direction:column; gap:12px; }
+    .villa-facilities{ grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+    .villa-checkin{ grid-template-columns:1fr; }
     .package-body{ padding: 22px 20px; }
     .package-features{ gap:16px; }
     .feature span{ font-size:16px; }
+    .package-rate-row{ font-size:13px; }
+    .package-actions{ justify-content:flex-start; }
     .footer-grid{ grid-template-columns: 1fr; }
   }
 

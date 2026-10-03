@@ -156,6 +156,7 @@
   }
   .rates-row:last-of-type{ border-bottom:none; }
   .rates-label{ font-weight:200; font-size: 22px; color: var(--brown-price); }
+  .rates-label small{ display:block; margin-top:4px; font-size:13px; line-height:1.4; color:#777; }
   .rates-value{ font-weight:700; font-size: 22px; color: var(--brown-price); }
 
   .detail-unavailable{
@@ -255,5 +256,6 @@
     .detail-card{ padding: 30px 24px; }
     .detail-features{ grid-template-columns: 1fr; }
     .rates-card{ padding: 24px 20px; }
+    .rates-label,.rates-value{ font-size:17px; }
     .footer-grid{ grid-template-columns: 1fr; }
   }

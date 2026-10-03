@@ -271,7 +271,6 @@ if ($lookupAttempted) {
 # assign default 1 malam ke $nights sbb belum tentu ada booking
 $nights = 1;
 # assign default struktur $stay untuk elak error kalau takde booking
-$stay = ['weekday_nights' => 1, 'weekend_nights' => 0];
 # check ada booking yang dijumpai baru kira nights & harga sebenar
 if ($booking) {
     # calling function new DateTime() that assign to variable name $checkIn untuk tukar tarikh check-in jadi object DateTime
@@ -280,8 +279,6 @@ if ($booking) {
     $checkOut = new DateTime($booking['check_out']);
     # calling method diff() untuk kira beza hari antara check-in & check-out, assign to variable name $nights
     $nights = max(1, $checkOut->diff($checkIn)->days);
-    # calling function compute_stay_price() that assign to variable name $stay untuk kira breakdown malam weekday/weekend
-    $stay = compute_stay_price(1, 1, $checkIn, $checkOut);
 }
 
 # calling function isset() untuk check ada parameter 'reviewed' dalam url, assign to variable name $reviewSubmitted

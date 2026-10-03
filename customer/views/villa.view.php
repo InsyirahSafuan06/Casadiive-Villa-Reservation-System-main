@@ -1,9 +1,41 @@
 <?php include __DIR__ . '/../../includes/header.php'; ?>
 
   <section class="hero" id="top" style="background-image:linear-gradient(rgba(124,106,70,.55), rgba(124,106,70,.55)), url('../assets/images/casa2-casa3-day.jpg');background-size:cover;background-position:center;">
-    <h1>Villa Packages</h1>
-    <p>Enjoy a peaceful stay with private rooms, pool access and a beachfront view.</p>
+    <h1>4 Unit Chalet</h1>
+    <p>Casadive Villa, Kg Baru Pulau Sayak, Kedah. Keseluruhan chalet selesa untuk 12-16 orang.</p>
     <a href="#packages" class="scroll-down" aria-label="Scroll down"><span></span></a>
+  </section>
+
+  <section class="villa-overview">
+    <div class="container">
+      <div class="villa-overview-heading">
+        <div>
+          <h2>Kemudahan disediakan</h2>
+          <p>Kolam renang untuk tetamu dan ruang kemudahan bersama.</p>
+        </div>
+        <p class="villa-bbq">Sewaan BBQ Set <strong>RM <?= number_format(ADDON_BBQ_PRICE, 0) ?></strong></p>
+      </div>
+      <ul class="villa-facilities">
+        <li>Kolam renang</li>
+        <li>Parking luas</li>
+        <li>Ampaian baju</li>
+        <li>2 tandas</li>
+        <li>Shower luar</li>
+        <li>Singki luar</li>
+      </ul>
+      <div class="villa-checkin">
+        <span>Daftar masuk selepas 3.00 petang</span>
+        <span>Daftar keluar sebelum 12.00 tengah hari</span>
+        <span>Self check-in, tiada perkhidmatan resepsionis</span>
+        <span>Hubungi admin sehari sebelum tiba untuk kod kotak kunci</span>
+      </div>
+      <div class="villa-contact-links" aria-label="Contact and social media">
+        <a href="tel:+60103851892">010-385 1892</a>
+        <a href="https://www.tiktok.com/@casadive.villa" target="_blank" rel="noopener">TikTok: casadive.villa</a>
+        <a href="https://www.instagram.com/casadivevilla" target="_blank" rel="noopener">Instagram: Casadive Villa</a>
+        <a href="https://www.facebook.com/Casadive%20Villa" target="_blank" rel="noopener">Facebook: Casadive Villa</a>
+      </div>
+    </div>
   </section>
 
   <section class="packages" id="packages">
@@ -49,6 +81,8 @@
         $paxLabel = $villa['pax_label'] ?: ('Max ' . (int) $villa['capacity'] . ' guests');
         # check kalau villa ada image untuk bina inline style background, kalau tak kosongkan style
         $mediaStyle = $villa['image'] ? ' style="background-image:url(\'' . htmlspecialchars($villa['image']) . '\');background-size:cover;background-position:center;"' : '';
+        $unitFeatures = array_slice(array_filter(array_map('trim', explode("\n", $villa['features'] ?? ''))), 0, 3);
+        $villaRatePeriods = $ratePeriodsByAccommodation[(int) $villa['accommodation_id']] ?? [];
       ?>
       <article class="package-card">
         <div class="package-media"<?= $mediaStyle ?>>
@@ -70,10 +104,34 @@
               <div class="feature"><?= $icons['wifi'] ?><span>Wifi</span></div>
             <?php endif; ?>
           </div>
+          <?php if ($unitFeatures): ?>
+            <ul class="package-highlights">
+              <?php foreach ($unitFeatures as $unitFeature): ?>
+                <li><?= htmlspecialchars($unitFeature) ?></li>
+              <?php endforeach; ?>
+            </ul>
+          <?php endif; ?>
           <hr class="package-divider">
           <div class="package-footer">
-            <?php # calling function number_format() untuk papar harga villa tanpa titik perpuluhan ?>
-            <span class="package-price">RM <?= number_format((float) $villa['price'], 0) ?></span>
+            <div class="package-rates">
+              <strong class="package-rates-heading">Harga 2 Hari 1 Malam</strong>
+              <div class="package-rate-row"><span>Weekday</span><strong>RM <?= number_format((float) $villa['price'], 0) ?></strong></div>
+              <?php if ($villa['price_weekend'] !== null): ?>
+                <div class="package-rate-row"><span>Weekend</span><strong>RM <?= number_format((float) $villa['price_weekend'], 0) ?></strong></div>
+              <?php endif; ?>
+              <?php if ($villa['price_holiday'] !== null): ?>
+                <div class="package-rate-row"><span>Cuti umum / cuti sekolah</span><strong>RM <?= number_format((float) $villa['price_holiday'], 0) ?></strong></div>
+              <?php endif; ?>
+              <?php if ($villa['price_seasonal'] !== null): ?>
+                <div class="package-rate-row"><span>Ramadan + musim hujan</span><strong>RM <?= number_format((float) $villa['price_seasonal'], 0) ?></strong></div>
+              <?php endif; ?>
+              <?php foreach ($villaRatePeriods as $villaRatePeriod): ?>
+                <div class="package-rate-row package-rate-special">
+                  <span><?= htmlspecialchars($villaRatePeriod['label']) ?><small><?= date('d M Y', strtotime($villaRatePeriod['start_date'])) ?> - <?= date('d M Y', strtotime($villaRatePeriod['end_date'])) ?></small></span>
+                  <strong>RM <?= number_format((float) $villaRatePeriod['price'], 0) ?></strong>
+                </div>
+              <?php endforeach; ?>
+            </div>
             <div class="package-actions">
               <a href="detail.php?id=<?= (int) $villa['accommodation_id'] ?>" class="btn view-detail">View Detail</a>
               <?php # calling function urlencode() untuk selamatkan nama villa dalam url, gabung dgn $searchQuery supaya carian tak hilang ?>

@@ -35,6 +35,17 @@ if ($editId) {
 
 # assign array kosong ke $errors untuk simpan senarai mesej error validation
 $errors = [];
+$ratePeriods = [];
+if ($editing) {
+    $stmt = $pdo->prepare(
+        'SELECT rate_period_id, label, start_date, end_date, price
+         FROM accommodation_rate_period
+         WHERE accommodation_id = :id
+         ORDER BY start_date'
+    );
+    $stmt->execute(['id' => $editing['accommodation_id']]);
+    $ratePeriods = $stmt->fetchAll();
+}
 # assign array nilai lama/default form ke $old supaya form boleh isi semula bila ada error atau mode edit
 $old = [
     'accommodation_name' => $editing['accommodation_name'] ?? '',
@@ -42,6 +53,7 @@ $old = [
     'price' => $editing['price'] ?? '',
     'price_weekend' => $editing['price_weekend'] ?? '',
     'price_holiday' => $editing['price_holiday'] ?? '',
+    'price_seasonal' => $editing['price_seasonal'] ?? '',
     'capacity' => $editing['capacity'] ?? '',
     'pax_label' => $editing['pax_label'] ?? '',
     'features' => $editing['features'] ?? '',
@@ -59,6 +71,79 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!csrf_verify()) {
         # assign mesej error ke dalam $errors sebab session dah expired
         $errors[] = 'Your session expired. Please try again.';
+    } elseif ($action === 'delete_rate_period') {
+        $ratePeriodId = filter_var($_POST['rate_period_id'] ?? '', FILTER_VALIDATE_INT);
+        if (!$editing || !$ratePeriodId) {
+            $errors[] = 'Rate period not found.';
+        } else {
+            $stmt = $pdo->prepare(
+                'DELETE FROM accommodation_rate_period
+                 WHERE rate_period_id = :rate_period_id AND accommodation_id = :accommodation_id'
+            );
+            $stmt->execute([
+                'rate_period_id' => $ratePeriodId,
+                'accommodation_id' => $editing['accommodation_id'],
+            ]);
+            header('Location: manage_accommodation.php?id=' . (int) $editing['accommodation_id']);
+            exit;
+        }
+    } elseif ($action === 'add_rate_period') {
+        $label = trim((string) ($_POST['rate_label'] ?? ''));
+        $startDateRaw = trim((string) ($_POST['start_date'] ?? ''));
+        $endDateRaw = trim((string) ($_POST['end_date'] ?? ''));
+        $price = filter_var($_POST['rate_price'] ?? '', FILTER_VALIDATE_FLOAT);
+        $startDate = DateTime::createFromFormat('!Y-m-d', $startDateRaw);
+        $endDate = DateTime::createFromFormat('!Y-m-d', $endDateRaw);
+        $startDateErrors = DateTime::getLastErrors();
+        $endDateErrors = DateTime::getLastErrors();
+        $validStartDate = $startDate && $startDate->format('Y-m-d') === $startDateRaw
+            && (!$startDateErrors || ($startDateErrors['warning_count'] === 0 && $startDateErrors['error_count'] === 0));
+        $validEndDate = $endDate && $endDate->format('Y-m-d') === $endDateRaw
+            && (!$endDateErrors || ($endDateErrors['warning_count'] === 0 && $endDateErrors['error_count'] === 0));
+
+        if (!$editing) {
+            $errors[] = 'Save the accommodation before adding rate periods.';
+        }
+        if ($label === '' || strlen($label) > 120) {
+            $errors[] = 'Enter a rate period label of up to 120 characters.';
+        }
+        if (!$validStartDate || !$validEndDate || $startDateRaw > $endDateRaw) {
+            $errors[] = 'Enter a valid date range with the end date on or after the start date.';
+        }
+        if ($price === false || $price <= 0) {
+            $errors[] = 'The period price must be greater than zero.';
+        }
+
+        if (!$errors) {
+            $stmt = $pdo->prepare(
+                'SELECT 1 FROM accommodation_rate_period
+                 WHERE accommodation_id = :accommodation_id
+                   AND start_date <= :end_date AND end_date >= :start_date
+                 LIMIT 1'
+            );
+            $stmt->execute([
+                'accommodation_id' => $editing['accommodation_id'],
+                'start_date' => $startDateRaw,
+                'end_date' => $endDateRaw,
+            ]);
+            if ($stmt->fetch()) {
+                $errors[] = 'This date range overlaps an existing rate period for this accommodation.';
+            } else {
+                $stmt = $pdo->prepare(
+                    'INSERT INTO accommodation_rate_period (accommodation_id, label, start_date, end_date, price)
+                     VALUES (:accommodation_id, :label, :start_date, :end_date, :price)'
+                );
+                $stmt->execute([
+                    'accommodation_id' => $editing['accommodation_id'],
+                    'label' => $label,
+                    'start_date' => $startDateRaw,
+                    'end_date' => $endDateRaw,
+                    'price' => $price,
+                ]);
+                header('Location: manage_accommodation.php?id=' . (int) $editing['accommodation_id']);
+                exit;
+            }
+        }
     } elseif ($action === 'delete') {
         # calling function filter_input() that assign to variable name $targetId untuk ambil id accommodation yang nak dipadam
         $targetId = filter_input(INPUT_POST, 'accommodation_id', FILTER_VALIDATE_INT);
@@ -90,6 +175,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $old['price_weekend'] = trim((string) ($_POST['price_weekend'] ?? ''));
         # calling function trim() that assign value ke $old['price_holiday'] untuk bersihkan input harga cuti umum dari form
         $old['price_holiday'] = trim((string) ($_POST['price_holiday'] ?? ''));
+        $old['price_seasonal'] = trim((string) ($_POST['price_seasonal'] ?? ''));
         # calling function trim() that assign value ke $old['capacity'] untuk bersihkan input kapasiti tetamu dari form
         $old['capacity'] = trim((string) ($_POST['capacity'] ?? ''));
         # calling function trim() that assign value ke $old['pax_label'] untuk bersihkan input label pax dari form
@@ -139,6 +225,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $errors[] = 'Public holiday price must be a positive number, or left blank.';
             }
         }
+        $priceSeasonal = null;
+        if ($old['price_seasonal'] !== '') {
+            $priceSeasonal = filter_var($old['price_seasonal'], FILTER_VALIDATE_FLOAT);
+            if ($priceSeasonal === false || $priceSeasonal <= 0) {
+                $errors[] = 'Ramadan / rainy season price must be greater than zero, or left blank.';
+            }
+        }
         # calling function filter_var() that assign to variable name $capacity untuk sahkan kapasiti adalah integer
         $capacity = filter_var($old['capacity'], FILTER_VALIDATE_INT);
         # check kalau kapasiti tak sah atau kurang dari 1
@@ -159,6 +252,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'price' => $price,
                 'price_weekend' => $priceWeekend,
                 'price_holiday' => $priceHoliday,
+                'price_seasonal' => $priceSeasonal,
                 'capacity' => $capacity,
                 'pax_label' => $old['pax_label'] !== '' ? $old['pax_label'] : null,
                 'features' => $old['features'] !== '' ? $old['features'] : null,
@@ -175,7 +269,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt = $pdo->prepare(
                     'UPDATE accommodation SET accommodation_name = :name, accommodation_type = :type,
                      price = :price, price_weekend = :price_weekend, price_holiday = :price_holiday,
-                     capacity = :capacity, pax_label = :pax_label, features = :features,
+                     price_seasonal = :price_seasonal, capacity = :capacity, pax_label = :pax_label, features = :features,
                      description = :description, status = :status, door_code = :door_code
                      WHERE accommodation_id = :id'
                 );
@@ -189,8 +283,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             # calling method prepare() dari object $pdo that assign to variable name $stmt untuk sediakan query insert accommodation baru
             $stmt = $pdo->prepare(
                 'INSERT INTO accommodation
-                 (accommodation_name, accommodation_type, price, price_weekend, price_holiday, capacity, pax_label, features, description, status, door_code)
-                 VALUES (:name, :type, :price, :price_weekend, :price_holiday, :capacity, :pax_label, :features, :description, :status, :door_code)'
+                 (accommodation_name, accommodation_type, price, price_weekend, price_holiday, price_seasonal, capacity, pax_label, features, description, status, door_code)
+                 VALUES (:name, :type, :price, :price_weekend, :price_holiday, :price_seasonal, :capacity, :pax_label, :features, :description, :status, :door_code)'
             );
             # calling method execute() dari object $stmt untuk simpan accommodation baru ke database
             $stmt->execute($params);

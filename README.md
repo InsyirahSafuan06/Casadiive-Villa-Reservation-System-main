@@ -57,6 +57,7 @@ read as too similar.)
 ├── database/
 │   ├── full_database.sql        MySQL schema + seed data
 │   └── add_staff_tasks.sql      Add task assignment to an existing database
+│   ├── update_villa_rates.sql   Add CASA rates and date-specific pricing
 ├── docs/                        Project deliverables (proposal, SRS, ERD, etc.)
 └── README.md
 ```
@@ -100,14 +101,15 @@ pages under `customer/` and `user/` link back to it with `../`.
    Both passwords are stored as bcrypt hashes — change them before any real
    deployment. `includes/db.php` connects as `root` with no password, XAMPP's
    default; edit it if your MySQL user differs.
-    For an existing installation, run `database/add_staff_tasks.sql` to add the
-    task table without recreating the database.
+    For an existing installation, run `database/add_staff_tasks.sql` if needed,
+    then run `database/update_villa_rates.sql` to add dated pricing and update
+    the four CASA packages without recreating the database.
 4. Visit `http://localhost/<project-folder>/index.php`.
 
 ## User scope (per the proposal) and what's built
 
 **Administrator** (role name in the app: **manager**) — `user/admin_dashboard.php`, `manage_account.php`, `manage_accommodation.php`
-- Add/update/delete Villa & Campsite packages (price, capacity, status) — `manage_accommodation.php`
+- Add/update/delete Villa & Campsite packages (price, capacity, status, date-specific rates) — `manage_accommodation.php`
 - Assign tasks to active staff and track task status — inline on the dashboard
 - Manage bookings and their status — inline on the dashboard
 - Monitor payment status per booking (read-only column, sourced from `payment`)
@@ -147,8 +149,8 @@ pages under `customer/` and `user/` link back to it with `../`.
   `guests`/`type`, which prefill the form and (client-side) preselect the
   first package matching that type. The accommodation dropdown is always
   populated live from the `accommodation` table. On submit, the form
-  validates server-side (dates, guest count vs. capacity), computes the
-  total/deposit from the DB price, and inserts a `customer` + `booking` +
+  validates server-side (dates, guest count vs. capacity), computes each
+  night's weekday/weekend/date-specific rate and deposit from the DB, and inserts a `customer` + `booking` +
   `booking_item` row in one transaction.
 - **Auth**: `user/login.php` checks credentials against `user.password`
   (bcrypt) via `password_verify()`, then stores a session in

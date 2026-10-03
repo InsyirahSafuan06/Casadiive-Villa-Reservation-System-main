@@ -73,13 +73,7 @@
           <div class="receipt-rows">
             <?php # loop setiap item accommodation dalam $items untuk papar baris harga masing-masing ?>
             <?php foreach ($items as $item):
-              # calling ternary that assign to variable name $weekendRate untuk tentukan harga weekend, guna harga biasa kalau takde harga weekend
-              $weekendRate = $item['nightly_price_weekend'] !== null ? (float) $item['nightly_price_weekend'] : (float) $item['nightly_price'];
-              # check ada malam weekend & harga weekend lain dari harga biasa, then bina label rate ikut kes (mix weekday+weekend atau flat rate je) that assign to variable name $rateLabel
-              $rateLabel = $stay['weekend_nights'] > 0 && $weekendRate !== (float) $item['nightly_price']
-                  ? "{$stay['weekday_nights']} weekday night" . ($stay['weekday_nights'] !== 1 ? 's' : '') . " &times; RM " . number_format((float) $item['nightly_price'], 2)
-                    . " + {$stay['weekend_nights']} weekend night" . ($stay['weekend_nights'] !== 1 ? 's' : '') . " &times; RM " . number_format($weekendRate, 2)
-                  : "RM " . number_format((float) $item['nightly_price'], 2) . " &times; {$nights} night" . ($nights > 1 ? 's' : '');
+              $rateLabel = $nights . ' night' . ($nights > 1 ? 's' : '') . ' (price confirmed at booking)';
             ?>
               <div class="receipt-row">
                 <span><?= htmlspecialchars($item['accommodation_name']) ?> (<?= $rateLabel ?>)</span>

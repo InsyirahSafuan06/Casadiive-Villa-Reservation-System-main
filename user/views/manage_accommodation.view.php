@@ -94,7 +94,12 @@
               <input type="number" name="price_holiday" value="<?= htmlspecialchars((string) $old['price_holiday']) ?>" min="0" step="0.01" style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:6px;font-family:inherit;">
             </div>
           </div>
-          <p style="font-size:12px;color:#999;margin-top:-10px;">Weekend/holiday rates are shown on the package detail page only — booking totals always use the weekday price above.</p>
+          <div>
+            <label style="display:block;font-weight:600;font-size:14px;color:var(--brown-price);margin-bottom:6px;">Ramadan / Rainy Season Price (RM, optional)</label>
+            <input type="number" name="price_seasonal" value="<?= htmlspecialchars((string) $old['price_seasonal']) ?>" min="0.01" step="0.01" style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:6px;font-family:inherit;">
+            <p style="font-size:12px;color:#999;margin-top:4px;">Set the amount here, then add the annual date range under Date-specific rates.</p>
+          </div>
+          <p style="font-size:12px;color:#999;margin-top:-10px;">Weekday and weekend rates apply automatically. Public holiday, school-break and seasonal rates are charged when their date ranges are added below.</p>
 
           <div>
             <label style="display:block;font-weight:600;font-size:14px;color:var(--brown-price);margin-bottom:6px;">PAX Label (optional, e.g. "4-5 PAX")</label>
@@ -123,6 +128,58 @@
             <a href="admin_dashboard.php" class="btn btn-outline" style="flex:1;text-align:center;">Cancel</a>
           </div>
         </form>
+
+        <?php if ($editing): ?>
+          <div style="margin-top:32px;padding-top:24px;border-top:1px solid var(--border);">
+            <h2 style="font-size:20px;color:var(--brown-price);margin-bottom:8px;">Date-specific rates</h2>
+            <p style="font-size:13px;color:#777;margin-bottom:18px;">These prices override weekday and weekend rates for every night in the inclusive date range.</p>
+
+            <?php if ($ratePeriods): ?>
+              <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:22px;">
+                <?php foreach ($ratePeriods as $ratePeriod): ?>
+                  <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);">
+                    <div>
+                      <strong><?= htmlspecialchars($ratePeriod['label']) ?></strong>
+                      <div style="font-size:13px;color:#777;"><?= htmlspecialchars($ratePeriod['start_date']) ?> to <?= htmlspecialchars($ratePeriod['end_date']) ?> · RM <?= number_format((float) $ratePeriod['price'], 2) ?>/night</div>
+                    </div>
+                    <form method="post">
+                      <?= csrf_field() ?>
+                      <input type="hidden" name="action" value="delete_rate_period">
+                      <input type="hidden" name="rate_period_id" value="<?= (int) $ratePeriod['rate_period_id'] ?>">
+                      <button type="submit" class="btn btn-outline" aria-label="Delete <?= htmlspecialchars($ratePeriod['label']) ?> rate">Delete</button>
+                    </form>
+                  </div>
+                <?php endforeach; ?>
+              </div>
+            <?php else: ?>
+              <p style="font-size:13px;color:#777;margin-bottom:18px;">No date-specific rates have been added.</p>
+            <?php endif; ?>
+
+            <form method="post" style="display:flex;flex-direction:column;gap:14px;">
+              <?= csrf_field() ?>
+              <input type="hidden" name="action" value="add_rate_period">
+              <div>
+                <label style="display:block;font-weight:600;font-size:14px;color:var(--brown-price);margin-bottom:6px;">Rate label</label>
+                <input type="text" name="rate_label" maxlength="120" placeholder="e.g. Ramadan / rainy season 2027" style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:6px;font-family:inherit;" required>
+              </div>
+              <div class="form-row-2">
+                <div>
+                  <label style="display:block;font-weight:600;font-size:14px;color:var(--brown-price);margin-bottom:6px;">Start date</label>
+                  <input type="date" name="start_date" style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:6px;font-family:inherit;" required>
+                </div>
+                <div>
+                  <label style="display:block;font-weight:600;font-size:14px;color:var(--brown-price);margin-bottom:6px;">End date</label>
+                  <input type="date" name="end_date" style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:6px;font-family:inherit;" required>
+                </div>
+              </div>
+              <div>
+                <label style="display:block;font-weight:600;font-size:14px;color:var(--brown-price);margin-bottom:6px;">Rate per night (RM)</label>
+                <input type="number" name="rate_price" min="0.01" step="0.01" style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:6px;font-family:inherit;" required>
+              </div>
+              <button type="submit" class="btn btn-primary">Add Date-specific Rate</button>
+            </form>
+          </div>
+        <?php endif; ?>
       </section>
     </div>
   </main>

@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 const ADDON_BBQ_PRICE = 20.00;
 const ADDON_MATTRESS_PRICE = 10.00;
+const BOOKING_DEPOSIT_AMOUNT = 50.00;
 
 function booking_addon_total(bool $bbq, bool $mattress): float
 {
@@ -221,38 +222,49 @@ function payment_needs_refund(string $bookingStatus, ?string $paymentStatus): bo
     return $bookingStatus === 'cancelled' && in_array($paymentStatus, ['paid', 'partial'], true);
 }
 
-function compute_stay_price(float $weekdayPrice, ?float $weekendPrice, DateTime $checkIn, DateTime $checkOut): array
+function compute_stay_price(float $weekdayPrice, ?float $weekendPrice, DateTime $checkIn, DateTime $checkOut, array $ratePeriods = []): array
 {
-    # assign value $weekdayPrice ke $weekendPrice kalau $weekendPrice tak dibagi, guna harga sama je
     $weekendPrice ??= $weekdayPrice;
-    # assign value 0 ke $weekdayNights untuk kira jumlah malam hari biasa
     $weekdayNights = 0;
-    # assign value 0 ke $weekendNights untuk kira jumlah malam hujung minggu
     $weekendNights = 0;
-
-    # calling clone that assign to variable name $cursor untuk salin tarikh check-in sbb nak gerak2 tanpa ubah asal
+    $specialNights = 0;
+    $total = 0.0;
     $cursor = clone $checkIn;
-    # loop dari tarikh check-in sampai sehari sebelum check-out, kira setiap malam
+
     while ($cursor < $checkOut) {
-        # calling method format() dari object $cursor & in_array() that assign to variable name $isWeekend untuk check hari tu jumaat/sabtu ke tak
+        $nightDate = $cursor->format('Y-m-d');
+        $specialPrice = null;
+        foreach ($ratePeriods as $ratePeriod) {
+            if ($nightDate >= $ratePeriod['start_date'] && $nightDate <= $ratePeriod['end_date']) {
+                $specialPrice = (float) $ratePeriod['price'];
+                break;
+            }
+        }
+
         $isWeekend = in_array((int) $cursor->format('N'), [5, 6], true);
-        # check kalau hari tu hujung minggu, tambah kira weekend, kalau tak tambah kira weekday
-        $isWeekend ? $weekendNights++ : $weekdayNights++;
-        # calling method modify() dari object $cursor untuk gerak ke hari seterusnya
+        if ($specialPrice !== null) {
+            $specialNights++;
+            $total += $specialPrice;
+        } elseif ($isWeekend) {
+            $weekendNights++;
+            $total += $weekendPrice;
+        } else {
+            $weekdayNights++;
+            $total += $weekdayPrice;
+        }
         $cursor->modify('+1 day');
     }
 
-    # pulangkan array jumlah malam weekday, weekend, dan jumlah harga keseluruhan
     return [
         'weekday_nights' => $weekdayNights,
         'weekend_nights' => $weekendNights,
-        'total' => round($weekdayNights * $weekdayPrice + $weekendNights * $weekendPrice, 2),
+        'special_nights' => $specialNights,
+        'total' => round($total, 2),
     ];
 }
 
 function lookup_booking_status(PDO $pdo, int $ref, string $phone): array
 {
-    # calling method prepare() dari object $pdo that assign to variable name $stmt untuk sediakan query cari booking ikut ref & phone
     $stmt = $pdo->prepare(
         'SELECT b.booking_id, b.check_in, b.check_out, b.total_guest, b.total_amount,
                 b.deposit_amount, b.booking_status
@@ -260,42 +272,29 @@ function lookup_booking_status(PDO $pdo, int $ref, string $phone): array
          JOIN customer c ON c.customer_id = b.customer_id
          WHERE b.booking_id = :ref AND c.phone = :phone'
     );
-    # calling method execute() dari object $stmt untuk jalankan query, isi placeholder :ref & :phone
     $stmt->execute(['ref' => $ref, 'phone' => $phone]);
-    # calling method fetch() dari object $stmt that assign to variable name $booking untuk ambil 1 row hasil query
     $booking = $stmt->fetch();
 
-    # check kalau tiada booking jumpa ikut ref & phone tu, terus pulangkan not found
     if (!$booking) {
         return ['found' => false];
     }
 
-    # calling method prepare() dari object $pdo that assign to variable name $stmt untuk sediakan query senarai accommodation dalam booking ni
     $stmt = $pdo->prepare(
         'SELECT GROUP_CONCAT(a.accommodation_name SEPARATOR ", ") AS accommodations
          FROM booking_item bi JOIN accommodation a ON a.accommodation_id = bi.accommodation_id
          WHERE bi.booking_id = :id'
     );
-    # calling method execute() dari object $stmt untuk jalankan query, isi placeholder :id
     $stmt->execute(['id' => $booking['booking_id']]);
-    # calling method fetchColumn() dari object $stmt that assign to variable name $accommodations, fallback '—' kalau takde
     $accommodations = $stmt->fetchColumn() ?: '—';
 
-    # calling method prepare() dari object $pdo that assign to variable name $stmt untuk sediakan query status payment terkini
     $stmt = $pdo->prepare('SELECT payment_status FROM payment WHERE booking_id = :id ORDER BY payment_id DESC LIMIT 1');
-    # calling method execute() dari object $stmt untuk jalankan query, isi placeholder :id
     $stmt->execute(['id' => $booking['booking_id']]);
-    # calling method fetchColumn() dari object $stmt that assign to variable name $paymentStatus, fallback null kalau takde
     $paymentStatus = $stmt->fetchColumn() ?: null;
 
-    # calling method prepare() dari object $pdo that assign to variable name $stmt untuk sediakan query jumlah deposit yang dah paid
     $stmt = $pdo->prepare("SELECT deposit_paid FROM payment WHERE booking_id = :id AND payment_status = 'paid' ORDER BY payment_id DESC LIMIT 1");
-    # calling method execute() dari object $stmt untuk jalankan query, isi placeholder :id
     $stmt->execute(['id' => $booking['booking_id']]);
-    # calling method fetchColumn() dari object $stmt that assign to variable name $amountPaid, fallback 0 kalau takde
     $amountPaid = (float) ($stmt->fetchColumn() ?: 0);
 
-    # pulangkan array detail booking lengkap dgn status, accommodation, dan baki bayaran
     return [
         'found' => true,
         'booking_ref' => format_booking_ref((int) $booking['booking_id']),

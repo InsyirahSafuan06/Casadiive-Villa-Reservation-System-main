@@ -24,6 +24,17 @@ if ($accommodation && !empty($accommodation['features'])) {
     # calling function array_filter(), array_map() & explode() that assign to variable name $features untuk pecahkan text features ikut baris jadi array
     $features = array_filter(array_map('trim', explode("\n", $accommodation['features'])));
 }
+$ratePeriods = [];
+if ($accommodation && $accommodation['accommodation_type'] === 'Villa') {
+    $stmt = $pdo->prepare(
+        'SELECT label, start_date, end_date, price
+         FROM accommodation_rate_period
+         WHERE accommodation_id = :id AND end_date >= CURDATE()
+         ORDER BY start_date'
+    );
+    $stmt->execute(['id' => $accommodation['accommodation_id']]);
+    $ratePeriods = $stmt->fetchAll();
+}
 
 # assign value '../' ke variable $base untuk set path relative balik ke root folder
 $base = '../';

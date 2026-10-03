@@ -90,13 +90,7 @@
           <div class="receipt-rows">
             <?php # loop setiap item dalam $items untuk papar setiap accommodation yg dibooking
             foreach ($items as $item):
-              # check kalau ada nightly_price_weekend, guna tu, kalau tak guna nightly_price biasa
-              $weekendRate = $item['nightly_price_weekend'] !== null ? (float) $item['nightly_price_weekend'] : (float) $item['nightly_price'];
-              # check kalau stay ada malam weekend & rate weekend lain dari weekday, bina label breakdown weekday+weekend, kalau tak bina label ringkas je
-              $rateLabel = $stay['weekend_nights'] > 0 && $weekendRate !== (float) $item['nightly_price']
-                  ? "{$stay['weekday_nights']} weekday night" . ($stay['weekday_nights'] !== 1 ? 's' : '') . " &times; RM " . number_format((float) $item['nightly_price'], 2)
-                    . " + {$stay['weekend_nights']} weekend night" . ($stay['weekend_nights'] !== 1 ? 's' : '') . " &times; RM " . number_format($weekendRate, 2)
-                  : "RM " . number_format((float) $item['nightly_price'], 2) . " &times; {$nights} night" . ($nights > 1 ? 's' : '');
+              $rateLabel = $nights . ' night' . ($nights > 1 ? 's' : '') . ' (price confirmed at booking)';
             ?>
               <div class="receipt-row">
                 <span><?= htmlspecialchars($item['accommodation_name']) ?> (<?= $rateLabel ?>)</span>

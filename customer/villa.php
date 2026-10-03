@@ -58,6 +58,17 @@ if ($searchActive) {
     )->fetchAll();
 }
 
+$ratePeriodsByAccommodation = [];
+$ratePeriodRows = $pdo->query(
+    'SELECT accommodation_id, label, start_date, end_date, price
+     FROM accommodation_rate_period
+     WHERE end_date >= CURDATE()
+     ORDER BY start_date'
+)->fetchAll();
+foreach ($ratePeriodRows as $ratePeriod) {
+    $ratePeriodsByAccommodation[(int) $ratePeriod['accommodation_id']][] = $ratePeriod;
+}
+
 $icons = [
     'room' => '<svg viewBox="0 0 32 32"><path d="M4 18v8h2v-3h20v3h2v-8a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4z" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="10" cy="15" r="2.5"/></svg>',
     'pool' => '<svg viewBox="0 0 32 32"><path d="M4 24c2.5 0 2.5-3 5-3s2.5 3 5 3 2.5-3 5-3 2.5 3 5 3 2.5-3 5-3v4H4z"/><circle cx="15" cy="10" r="4.5"/></svg>',

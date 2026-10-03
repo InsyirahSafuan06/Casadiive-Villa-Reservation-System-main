@@ -41,6 +41,15 @@ $accommodationsById = [];
 foreach ($accommodations as $acc) {
     $accommodationsById[(int) $acc['accommodation_id']] = $acc;
 }
+$ratePeriodsByAccommodation = [];
+$ratePeriodRows = $pdo->query(
+    'SELECT accommodation_id, label, start_date, end_date, price
+     FROM accommodation_rate_period
+     ORDER BY start_date'
+)->fetchAll();
+foreach ($ratePeriodRows as $ratePeriod) {
+    $ratePeriodsByAccommodation[(int) $ratePeriod['accommodation_id']][] = $ratePeriod;
+}
 
 # check kalau request bukan POST (means page baru dibuka), ambil value dari query string untuk pre-fill borang
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -201,39 +210,52 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $weekdayPrice = (float) $selectedAccommodation['price'];
         # check ada harga weekend khas ke tidak, assign to variable name $weekendPrice
         $weekendPrice = $selectedAccommodation['price_weekend'] !== null ? (float) $selectedAccommodation['price_weekend'] : null;
-        # calling function compute_stay_price() that assign to variable name $stay untuk kira jumlah harga ikut malam weekday/weekend
-        $stay = compute_stay_price($weekdayPrice, $weekendPrice, $checkIn, $checkOut);
-        # assign jumlah semua malam (weekday + weekend) ke $nights
-        $nights = $stay['weekday_nights'] + $stay['weekend_nights'];
+                $rateStmt = $pdo->prepare(
+                        'SELECT label, start_date, end_date, price
+                         FROM accommodation_rate_period
+                         WHERE accommodation_id = :accommodation_id
+                             AND start_date < :check_out AND end_date >= :check_in
+                         ORDER BY start_date'
+                );
+                $rateStmt->execute([
+                        'accommodation_id' => $accommodationId,
+                        'check_in' => $checkIn->format('Y-m-d'),
+                        'check_out' => $checkOut->format('Y-m-d'),
+                ]);
+                $ratePeriods = $rateStmt->fetchAll();
+                $stay = compute_stay_price($weekdayPrice, $weekendPrice, $checkIn, $checkOut, $ratePeriods);
+                $nights = $stay['weekday_nights'] + $stay['weekend_nights'] + $stay['special_nights'];
         # calling function booking_long_stay_discount() & min() that assign to variable name $discountAmount untuk kira diskaun ikut lama tinggal
         $discountAmount = min($stay['total'], booking_long_stay_discount($nights));
         # calling function booking_addon_total() that assign to variable name $addonAmount untuk kira jumlah harga addon bbq/mattress
         $addonAmount = booking_addon_total($old['addon_bbq'], $old['addon_mattress']);
         # kira jumlah keseluruhan (stay + addon - discount), assign to $totalAmount
         $totalAmount = $stay['total'] + $addonAmount - $discountAmount;
-        # assign value tetap 1.00 ke $depositAmount untuk jumlah deposit yang kena bayar
-        $depositAmount = 1.00;
+        # set deposit tempahan bagi setiap villa
+        $depositAmount = $selectedAccommodation['accommodation_type'] === 'Villa'
+            ? BOOKING_DEPOSIT_AMOUNT
+            : 0.0;
 
         try {
             # calling method beginTransaction() dari object $pdo untuk mula transaction, supaya semua insert berjaya sekali atau gagal sekali
             $pdo->beginTransaction();
 
             # calling method prepare() dari object $pdo that assign to variable name $stmt untuk sediakan query insert data customer baru
-            $stmt = $pdo->prepare(
-                'INSERT INTO customer (full_name, phone, email, plate_num, location, ic_passport, whatsapp_optin)
-                 VALUES (:full_name, :phone, :email, :plate_num, :location, :ic_passport, :whatsapp_optin)'
-            );
-            # calling method execute() dari object $stmt untuk simpan data customer ke database
-            $stmt->execute([
-                'full_name' => $old['full_name'],
-                'phone' => $old['phone'],
-                'email' => $old['email'],
-                'plate_num' => $old['plate_num'] !== '' ? $old['plate_num'] : null,
-                'location' => $old['location'] !== '' ? $old['location'] : null,
-                'ic_passport' => $old['ic_passport'],
-                'whatsapp_optin' => $old['whatsapp_optin'] ? 1 : 0,
-            ]);
-            # calling method lastInsertId() dari object $pdo that assign to variable name $customerId untuk dapatkan id customer yang baru insert
+        $rateStmt = $pdo->prepare(
+            'SELECT label, start_date, end_date, price
+             FROM accommodation_rate_period
+             WHERE accommodation_id = :accommodation_id
+               AND start_date < :check_out AND end_date >= :check_in
+             ORDER BY start_date'
+        );
+        $rateStmt->execute([
+            'accommodation_id' => $accommodationId,
+            'check_in' => $checkIn->format('Y-m-d'),
+            'check_out' => $checkOut->format('Y-m-d'),
+        ]);
+        $ratePeriods = $rateStmt->fetchAll();
+        $stay = compute_stay_price($weekdayPrice, $weekendPrice, $checkIn, $checkOut, $ratePeriods);
+        $nights = $stay['weekday_nights'] + $stay['weekend_nights'] + $stay['special_nights'];
             $customerId = (int) $pdo->lastInsertId();
 
             # calling method prepare() dari object $pdo that assign to variable name $stmt untuk sediakan query insert booking baru
