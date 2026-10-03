@@ -12,6 +12,59 @@ require_login(['manager']);
 
 # calling function current_user() that assign to variable name $user untuk tahu siapa yang sedang login
 $user = current_user();
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'add_task') {
+    if (!csrf_verify()) {
+        http_response_code(400);
+        exit('Invalid security token. Please refresh and try again.');
+    }
+
+    $titleInput = $_POST['title'] ?? '';
+    $title = is_string($titleInput) ? trim($titleInput) : '';
+    $assigneeInput = $_POST['assigned_to'] ?? '';
+    $assignedTo = filter_var(is_scalar($assigneeInput) ? (string) $assigneeInput : '', FILTER_VALIDATE_INT);
+
+    if ($title === '' || strlen($title) > 255 || $assignedTo === false || $assignedTo < 1) {
+        header('Location: admin_dashboard.php?taskerror=1');
+        exit;
+    }
+
+    $staffCheck = $pdo->prepare("SELECT user_id FROM user WHERE user_id = :id AND role = 'staff' AND status = 'active'");
+    $staffCheck->execute(['id' => $assignedTo]);
+    if (!$staffCheck->fetchColumn()) {
+        header('Location: admin_dashboard.php?taskerror=1');
+        exit;
+    }
+
+    $stmt = $pdo->prepare('INSERT INTO staff_task (title, assigned_to) VALUES (:title, :assigned_to)');
+    $stmt->execute(['title' => $title, 'assigned_to' => $assignedTo]);
+    header('Location: admin_dashboard.php?taskcreated=1');
+    exit;
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'delete_task') {
+    if (!csrf_verify()) {
+        http_response_code(400);
+        exit('Invalid security token. Please refresh and try again.');
+    }
+
+    $taskId = filter_input(INPUT_POST, 'task_id', FILTER_VALIDATE_INT);
+    if (!$taskId || $taskId < 1) {
+        header('Location: admin_dashboard.php?taskerror=1');
+        exit;
+    }
+
+    $stmt = $pdo->prepare('DELETE FROM staff_task WHERE task_id = :id');
+    $stmt->execute(['id' => $taskId]);
+    if ($stmt->rowCount() !== 1) {
+        header('Location: admin_dashboard.php?taskerror=1');
+        exit;
+    }
+
+    header('Location: admin_dashboard.php?taskdeleted=1');
+    exit;
+}
+
 # assign array status booking yang valid ke $validStatuses untuk dipakai semasa validate input
 $validStatuses = ['pending', 'confirmed', 'checked_in', 'checked_out', 'cancelled'];
 # assign value false ke $updated untuk flag default (belum ada update)
@@ -187,6 +240,9 @@ $galleryAdded = isset($_GET['galleryadded']);
 $galleryDeleted = isset($_GET['gallerydeleted']);
 # calling function isset() that assign to variable name $refunded untuk check query string 'refunded' ada ke tak
 $refunded = isset($_GET['refunded']);
+$taskCreated = isset($_GET['taskcreated']);
+$taskDeleted = isset($_GET['taskdeleted']);
+$taskError = isset($_GET['taskerror']);
 
 # calling method query() dari object $pdo that assign to variable name $bookings untuk ambil 50 booking terkini sekali dengan detail customer & payment
 $bookings = $pdo->query(
@@ -239,6 +295,22 @@ foreach ($pdo->query(
 $users = $pdo->query(
     'SELECT user_id, username, fullname, email, role, status, created_at FROM user ORDER BY user_id'
 )->fetchAll();
+
+$activeStaff = $pdo->query(
+    "SELECT user_id, fullname FROM user WHERE role = 'staff' AND status = 'active' ORDER BY fullname"
+)->fetchAll();
+$tasks = $pdo->query(
+    'SELECT t.task_id, t.title, t.status, t.created_at, u.fullname AS staff_name
+     FROM staff_task t
+     LEFT JOIN user u ON u.user_id = t.assigned_to
+     ORDER BY t.task_id DESC'
+)->fetchAll();
+$taskDone = count(array_filter($tasks, static fn(array $task): bool => $task['status'] === 'done'));
+$taskOpen = count($tasks) - $taskDone;
+$occupancyData = load_current_occupancy($pdo, $_GET['occ_date'] ?? null);
+$occupancyDate = $occupancyData['date'];
+$occupancyRooms = $occupancyData['rooms'];
+$occupancyBookings = $occupancyData['bookings'];
 
 try {
     # calling method query() dari object $pdo that assign to variable name $reviews untuk ambil semua review customer

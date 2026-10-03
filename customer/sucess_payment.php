@@ -2,7 +2,7 @@
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/helpers.php';
 
-$methodLabels = ['qr' => 'QR / DuitNow', 'online_banking' => 'FPX Online Banking', 'toyyibpay' => 'ToyyibPay'];
+$methodLabels = ['qr' => 'QR / DuitNow'];
 
 # calling function parse_booking_ref() that assign to variable name $bookingId untuk tukar booking ref (cth CDV123) jadi id integer
 $bookingId = parse_booking_ref((string) ($_GET['ref'] ?? $_GET['booking_id'] ?? ''));

@@ -18,6 +18,42 @@ $validStatuses = ['pending', 'confirmed', 'checked_in', 'checked_out', 'cancelle
 $validAccStatuses = ['available', 'unavailable', 'maintenance'];
 # assign array status payment yang valid ke $validPaymentStatuses untuk dipakai semasa validate input
 $validPaymentStatuses = ['pending', 'partial', 'paid', 'refunded', 'failed'];
+$validTaskStatuses = ['pending', 'in_progress', 'done'];
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'update_task_status') {
+    if ($user['role'] !== 'staff') {
+        http_response_code(403);
+        exit('You do not have permission to update this task.');
+    }
+    if (!csrf_verify()) {
+        http_response_code(400);
+        exit('Invalid security token. Please refresh and try again.');
+    }
+
+    $taskId = filter_input(INPUT_POST, 'task_id', FILTER_VALIDATE_INT);
+    $taskStatusInput = $_POST['task_status'] ?? '';
+    $newTaskStatus = is_string($taskStatusInput) ? $taskStatusInput : '';
+    if ($taskId && $taskId > 0 && in_array($newTaskStatus, $validTaskStatuses, true)) {
+        $taskCheck = $pdo->prepare(
+            'SELECT task_id FROM staff_task WHERE task_id = :id AND assigned_to = :user_id'
+        );
+        $taskCheck->execute(['id' => $taskId, 'user_id' => $user['user_id']]);
+        if (!$taskCheck->fetchColumn()) {
+            header('Location: staff_dashboard.php?taskerror=1');
+            exit;
+        }
+
+        $stmt = $pdo->prepare(
+            'UPDATE staff_task SET status = :status WHERE task_id = :id AND assigned_to = :user_id'
+        );
+        $stmt->execute(['status' => $newTaskStatus, 'id' => $taskId, 'user_id' => $user['user_id']]);
+        header('Location: staff_dashboard.php?taskupdated=1');
+        exit;
+    }
+
+    header('Location: staff_dashboard.php?taskerror=1');
+    exit;
+}
 
 # check kalau request POST dan action yang dihantar ialah 'update_status'
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'update_status') {
@@ -147,6 +183,8 @@ $updated = isset($_GET['updated']);
 $accUpdated = isset($_GET['accupdated']);
 # calling function isset() that assign to variable name $paymentRecorded untuk check query string 'paymentrecorded' ada ke tak
 $paymentRecorded = isset($_GET['paymentrecorded']);
+$taskUpdated = isset($_GET['taskupdated']);
+$taskError = isset($_GET['taskerror']);
 # calling function isset() that assign to variable name $galleryAdded untuk check query string 'galleryadded' ada ke tak
 $galleryAdded = isset($_GET['galleryadded']);
 # calling function isset() that assign to variable name $galleryDeleted untuk check query string 'gallerydeleted' ada ke tak
@@ -168,6 +206,21 @@ $bookings = $pdo->query(
      ORDER BY b.booking_id DESC
      LIMIT 50"
 )->fetchAll();
+
+$tasks = [];
+if ($user['role'] === 'staff') {
+    $stmt = $pdo->prepare(
+        'SELECT task_id, title, status, created_at
+         FROM staff_task WHERE assigned_to = :user_id ORDER BY task_id DESC'
+    );
+    $stmt->execute(['user_id' => $user['user_id']]);
+    $tasks = $stmt->fetchAll();
+}
+
+$occupancyData = load_current_occupancy($pdo, $_GET['occ_date'] ?? null);
+$occupancyDate = $occupancyData['date'];
+$occupancyRooms = $occupancyData['rooms'];
+$occupancyBookings = $occupancyData['bookings'];
 
 # calling method query() dari object $pdo that assign to variable name $accommodations untuk ambil semua senarai villa/campsite
 $accommodations = $pdo->query(

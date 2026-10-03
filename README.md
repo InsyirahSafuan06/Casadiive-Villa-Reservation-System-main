@@ -36,7 +36,7 @@ read as too similar.)
 │   ├── villa.php / campsite.php / gallery.php / contact_us.php / detail.php
 │   ├── bookingform.php          Booking form -> inserts customer/booking/booking_item
 │   ├── mybooking.php            Reference + phone lookup -> receipt, self-serve cancel, reviews
-│   ├── payment.php / payment_method.php / process_payment.php / sucess_payment.php
+│   ├── payment.php / payment_method.php / sucess_payment.php
 │   ├── chatbot_recommend.php / chatbot_booking_status.php  JSON endpoints for the AI Assistant (no view — pure API)
 │   ├── views/                   One `<name>.view.php` per logic file above
 │   └── style/                    CSS for the pages above
@@ -55,7 +55,8 @@ read as too similar.)
 │       ├── dashboard.css
 │       └── receipt.css
 ├── database/
-│   └── database.sql             MySQL schema + seed data
+│   ├── full_database.sql        MySQL schema + seed data
+│   └── add_staff_tasks.sql      Add task assignment to an existing database
 ├── docs/                        Project deliverables (proposal, SRS, ERD, etc.)
 └── README.md
 ```
@@ -84,12 +85,11 @@ pages under `customer/` and `user/` link back to it with `../`.
 1. Copy this folder into `C:\xampp\htdocs\`.
 2. Start **Apache** and **MySQL** from the XAMPP control panel.
 3. Import the schema: open phpMyAdmin (`http://localhost/phpmyadmin`) and run
-   `database/database.sql`, or from a terminal:
+  `database/full_database.sql`, or from a terminal:
    ```
-   mysql -u root < database/database.sql
+  mysql -u root < database/full_database.sql
    ```
-   This creates the `sabrisae_casadivevilla` database (same name used on
-   production, so `database.sql` works unchanged for either), seeds 8
+  This creates the `sabrisae_casadivevilla` database used in production, seeds 8
    Villa/Campsite accommodation packages, and creates two login accounts:
 
    | Username | Password | Role |
@@ -100,30 +100,28 @@ pages under `customer/` and `user/` link back to it with `../`.
    Both passwords are stored as bcrypt hashes — change them before any real
    deployment. `includes/db.php` connects as `root` with no password, XAMPP's
    default; edit it if your MySQL user differs.
+    For an existing installation, run `database/add_staff_tasks.sql` to add the
+    task table without recreating the database.
 4. Visit `http://localhost/<project-folder>/index.php`.
 
 ## User scope (per the proposal) and what's built
 
 **Administrator** (role name in the app: **manager**) — `user/admin_dashboard.php`, `manage_account.php`, `manage_accommodation.php`
 - Add/update/delete Villa & Campsite packages (price, capacity, status) — `manage_accommodation.php`
+- Assign tasks to active staff and track task status — inline on the dashboard
 - Manage bookings and their status — inline on the dashboard
 - Monitor payment status per booking (read-only column, sourced from `payment`)
 - Manage staff **and manager** accounts, including changing her own username/
   password (a "My Account" shortcut in the topbar) — `manage_account.php`
 - Manage customer records — implicit via the bookings list (customer rows are
   created through the booking flow, no separate customer accounts)
-- Business analytics dashboard (Power BI) — a read-only reporting API
-  (`api/bookings.php`, `occupancy.php`, `payments.php`, `reviews.php`,
-  key-authenticated via `includes/api_auth.php`) that Power BI's Web connector
-  can pull from directly; the stat tiles on the dashboards remain the
-  in-app equivalent.
-
 **Staff** — `user/staff_dashboard.php`, `booking_receipt.php`
 - View/manage bookings, update status through the full proposal lifecycle:
   Pending → Confirmed → Checked-in → Checked-out, or Cancelled
 - Verify/record payment status — a "Record a Payment" form writes to the
   `payment` table (deposit amount, status, receipt note), shown against each
   booking and in a running Recent Payments list
+- View assigned tasks and update their status — inline on the dashboard
 - Update room availability / record maintenance status — a status-only
   toggle per accommodation (no name/price/capacity edit access — that's
   manager-only)
@@ -175,7 +173,7 @@ pages under `customer/` and `user/` link back to it with `../`.
 
 ## Database
 
-See `database/database.sql` for the full schema (`user`, `customer`,
+See `database/full_database.sql` for the full schema (`user`, `staff_task`, `customer`,
 `accommodation`, `booking`, `booking_item`, `payment`, `review`,
 `notification_status`), based on `docs/ERD Casadive Villa Reservation
 System.drawio.pdf`. `booking.booking_status` follows the proposal's exact

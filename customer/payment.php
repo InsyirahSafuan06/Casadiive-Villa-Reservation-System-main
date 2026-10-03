@@ -53,7 +53,7 @@ if ($booking && !$paid && $_SERVER['REQUEST_METHOD'] === 'POST') {
     # ambil value $_POST['method'] that assign to variable name $method
     $method = $_POST['method'] ?? '';
     # calling function in_array() untuk check $method yang dipilih valid ke tidak
-    if (!in_array($method, ['toyyibpay', 'qr'], true)) {
+    if (!in_array($method, ['qr'], true)) {
         $errors[] = 'Please choose a payment method.';
     }
 

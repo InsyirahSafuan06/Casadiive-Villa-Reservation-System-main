@@ -22,7 +22,7 @@
             ],
             [
                 'q' => 'How do I pay for my booking?',
-                'a' => 'Payment is made online through our secure payment page after booking. We accept online banking (FPX) via our payment gateway. Some bookings may involve a deposit followed by the balance — this is shown clearly on your booking summary before you pay.',
+                'a' => 'Payment is made online through our secure payment page after booking. Pay by QR / DuitNow with your banking app or eWallet, then upload your receipt on the next step. Some bookings may involve a deposit followed by the balance — this is shown clearly on your booking summary before you pay.',
             ],
             [
                 'q' => 'What are the check-in and check-out times?',

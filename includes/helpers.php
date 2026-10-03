@@ -488,3 +488,56 @@ function recommend_accommodations(PDO $pdo, array $criteria): array
     # calling function array_slice() untuk ambil 6 cadangan teratas je untuk dipulangkan
     return array_slice($results, 0, 6);
 }
+
+function load_current_occupancy(PDO $pdo, mixed $requestedDate): array
+{
+    $selectedDate = date('Y-m-d');
+    if (is_string($requestedDate) && $requestedDate !== '') {
+        $parsedDate = DateTimeImmutable::createFromFormat('!Y-m-d', $requestedDate);
+        $dateErrors = DateTimeImmutable::getLastErrors();
+        if (
+            $parsedDate
+            && $parsedDate->format('Y-m-d') === $requestedDate
+            && (!$dateErrors || ($dateErrors['warning_count'] === 0 && $dateErrors['error_count'] === 0))
+        ) {
+            $selectedDate = $parsedDate->format('Y-m-d');
+        }
+    }
+
+    $stmt = $pdo->prepare(
+        "SELECT b.booking_id, b.booking_status, b.check_in, b.check_out, b.total_guest,
+                c.full_name, c.phone, c.plate_num,
+                a.accommodation_id, a.accommodation_name, a.accommodation_type, a.image
+         FROM booking b
+         JOIN customer c ON c.customer_id = b.customer_id
+         JOIN booking_item bi ON bi.booking_id = b.booking_id
+         JOIN accommodation a ON a.accommodation_id = bi.accommodation_id
+         WHERE b.booking_status NOT IN ('cancelled', 'pending')
+           AND b.check_in <= :check_in_date
+           AND b.check_out >= :check_out_date
+         ORDER BY a.accommodation_name, b.check_in, b.booking_id"
+    );
+    $stmt->execute([
+        'check_in_date' => $selectedDate,
+        'check_out_date' => $selectedDate,
+    ]);
+    $bookings = $stmt->fetchAll();
+
+    $rooms = [];
+    foreach ($bookings as $booking) {
+        $accommodationId = (int) $booking['accommodation_id'];
+        $rooms[$accommodationId] ??= [
+            'name' => $booking['accommodation_name'],
+            'type' => $booking['accommodation_type'],
+            'image' => $booking['image'],
+            'bookings' => [],
+        ];
+        $rooms[$accommodationId]['bookings'][] = $booking;
+    }
+
+    return [
+        'date' => $selectedDate,
+        'rooms' => array_values($rooms),
+        'bookings' => $bookings,
+    ];
+}

@@ -31,6 +31,6 @@ try {
         # calling function http_response_code() untuk set response code 500 (server error)
         http_response_code(500);
         # calling function die() untuk stop script dan papar mesej sambungan database gagal
-        die('Database connection failed. Make sure MySQL is running and database/database.sql has been imported.');
+        die('Database connection failed. Make sure MySQL is running and database/full_database.sql has been imported.');
     }
 }

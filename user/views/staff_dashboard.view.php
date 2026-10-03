@@ -6,7 +6,7 @@
 <title>Staff Dashboard — Casadive Villa</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600;700&family=Mulish:wght@700;800&family=Poppins:wght@400;500;600&family=Raleway:wght@500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style/dashboard.css">
+<link rel="stylesheet" href="style/dashboard.css?v=<?= filemtime(__DIR__ . '/../style/dashboard.css') ?>">
 </head>
 <body>
 
@@ -46,13 +46,48 @@
       <?php if ($galleryDeleted): ?>
         <p class="flash">Image removed from gallery.</p>
       <?php endif; ?>
+      <?php if ($taskUpdated): ?>
+        <p class="flash">Task status updated.</p>
+      <?php endif; ?>
+      <?php if ($taskError): ?>
+        <p class="flash flash-error">Could not update that task. Refresh and try again.</p>
+      <?php endif; ?>
 
-      <section class="dash-section">
-        <h2 class="section-heading">Analytics Dashboard</h2>
-        <div class="pbi-embed-wrap">
-          <iframe title="FYP" src="https://app.powerbi.com/reportEmbed?reportId=317fef2a-5607-4506-97f7-4f5e24ff35a1&autoAuth=true&ctid=221e8880-f1b1-41cd-8221-56d4277e4ffc" frameborder="0" allowFullScreen="true"></iframe>
-        </div>
-      </section>
+      <?php require __DIR__ . '/current_occupancy.view.php'; ?>
+
+      <?php if ($user['role'] === 'staff'): ?>
+        <section class="dash-section">
+          <h2>My Tasks</h2>
+          <table>
+            <thead>
+              <tr><th>Task</th><th>Status</th><th>Update</th></tr>
+            </thead>
+            <tbody>
+              <?php if (!$tasks): ?>
+                <tr class="empty-row"><td colspan="3">No tasks assigned yet.</td></tr>
+              <?php else: foreach ($tasks as $task): ?>
+                <tr>
+                  <td><?= htmlspecialchars($task['title']) ?></td>
+                  <td><span class="status-badge status-<?= htmlspecialchars($task['status']) ?>"><?= htmlspecialchars(ucwords(str_replace('_', ' ', $task['status']))) ?></span></td>
+                  <td>
+                    <form class="status-form" method="post">
+                      <?= csrf_field() ?>
+                      <input type="hidden" name="action" value="update_task_status">
+                      <input type="hidden" name="task_id" value="<?= (int) $task['task_id'] ?>">
+                      <select name="task_status">
+                        <?php foreach ($validTaskStatuses as $status): ?>
+                          <option value="<?= $status ?>" <?= $status === $task['status'] ? 'selected' : '' ?>><?= htmlspecialchars(ucwords(str_replace('_', ' ', $status))) ?></option>
+                        <?php endforeach; ?>
+                      </select>
+                      <button type="submit">Save</button>
+                    </form>
+                  </td>
+                </tr>
+              <?php endforeach; endif; ?>
+            </tbody>
+          </table>
+        </section>
+      <?php endif; ?>
 
       <section class="dash-section">
         <h2>Bookings</h2>

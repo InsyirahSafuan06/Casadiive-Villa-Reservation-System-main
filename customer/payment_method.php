@@ -4,7 +4,7 @@ require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/helpers.php';
 require_once __DIR__ . '/../includes/email_notify.php';
 
-$methodLabels = ['toyyibpay' => 'Online Banking', 'qr' => 'QR Payment'];
+$methodLabels = ['qr' => 'QR Payment'];
 
 # calling function filter_var() that assign to variable name $bookingId untuk ambil & validate booking_id dari POST atau GET
 $bookingId = filter_var($_POST['booking_id'] ?? $_GET['booking_id'] ?? '', FILTER_VALIDATE_INT);
@@ -17,7 +17,7 @@ $paid = false;
 $nights = 0;
 
 # calling function in_array() untuk check $method valid ke tidak, kalau tak valid kosongkan balik
-if (!in_array($method, ['toyyibpay', 'qr'], true)) {
+if (!in_array($method, ['qr'], true)) {
     $method = '';
 }
 
@@ -78,13 +78,6 @@ if ($booking && !$paid && $method !== '' && $_SERVER['REQUEST_METHOD'] === 'POST
     # check kalau takde error dan user tak tick confirm checkbox
     if (!$errors && !($_POST['confirm'] ?? false)) {
         $errors[] = 'Please confirm the payment details before proceeding.';
-    }
-
-    # check kalau takde error dan method yang dipilih ialah toyyibpay
-    if (!$errors && $method === 'toyyibpay') {
-        # calling function header() untuk redirect browser ke toyyibpay_pay.php bawa sekali booking ref & phone
-        header('Location: toyyibpay_pay.php?ref=' . urlencode(format_booking_ref($bookingId)) . '&phone=' . urlencode($booking['phone']));
-        exit;
     }
 
     # check kalau takde error dan method yang dipilih ialah qr

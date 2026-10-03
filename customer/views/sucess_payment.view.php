@@ -105,7 +105,7 @@
             <?php # calling function array_column() & implode() untuk gabung semua nama accommodation jadi satu string, kalau kosong papar '—' ?>
             <div><dt>Accommodation</dt><dd><?= htmlspecialchars(implode(', ', array_column($items, 'accommodation_name')) ?: '—') ?></dd></div>
             <?php # check kalau $payment wujud untuk papar label method, kalau tak papar '—' ?>
-            <div><dt>Payment Method</dt><dd><?= $payment ? htmlspecialchars($methodLabels[$payment['payment_method']] ?? $payment['payment_method']) : '—' ?></dd></div>
+            <div><dt>Payment Method</dt><dd><?= $payment ? htmlspecialchars($methodLabels[$payment['payment_method']] ?? 'Other') : '—' ?></dd></div>
             <?php # calling function number_format() untuk papar $amountPaid dgn 2 titik perpuluhan ?>
             <div><dt>Amount Paid</dt><dd>RM <?= number_format($amountPaid, 2) ?></dd></div>
             <?php # calling function booking_grand_total() & number_format() untuk kira & papar jumlah keseluruhan ?>

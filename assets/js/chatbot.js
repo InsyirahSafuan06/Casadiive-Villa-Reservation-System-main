@@ -183,8 +183,8 @@
     chatIntent = 'booking_phone';
     return botSayMulti([
       T(
-        'We accept payment via online banking or FPX (ToyyibPay). A deposit confirms your booking (status changes to "Confirmed"); the remaining balance is settled at check-in.',
-        'Kami menerima pembayaran melalui online banking atau FPX (ToyyibPay). Deposit akan mengesahkan tempahan anda (status bertukar kepada "Confirmed"); baki bayaran diselesaikan semasa check-in.'
+        'Pay by QR / DuitNow and upload your receipt on the payment page. A deposit confirms your booking (status changes to "Confirmed"); the remaining balance is settled at check-in.',
+        'Bayar melalui QR / DuitNow dan muat naik resit pada halaman pembayaran. Deposit akan mengesahkan tempahan anda (status bertukar kepada "Confirmed"); baki bayaran diselesaikan semasa check-in.'
       ),
       T('Want to check the payment status of your booking? Just tell me the phone number you used when booking.', 'Nak semak status pembayaran tempahan anda? Beritahu saya nombor telefon yang anda gunakan semasa membuat tempahan.')
     ]);

@@ -6,23 +6,37 @@
 <title>Manager Dashboard — Casadive Villa</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600;700&family=Mulish:wght@700;800&family=Poppins:wght@400;500;600&family=Raleway:wght@500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style/dashboard.css">
+<link rel="stylesheet" href="style/dashboard.css?v=<?= filemtime(__DIR__ . '/../style/dashboard.css') ?>">
 </head>
 <body>
+  <div class="manager-shell">
+    <aside class="manager-sidebar">
+      <a href="admin_dashboard.php" class="manager-brand">
+        <span>Casadive Villa</span>
+        <small>Booking &amp; Management System</small>
+      </a>
+      <nav class="manager-nav" aria-label="Manager navigation">
+        <a href="admin_dashboard.php" class="is-active" aria-current="page">Dashboard</a>
+        <a href="#bookings">Bookings</a>
+        <a href="manage_accommodation.php">Accommodation</a>
+        <a href="#staff-accounts">Staff</a>
+        <a href="manage_account.php?id=<?= (int) $user['user_id'] ?>">Settings</a>
+        <a href="logout.php" class="manager-nav-logout">Logout</a>
+      </nav>
+      <div class="manager-sidebar-footer">Casadive Villa Operations</div>
+    </aside>
 
-  <header class="dash-topbar">
-    <div class="container">
-      <div class="brand">Casadive Villa</div>
-      <div class="dash-user">
-        <span class="who">Hi, <strong><?= htmlspecialchars($user['fullname']) ?></strong><span class="role-badge"><?= htmlspecialchars($user['role']) ?></span></span>
-        <a href="manage_account.php?id=<?= (int) $user['user_id'] ?>" class="btn btn-outline">My Account</a>
-        <a href="../index.php" class="btn btn-outline">View Site</a>
-        <a href="logout.php" class="btn btn-primary">Logout</a>
-      </div>
-    </div>
-  </header>
+    <div class="manager-workspace">
+      <header class="manager-header">
+        <span class="manager-header-label">Manager workspace</span>
+        <div class="dash-user">
+          <span class="who">Hi, <strong><?= htmlspecialchars($user['fullname']) ?></strong><span class="role-badge"><?= htmlspecialchars($user['role']) ?></span></span>
+          <a href="manage_account.php?id=<?= (int) $user['user_id'] ?>" class="btn btn-outline">My Account</a>
+          <a href="../index.php" class="btn btn-outline">View Site</a>
+        </div>
+      </header>
 
-  <main class="dash-main">
+  <main class="dash-main manager-main">
     <div class="container">
       <h1 class="dash-heading">Manager Dashboard</h1>
       <p class="dash-subheading">Overview of bookings, accommodations, and staff accounts.</p>
@@ -71,15 +85,78 @@
       <?php if ($refunded): ?>
         <p class="flash">Refund recorded.</p>
       <?php endif; ?>
+      <?php if ($taskCreated): ?>
+        <p class="flash">Task assigned.</p>
+      <?php endif; ?>
+      <?php if ($taskDeleted): ?>
+        <p class="flash">Task deleted.</p>
+      <?php endif; ?>
+      <?php if ($taskError): ?>
+        <p class="flash flash-error">Could not save that task. Check the title and active staff assignment, then try again.</p>
+      <?php endif; ?>
+
+      <div class="stat-grid">
+        <div class="stat-tile"><p class="stat-label">Active Staff</p><p class="stat-value"><?= count($activeStaff) ?></p></div>
+        <div class="stat-tile"><p class="stat-label">Tasks</p><p class="stat-value"><?= count($tasks) ?></p></div>
+        <div class="stat-tile"><p class="stat-label">Done</p><p class="stat-value"><?= $taskDone ?></p></div>
+        <div class="stat-tile"><p class="stat-label">Open</p><p class="stat-value"><?= $taskOpen ?></p></div>
+      </div>
+
+      <?php require __DIR__ . '/current_occupancy.view.php'; ?>
 
       <section class="dash-section">
-        <h2 class="section-heading">Analytics Dashboard</h2>
-        <div class="pbi-embed-wrap">
-          <iframe title="FYP" src="https://app.powerbi.com/reportEmbed?reportId=317fef2a-5607-4506-97f7-4f5e24ff35a1&autoAuth=true&ctid=221e8880-f1b1-41cd-8221-56d4277e4ffc" frameborder="0" allowFullScreen="true"></iframe>
-        </div>
+        <h2>Staff Tasks</h2>
+        <?php if ($activeStaff): ?>
+          <form method="post" class="task-create-form">
+            <?= csrf_field() ?>
+            <input type="hidden" name="action" value="add_task">
+            <div>
+              <label for="task-title">Task</label>
+              <input id="task-title" type="text" name="title" maxlength="255" required>
+            </div>
+            <div>
+              <label for="task-assignee">Assign to</label>
+              <select id="task-assignee" name="assigned_to" required>
+                <option value="">Select active staff</option>
+                <?php foreach ($activeStaff as $staffMember): ?>
+                  <option value="<?= (int) $staffMember['user_id'] ?>"><?= htmlspecialchars($staffMember['fullname']) ?></option>
+                <?php endforeach; ?>
+              </select>
+            </div>
+            <button type="submit" class="btn btn-primary">Assign Task</button>
+          </form>
+        <?php else: ?>
+          <p class="notice-info">There are no active staff accounts to assign tasks to.</p>
+        <?php endif; ?>
+
+        <table>
+          <thead>
+            <tr><th>Task</th><th>Staff</th><th>Status</th><th>Created</th><th>Action</th></tr>
+          </thead>
+          <tbody>
+            <?php if (!$tasks): ?>
+              <tr class="empty-row"><td colspan="5">No tasks assigned yet.</td></tr>
+            <?php else: foreach ($tasks as $task): ?>
+              <tr>
+                <td><?= htmlspecialchars($task['title']) ?></td>
+                <td><?= htmlspecialchars($task['staff_name'] ?? 'Unassigned') ?></td>
+                <td><span class="status-badge status-<?= htmlspecialchars($task['status']) ?>"><?= htmlspecialchars(ucwords(str_replace('_', ' ', $task['status']))) ?></span></td>
+                <td><?= htmlspecialchars($task['created_at']) ?></td>
+                <td>
+                  <form method="post" onsubmit="return confirm('Delete this task?');">
+                    <?= csrf_field() ?>
+                    <input type="hidden" name="action" value="delete_task">
+                    <input type="hidden" name="task_id" value="<?= (int) $task['task_id'] ?>">
+                    <button type="submit">Delete</button>
+                  </form>
+                </td>
+              </tr>
+            <?php endforeach; endif; ?>
+          </tbody>
+        </table>
       </section>
 
-      <section class="dash-section">
+      <section class="dash-section" id="bookings">
         <h2>Recent Bookings</h2>
         <p class="notice-info">Before clicking a Notification button below, make sure the browser you're using is logged into WhatsApp Web as the official Casadive Villa number — the message opens pre-filled, but you still need to tap Send yourself.</p>
         <table>
@@ -225,7 +302,7 @@
         </table>
       </section>
 
-      <section class="dash-section">
+      <section class="dash-section" id="staff-accounts">
         <h2 class="section-heading">
           Accommodations
           <a href="manage_accommodation.php" class="btn btn-md btn-primary">+ Add Accommodation</a>
@@ -411,8 +488,9 @@
           <?php endforeach; endif; ?>
         </div>
       </section>
-    </div>
   </main>
+    </div>
+  </div>
 
 </body>
 </html>

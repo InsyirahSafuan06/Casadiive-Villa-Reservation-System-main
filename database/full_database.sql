@@ -5,6 +5,7 @@ USE sabrisae_casadivevilla;
 
 SET FOREIGN_KEY_CHECKS = 0;
 
+DROP TABLE IF EXISTS `staff_task`;
 DROP TABLE IF EXISTS `user`;
 CREATE TABLE `user` (
   user_id         INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -18,6 +19,17 @@ CREATE TABLE `user` (
   status          ENUM('active','inactive','suspended') NOT NULL DEFAULT 'active',
   created_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+CREATE TABLE `staff_task` (
+  task_id      INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  title        VARCHAR(255) NOT NULL,
+  assigned_to  INT UNSIGNED NULL,
+  status       ENUM('pending','in_progress','done') NOT NULL DEFAULT 'pending',
+  created_at   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_staff_task_assigned_to (assigned_to),
+  CONSTRAINT fk_staff_task_assigned_user FOREIGN KEY (assigned_to)
+    REFERENCES `user`(user_id) ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB;
 
 DROP TABLE IF EXISTS `customer`;
@@ -88,7 +100,7 @@ CREATE TABLE `payment` (
   payment_id     INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   booking_id     INT UNSIGNED NOT NULL,
   deposit_paid   DECIMAL(10,2) NOT NULL DEFAULT 0,
-  payment_method ENUM('qr','online_banking','toyyibpay') NULL,
+  payment_method ENUM('qr') NULL,
   payment_date   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   payment_status ENUM('pending','partial','paid','refunded','failed') NOT NULL DEFAULT 'pending',
   receipt        VARCHAR(255),
@@ -133,6 +145,18 @@ CREATE TABLE `gallery` (
   created_at   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT fk_gallery_user FOREIGN KEY (uploaded_by)
     REFERENCES user(user_id) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS `staff_task`
+(
+  task_id      INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  title        VARCHAR(255) NOT NULL,
+  assigned_to  INT UNSIGNED NULL,
+  status       ENUM('pending','in_progress','done') NOT NULL DEFAULT 'pending',
+  created_at   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_staff_task_assigned_to (assigned_to),
+  CONSTRAINT fk_staff_task_assigned_user FOREIGN KEY (assigned_to)
+    REFERENCES `user`(user_id) ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB;
 
 SET FOREIGN_KEY_CHECKS = 1;
