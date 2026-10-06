@@ -1,6 +1,7 @@
 <?php
 # calling function require_once() untuk load fail db.php supaya dapat object $pdo untuk connect database
 require_once __DIR__ . '/../includes/db.php';
+require_once __DIR__ . '/../includes/helpers.php';
 
 # calling function filter_input() that assign to variable name $id untuk ambil & validate value 'id' dari url query string
 $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
@@ -25,15 +26,8 @@ if ($accommodation && !empty($accommodation['features'])) {
     $features = array_filter(array_map('trim', explode("\n", $accommodation['features'])));
 }
 $ratePeriods = [];
-if ($accommodation && $accommodation['accommodation_type'] === 'Villa') {
-    $stmt = $pdo->prepare(
-        'SELECT label, start_date, end_date, price
-         FROM accommodation_rate_period
-         WHERE accommodation_id = :id AND end_date >= CURDATE()
-         ORDER BY start_date'
-    );
-    $stmt->execute(['id' => $accommodation['accommodation_id']]);
-    $ratePeriods = $stmt->fetchAll();
+if ($accommodation) {
+    $ratePeriods = fetch_accommodation_rate_periods($pdo, (int) $accommodation['accommodation_id'], true);
 }
 
 # assign value '../' ke variable $base untuk set path relative balik ke root folder

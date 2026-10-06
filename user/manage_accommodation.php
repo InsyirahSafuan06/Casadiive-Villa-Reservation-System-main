@@ -3,6 +3,7 @@
 require_once __DIR__ . '/../includes/db.php';
 # calling function require_once() untuk load fail auth.php supaya boleh guna current_user(), require_login(), csrf_verify()
 require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/helpers.php';
 # calling function require_login() untuk pastikan hanya manager je boleh buka page ni
 require_login(['manager']);
 
@@ -12,6 +13,17 @@ $currentUser = current_user();
 $validTypes = ['Villa', 'Campsite'];
 # assign array status accommodation yang valid ke $validStatuses untuk dipakai semasa validate input
 $validStatuses = ['available', 'unavailable', 'maintenance'];
+$validRateTypes = [
+    'weekday' => 'Weekday override',
+    'weekend' => 'Weekend override',
+    'public_holiday' => 'Public holiday',
+    'school_holiday' => 'School holiday',
+    'ramadan' => 'Ramadan',
+    'seasonal' => 'Seasonal',
+    'super_peak_cny' => 'Super Peak - Chinese New Year',
+    'super_peak_eid' => 'Super Peak - Eid al-Fitr and School Break',
+    'custom' => 'Custom / other',
+];
 
 # calling function filter_input() that assign to variable name $editId untuk ambil id accommodation dari url (kalau mode edit), null kalau takde
 $editId = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT) ?: null;
@@ -36,15 +48,9 @@ if ($editId) {
 # assign array kosong ke $errors untuk simpan senarai mesej error validation
 $errors = [];
 $ratePeriods = [];
-if ($editing) {
-    $stmt = $pdo->prepare(
-        'SELECT rate_period_id, label, start_date, end_date, price
-         FROM accommodation_rate_period
-         WHERE accommodation_id = :id
-         ORDER BY start_date'
-    );
-    $stmt->execute(['id' => $editing['accommodation_id']]);
-    $ratePeriods = $stmt->fetchAll();
+$ratePeriodsAvailable = accommodation_rate_period_categories_available($pdo);
+if ($editing && $ratePeriodsAvailable) {
+    $ratePeriods = fetch_accommodation_rate_periods($pdo, (int) $editing['accommodation_id']);
 }
 # assign array nilai lama/default form ke $old supaya form boleh isi semula bila ada error atau mode edit
 $old = [
@@ -73,7 +79,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors[] = 'Your session expired. Please try again.';
     } elseif ($action === 'delete_rate_period') {
         $ratePeriodId = filter_var($_POST['rate_period_id'] ?? '', FILTER_VALIDATE_INT);
-        if (!$editing || !$ratePeriodId) {
+        if (!$ratePeriodsAvailable) {
+            $errors[] = 'Date-specific rates are unavailable until the database pricing migration is installed.';
+        } elseif (!$editing || !$ratePeriodId) {
             $errors[] = 'Rate period not found.';
         } else {
             $stmt = $pdo->prepare(
@@ -87,8 +95,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             header('Location: manage_accommodation.php?id=' . (int) $editing['accommodation_id']);
             exit;
         }
-    } elseif ($action === 'add_rate_period') {
+    } elseif (in_array($action, ['add_rate_period', 'update_rate_period'], true)) {
+        $isUpdate = $action === 'update_rate_period';
+        $ratePeriodId = filter_var($_POST['rate_period_id'] ?? '', FILTER_VALIDATE_INT);
         $label = trim((string) ($_POST['rate_label'] ?? ''));
+        $rateType = (string) ($_POST['rate_type'] ?? '');
         $startDateRaw = trim((string) ($_POST['start_date'] ?? ''));
         $endDateRaw = trim((string) ($_POST['end_date'] ?? ''));
         $price = filter_var($_POST['rate_price'] ?? '', FILTER_VALIDATE_FLOAT);
@@ -101,11 +112,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $validEndDate = $endDate && $endDate->format('Y-m-d') === $endDateRaw
             && (!$endDateErrors || ($endDateErrors['warning_count'] === 0 && $endDateErrors['error_count'] === 0));
 
-        if (!$editing) {
-            $errors[] = 'Save the accommodation before adding rate periods.';
+        if (!$ratePeriodsAvailable) {
+            $errors[] = 'Date-specific rates are unavailable until the database pricing migration is installed.';
+        }
+        if (!$editing || ($isUpdate && !$ratePeriodId)) {
+            $errors[] = 'Save the accommodation before managing rate periods.';
         }
         if ($label === '' || strlen($label) > 120) {
             $errors[] = 'Enter a rate period label of up to 120 characters.';
+        }
+        if (!array_key_exists($rateType, $validRateTypes)) {
+            $errors[] = 'Select a valid rate category.';
         }
         if (!$validStartDate || !$validEndDate || $startDateRaw > $endDateRaw) {
             $errors[] = 'Enter a valid date range with the end date on or after the start date.';
@@ -115,31 +132,57 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         if (!$errors) {
-            $stmt = $pdo->prepare(
-                'SELECT 1 FROM accommodation_rate_period
-                 WHERE accommodation_id = :accommodation_id
-                   AND start_date <= :end_date AND end_date >= :start_date
-                 LIMIT 1'
-            );
-            $stmt->execute([
+            $overlapSql = 'SELECT 1 FROM accommodation_rate_period
+                           WHERE accommodation_id = :accommodation_id AND rate_type = :rate_type
+                             AND start_date <= :end_date AND end_date >= :start_date';
+            if ($isUpdate) {
+                $overlapSql .= ' AND rate_period_id <> :rate_period_id';
+            }
+            $overlapSql .= ' LIMIT 1';
+            $stmt = $pdo->prepare($overlapSql);
+            $overlapParams = [
                 'accommodation_id' => $editing['accommodation_id'],
+                'rate_type' => $rateType,
                 'start_date' => $startDateRaw,
                 'end_date' => $endDateRaw,
-            ]);
+            ];
+            if ($isUpdate) {
+                $overlapParams['rate_period_id'] = $ratePeriodId;
+            }
+            $stmt->execute($overlapParams);
+
             if ($stmt->fetch()) {
-                $errors[] = 'This date range overlaps an existing rate period for this accommodation.';
+                $errors[] = 'This date range overlaps another rate of the same category for this accommodation.';
             } else {
-                $stmt = $pdo->prepare(
-                    'INSERT INTO accommodation_rate_period (accommodation_id, label, start_date, end_date, price)
-                     VALUES (:accommodation_id, :label, :start_date, :end_date, :price)'
-                );
-                $stmt->execute([
-                    'accommodation_id' => $editing['accommodation_id'],
-                    'label' => $label,
-                    'start_date' => $startDateRaw,
-                    'end_date' => $endDateRaw,
-                    'price' => $price,
-                ]);
+                if ($isUpdate) {
+                    $stmt = $pdo->prepare(
+                        'UPDATE accommodation_rate_period
+                         SET label = :label, rate_type = :rate_type, start_date = :start_date, end_date = :end_date, price = :price
+                         WHERE rate_period_id = :rate_period_id AND accommodation_id = :accommodation_id'
+                    );
+                    $stmt->execute([
+                        'label' => $label,
+                        'rate_type' => $rateType,
+                        'start_date' => $startDateRaw,
+                        'end_date' => $endDateRaw,
+                        'price' => $price,
+                        'rate_period_id' => $ratePeriodId,
+                        'accommodation_id' => $editing['accommodation_id'],
+                    ]);
+                } else {
+                    $stmt = $pdo->prepare(
+                        'INSERT INTO accommodation_rate_period (accommodation_id, label, rate_type, start_date, end_date, price)
+                         VALUES (:accommodation_id, :label, :rate_type, :start_date, :end_date, :price)'
+                    );
+                    $stmt->execute([
+                        'accommodation_id' => $editing['accommodation_id'],
+                        'label' => $label,
+                        'rate_type' => $rateType,
+                        'start_date' => $startDateRaw,
+                        'end_date' => $endDateRaw,
+                        'price' => $price,
+                    ]);
+                }
                 header('Location: manage_accommodation.php?id=' . (int) $editing['accommodation_id']);
                 exit;
             }

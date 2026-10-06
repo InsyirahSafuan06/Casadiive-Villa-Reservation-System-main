@@ -10,18 +10,43 @@
 </head>
 <body>
 
-  <header class="dash-topbar">
-    <div class="container">
-      <div class="brand">Casadive Villa</div>
-      <div class="dash-user">
-        <span class="who">Hi, <strong><?= htmlspecialchars($user['fullname']) ?></strong><span class="role-badge"><?= htmlspecialchars($user['role']) ?></span></span>
-        <a href="../index.php" class="btn btn-outline">View Site</a>
-        <a href="logout.php" class="btn btn-primary">Logout</a>
-      </div>
-    </div>
-  </header>
+  <div class="manager-shell">
+    <aside class="manager-sidebar">
+      <a href="staff_dashboard.php" class="manager-brand">
+        <span>Casadive Villa</span>
+        <small>Booking &amp; Management System</small>
+      </a>
+      <nav class="manager-nav" aria-label="Staff navigation">
+        <a href="staff_dashboard.php" class="is-active" aria-current="page">Dashboard</a>
+        <a href="#bookings">Bookings</a>
+        <a href="#occupancy">Occupancy</a>
+        <?php if ($user['role'] === 'staff'): ?>
+          <a href="#my-tasks">My Tasks</a>
+        <?php endif; ?>
+        <a href="#accommodations">Availability</a>
+        <a href="#record-payment">Payments</a>
+        <a href="#gallery">Gallery</a>
+        <?php if ($user['role'] === 'manager'): ?>
+          <a href="manage_account.php?id=<?= (int) $user['user_id'] ?>">Settings</a>
+        <?php endif; ?>
+        <a href="logout.php" class="manager-nav-logout">Logout</a>
+      </nav>
+      <div class="manager-sidebar-footer">Casadive Villa Operations</div>
+    </aside>
 
-  <main class="dash-main">
+    <div class="manager-workspace">
+      <header class="manager-header">
+        <span class="manager-header-label">Staff workspace</span>
+        <div class="dash-user">
+          <span class="who">Hi, <strong><?= htmlspecialchars($user['fullname']) ?></strong><span class="role-badge"><?= htmlspecialchars($user['role']) ?></span></span>
+          <?php if ($user['role'] === 'manager'): ?>
+            <a href="manage_account.php?id=<?= (int) $user['user_id'] ?>" class="btn btn-outline">My Account</a>
+          <?php endif; ?>
+          <a href="../index.php" class="btn btn-outline">View Site</a>
+        </div>
+      </header>
+
+  <main class="dash-main manager-main">
     <div class="container">
       <h1 class="dash-heading">Staff Dashboard</h1>
       <p class="dash-subheading">Manage bookings and daily check-ins / check-outs.</p>
@@ -53,10 +78,12 @@
         <p class="flash flash-error">Could not update that task. Refresh and try again.</p>
       <?php endif; ?>
 
-      <?php require __DIR__ . '/current_occupancy.view.php'; ?>
+      <div id="occupancy">
+        <?php require __DIR__ . '/current_occupancy.view.php'; ?>
+      </div>
 
       <?php if ($user['role'] === 'staff'): ?>
-        <section class="dash-section">
+        <section class="dash-section" id="my-tasks">
           <h2>My Tasks</h2>
           <table>
             <thead>
@@ -89,7 +116,7 @@
         </section>
       <?php endif; ?>
 
-      <section class="dash-section">
+      <section class="dash-section" id="bookings">
         <h2>Bookings</h2>
         <table>
           <thead>
@@ -173,7 +200,7 @@
         </table>
       </section>
 
-      <section class="dash-section">
+      <section class="dash-section" id="accommodations">
         <h2>Accommodations — Availability &amp; Maintenance</h2>
         <table>
           <thead>
@@ -294,7 +321,7 @@
         </table>
       </section>
 
-      <section class="dash-section">
+      <section class="dash-section" id="gallery">
         <h2 class="section-heading">Gallery</h2>
         <?php # check ada $galleryError untuk papar mesej ralat upload gambar ?>
         <?php if ($galleryError): ?>
@@ -328,6 +355,8 @@
       </section>
     </div>
   </main>
+    </div>
+  </div>
 
 </body>
 </html>

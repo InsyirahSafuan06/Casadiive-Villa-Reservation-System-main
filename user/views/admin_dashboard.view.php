@@ -313,7 +313,8 @@
               <th>#</th>
               <th>Name</th>
               <th>Type</th>
-              <th>Price (RM)</th>
+              <th>Weekday / Night (RM)</th>
+              <th>Weekend / Night (RM)</th>
               <th>Capacity</th>
               <th>Status</th>
               <th>Manage</th>
@@ -328,11 +329,12 @@
                 <td><?= htmlspecialchars($a['accommodation_type']) ?></td>
                 <?php # calling function number_format() untuk papar harga accommodation dengan 2 titik perpuluhan ?>
                 <td><?= number_format((float) $a['price'], 2) ?></td>
+                <td><?= $a['price_weekend'] !== null ? number_format((float) $a['price_weekend'], 2) : '—' ?></td>
                 <td><?= (int) $a['capacity'] ?></td>
                 <td><span class="status-badge status-<?= htmlspecialchars($a['status']) ?>"><?= htmlspecialchars($a['status']) ?></span></td>
                 <td>
                   <div class="status-form">
-                    <a href="manage_accommodation.php?id=<?= (int) $a['accommodation_id'] ?>" class="btn btn-sm btn-outline">Edit</a>
+                    <a href="manage_accommodation.php?id=<?= (int) $a['accommodation_id'] ?>" class="btn btn-sm btn-outline">Edit Prices &amp; Rates</a>
                     <form method="post" action="manage_accommodation.php" onsubmit="return confirm('Delete this accommodation? This cannot be undone.');">
                       <?php # calling function csrf_field() untuk letak token keselamatan dalam form delete accommodation ?>
                       <?= csrf_field() ?>

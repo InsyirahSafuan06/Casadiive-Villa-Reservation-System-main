@@ -126,7 +126,7 @@
               </h2>
 
               <div class="qr-code-frame" id="qr-code-frame">
-                <img src="<?= htmlspecialchars($base) ?>assets/images/qr-payment.jpg" alt="Touch 'n Go eWallet payment QR code" id="qr-code-img">
+                <img src="<?= htmlspecialchars($base) ?>assets/images/QR-PAYMENT.jpeg" alt="Touch 'n Go eWallet payment QR code" id="qr-code-img">
                 <div class="qr-code-fallback">
                   <svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM20 14v3M14 20h3M20 20v.01"/></svg>
                   <span>QR code is not available right now.<br>Please contact us on WhatsApp to pay.</span>

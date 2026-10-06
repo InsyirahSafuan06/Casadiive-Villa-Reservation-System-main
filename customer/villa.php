@@ -2,28 +2,28 @@
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/helpers.php';
 
-# calling function trim() that assign to variable name $searchCheckIn untuk buang whitespace tarikh check-in dari url
+# Trim whitespace from the check-in date in the URL and assign it to $searchCheckIn.
 $searchCheckIn = trim((string) ($_GET['check_in'] ?? ''));
-# calling function trim() that assign to variable name $searchCheckOut untuk buang whitespace tarikh check-out dari url
+# Trim whitespace from the check-out date in the URL and assign it to $searchCheckOut.
 $searchCheckOut = trim((string) ($_GET['check_out'] ?? ''));
-# calling function trim() that assign to variable name $searchGuestsRaw untuk buang whitespace bilangan tetamu dari url
+# Trim whitespace from the guest count in the URL and assign it to $searchGuestsRaw.
 $searchGuestsRaw = trim((string) ($_GET['guests'] ?? ''));
-# check kalau mana-mana satu field carian diisi, that assign to variable name $searchActive
+# Check whether any search field is filled and assign the result to $searchActive.
 $searchActive = $searchCheckIn !== '' || $searchCheckOut !== '' || $searchGuestsRaw !== '';
 $searchError = null;
 $villas = [];
 
-# calling method query() dari object $pdo & fetchColumn() that assign to variable name $maxVillaCapacity untuk ambil kapasiti maksimum villa yang available
+# Query the maximum capacity of an available villa and assign it to $maxVillaCapacity.
 $maxVillaCapacity = (int) $pdo->query(
     "SELECT COALESCE(MAX(capacity), 0) FROM accommodation WHERE accommodation_type = 'Villa' AND status = 'available'"
 )->fetchColumn();
 
-# check kalau user buat carian (ada isi check-in/check-out/guests)
+# Check whether the user submitted a search (check-in, check-out, or guest count).
 if ($searchActive) {
-    # calling function filter_var() that assign to variable name $searchGuests untuk validate bilangan tetamu ialah integer
+    # Validate that the guest count is an integer and assign it to $searchGuests.
     $searchGuests = filter_var($searchGuestsRaw, FILTER_VALIDATE_INT);
 
-    # check kalau bilangan tetamu tak valid atau kurang dari 1
+    # Check whether the guest count is invalid or less than 1.
     if ($searchGuests === false || $searchGuests < 1) {
         $searchError = 'Please enter a valid number of guests.';
     } elseif ($searchGuests > $maxVillaCapacity) {
@@ -31,9 +31,9 @@ if ($searchActive) {
     } elseif ($searchCheckIn !== '' && $searchCheckOut !== '' && $searchCheckOut <= $searchCheckIn) {
         $searchError = 'Check-out date must be after check-in date.';
     } else {
-        # check kalau kedua-dua tarikh check-in & check-out diisi, that assign to variable name $useDates
+        # Check whether both check-in and check-out dates are provided.
         $useDates = $searchCheckIn !== '' && $searchCheckOut !== '';
-        # calling function recommend_accommodations() that assign to variable name $matches untuk cari villa yang sesuai ikut kriteria carian
+        # Find villas that match the search criteria and assign them to $matches.
         $matches = recommend_accommodations($pdo, [
             'guests' => $searchGuests,
             'type' => 'Villa',
@@ -41,10 +41,10 @@ if ($searchActive) {
             'check_out' => $useDates ? $searchCheckOut : null,
             'budget' => null,
         ]);
-        # calling function array_column() that assign to variable name $villas untuk ambil je bahagian accommodation dari hasil carian
+        # Extract the accommodation entries from the search results.
         $villas = array_column($matches, 'accommodation');
 
-        # check kalau takde villa yang match dgn carian
+        # Check whether any villas match the search.
         if (!$villas) {
             $searchError = $useDates
                 ? 'No villas are available for those dates with that number of guests. Please try different dates.'
@@ -52,19 +52,14 @@ if ($searchActive) {
         }
     }
 } else {
-    # calling method query() dari object $pdo & fetchAll() that assign to variable name $villas untuk ambil semua villa yang available
+    # Fetch all available villas.
     $villas = $pdo->query(
         "SELECT * FROM accommodation WHERE accommodation_type = 'Villa' AND status = 'available' ORDER BY accommodation_id"
     )->fetchAll();
 }
 
 $ratePeriodsByAccommodation = [];
-$ratePeriodRows = $pdo->query(
-    'SELECT accommodation_id, label, start_date, end_date, price
-     FROM accommodation_rate_period
-     WHERE end_date >= CURDATE()
-     ORDER BY start_date'
-)->fetchAll();
+$ratePeriodRows = fetch_accommodation_rate_periods($pdo, upcomingOnly: true);
 foreach ($ratePeriodRows as $ratePeriod) {
     $ratePeriodsByAccommodation[(int) $ratePeriod['accommodation_id']][] = $ratePeriod;
 }

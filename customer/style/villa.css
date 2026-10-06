@@ -192,16 +192,6 @@
     border-top:1px solid rgba(37,75,71,.2);
     padding-top:18px;
   }
-  .villa-contact-links{
-    display:flex;
-    flex-wrap:wrap;
-    gap:10px 22px;
-    margin-top:20px;
-    font-family:'Raleway', sans-serif;
-    font-size:13px;
-    font-weight:700;
-  }
-  .villa-contact-links a{ color:#254b47; text-decoration:underline; text-underline-offset:3px; }
 
   .search-notice{
     font-family: 'Raleway', sans-serif;

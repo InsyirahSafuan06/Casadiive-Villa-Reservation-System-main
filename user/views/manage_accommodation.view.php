@@ -74,7 +74,7 @@
 
           <div class="form-row-2">
             <div>
-              <label style="display:block;font-weight:600;font-size:14px;color:var(--brown-price);margin-bottom:6px;">Weekday Price / Night (RM)</label>
+              <label style="display:block;font-weight:600;font-size:14px;color:var(--brown-price);margin-bottom:6px;">Weekday Base Price / Night (RM)</label>
               <input type="number" name="price" value="<?= htmlspecialchars((string) $old['price']) ?>" min="0" step="0.01" style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:6px;font-family:inherit;" required>
               <p style="font-size:12px;color:#999;margin-top:4px;">This is the rate actually used for booking totals.</p>
             </div>
@@ -86,7 +86,7 @@
 
           <div class="form-row-2">
             <div>
-              <label style="display:block;font-weight:600;font-size:14px;color:var(--brown-price);margin-bottom:6px;">Weekend Price / Night (RM, optional)</label>
+              <label style="display:block;font-weight:600;font-size:14px;color:var(--brown-price);margin-bottom:6px;">Weekend Base Price / Night (RM, optional)</label>
               <input type="number" name="price_weekend" value="<?= htmlspecialchars((string) $old['price_weekend']) ?>" min="0" step="0.01" style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:6px;font-family:inherit;">
             </div>
             <div>
@@ -99,7 +99,7 @@
             <input type="number" name="price_seasonal" value="<?= htmlspecialchars((string) $old['price_seasonal']) ?>" min="0.01" step="0.01" style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:6px;font-family:inherit;">
             <p style="font-size:12px;color:#999;margin-top:4px;">Set the amount here, then add the annual date range under Date-specific rates.</p>
           </div>
-          <p style="font-size:12px;color:#999;margin-top:-10px;">Weekday and weekend rates apply automatically. Public holiday, school-break and seasonal rates are charged when their date ranges are added below.</p>
+          <p style="font-size:12px;color:#999;margin-top:-10px;">Weekday and weekend base rates apply automatically. To charge a different rate on public or school holidays, Ramadan / rainy season, or Super Peak dates, add a dated rate below. Dated rates are used in booking totals for both villas and campsites.</p>
 
           <div>
             <label style="display:block;font-weight:600;font-size:14px;color:var(--brown-price);margin-bottom:6px;">PAX Label (optional, e.g. "4-5 PAX")</label>
@@ -129,19 +129,45 @@
           </div>
         </form>
 
-        <?php if ($editing): ?>
+        <?php if ($editing && $ratePeriodsAvailable): ?>
           <div style="margin-top:32px;padding-top:24px;border-top:1px solid var(--border);">
             <h2 style="font-size:20px;color:var(--brown-price);margin-bottom:8px;">Date-specific rates</h2>
-            <p style="font-size:13px;color:#777;margin-bottom:18px;">These prices override weekday and weekend rates for every night in the inclusive date range.</p>
+            <p style="font-size:13px;color:#777;margin-bottom:18px;">Add one dated rate for each applicable period and accommodation. Weekday/weekend rates apply only to matching nights in the selected range. Holiday, seasonal, and Super Peak rates override them; higher-priority categories win when special periods overlap.</p>
 
             <?php if ($ratePeriods): ?>
               <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:22px;">
                 <?php foreach ($ratePeriods as $ratePeriod): ?>
-                  <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);">
-                    <div>
-                      <strong><?= htmlspecialchars($ratePeriod['label']) ?></strong>
-                      <div style="font-size:13px;color:#777;"><?= htmlspecialchars($ratePeriod['start_date']) ?> to <?= htmlspecialchars($ratePeriod['end_date']) ?> · RM <?= number_format((float) $ratePeriod['price'], 2) ?>/night</div>
-                    </div>
+                  <div style="display:flex;align-items:flex-end;gap:10px;padding:12px 0;border-bottom:1px solid var(--border);">
+                    <form method="post" style="display:flex;flex:1;flex-wrap:wrap;align-items:flex-end;gap:10px;">
+                      <?= csrf_field() ?>
+                      <input type="hidden" name="action" value="update_rate_period">
+                      <input type="hidden" name="rate_period_id" value="<?= (int) $ratePeriod['rate_period_id'] ?>">
+                      <div style="flex:1;min-width:150px;">
+                        <label style="display:block;font-size:12px;color:#777;margin-bottom:4px;">Label</label>
+                        <input type="text" name="rate_label" maxlength="120" value="<?= htmlspecialchars($ratePeriod['label']) ?>" style="width:100%;padding:9px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;" required>
+                      </div>
+                      <div style="flex:1;min-width:150px;">
+                        <label style="display:block;font-size:12px;color:#777;margin-bottom:4px;">Category</label>
+                        <select name="rate_type" style="width:100%;padding:9px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;">
+                          <?php foreach ($validRateTypes as $rateType => $rateTypeLabel): ?>
+                            <option value="<?= htmlspecialchars($rateType) ?>" <?= ($ratePeriod['rate_type'] ?? 'custom') === $rateType ? 'selected' : '' ?>><?= htmlspecialchars($rateTypeLabel) ?></option>
+                          <?php endforeach; ?>
+                        </select>
+                      </div>
+                      <div>
+                        <label style="display:block;font-size:12px;color:#777;margin-bottom:4px;">Start</label>
+                        <input type="date" name="start_date" value="<?= htmlspecialchars($ratePeriod['start_date']) ?>" style="padding:9px 8px;border:1px solid var(--border);border-radius:6px;font-family:inherit;" required>
+                      </div>
+                      <div>
+                        <label style="display:block;font-size:12px;color:#777;margin-bottom:4px;">End</label>
+                        <input type="date" name="end_date" value="<?= htmlspecialchars($ratePeriod['end_date']) ?>" style="padding:9px 8px;border:1px solid var(--border);border-radius:6px;font-family:inherit;" required>
+                      </div>
+                      <div style="width:120px;">
+                        <label style="display:block;font-size:12px;color:#777;margin-bottom:4px;">Rate / night (RM)</label>
+                        <input type="number" name="rate_price" min="0.01" step="0.01" value="<?= htmlspecialchars((string) $ratePeriod['price']) ?>" style="width:100%;padding:9px 8px;border:1px solid var(--border);border-radius:6px;font-family:inherit;" required>
+                      </div>
+                      <button type="submit" class="btn btn-primary">Save</button>
+                    </form>
                     <form method="post">
                       <?= csrf_field() ?>
                       <input type="hidden" name="action" value="delete_rate_period">
@@ -162,6 +188,14 @@
                 <label style="display:block;font-weight:600;font-size:14px;color:var(--brown-price);margin-bottom:6px;">Rate label</label>
                 <input type="text" name="rate_label" maxlength="120" placeholder="e.g. Ramadan / rainy season 2027" style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:6px;font-family:inherit;" required>
               </div>
+              <div>
+                <label style="display:block;font-weight:600;font-size:14px;color:var(--brown-price);margin-bottom:6px;">Rate category</label>
+                <select name="rate_type" style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:6px;font-family:inherit;">
+                  <?php foreach ($validRateTypes as $rateType => $rateTypeLabel): ?>
+                    <option value="<?= htmlspecialchars($rateType) ?>"><?= htmlspecialchars($rateTypeLabel) ?></option>
+                  <?php endforeach; ?>
+                </select>
+              </div>
               <div class="form-row-2">
                 <div>
                   <label style="display:block;font-weight:600;font-size:14px;color:var(--brown-price);margin-bottom:6px;">Start date</label>
@@ -179,6 +213,8 @@
               <button type="submit" class="btn btn-primary">Add Date-specific Rate</button>
             </form>
           </div>
+        <?php elseif ($editing): ?>
+          <p class="notice-info" style="margin-top:28px;">Date-specific rates are unavailable until the database pricing migration is installed.</p>
         <?php endif; ?>
       </section>
     </div>

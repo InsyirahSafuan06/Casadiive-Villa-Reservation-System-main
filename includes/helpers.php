@@ -11,6 +11,92 @@ function booking_addon_total(bool $bbq, bool $mattress): float
     return ($bbq ? ADDON_BBQ_PRICE : 0.0) + ($mattress ? ADDON_MATTRESS_PRICE : 0.0);
 }
 
+function accommodation_rate_periods_table_exists(PDO $pdo): bool
+{
+    static $exists = null;
+    if ($exists !== null) {
+        return $exists;
+    }
+
+    try {
+        $pdo->query('SELECT 1 FROM accommodation_rate_period LIMIT 0');
+        return $exists = true;
+    } catch (PDOException $e) {
+        if ((string) $e->getCode() === '42S02' || (int) ($e->errorInfo[1] ?? 0) === 1146) {
+            return $exists = false;
+        }
+        throw $e;
+    }
+}
+
+function accommodation_rate_period_categories_available(PDO $pdo): bool
+{
+    if (!accommodation_rate_periods_table_exists($pdo)) {
+        return false;
+    }
+
+    try {
+        $pdo->query('SELECT rate_type FROM accommodation_rate_period LIMIT 0');
+        return true;
+    } catch (PDOException $e) {
+        if ((string) $e->getCode() === '42S22' || (int) ($e->errorInfo[1] ?? 0) === 1054) {
+            return false;
+        }
+        throw $e;
+    }
+}
+
+function fetch_accommodation_rate_periods(
+    PDO $pdo,
+    ?int $accommodationId = null,
+    bool $upcomingOnly = false,
+    ?DateTimeInterface $checkIn = null,
+    ?DateTimeInterface $checkOut = null
+): array {
+    if (!accommodation_rate_periods_table_exists($pdo)) {
+        return [];
+    }
+    if (($checkIn === null) !== ($checkOut === null)) {
+        throw new InvalidArgumentException('Both check-in and check-out dates are required.');
+    }
+
+    $conditions = [];
+    $params = [];
+    if ($accommodationId !== null) {
+        $conditions[] = 'accommodation_id = :accommodation_id';
+        $params['accommodation_id'] = $accommodationId;
+    }
+    if ($upcomingOnly) {
+        $conditions[] = 'end_date >= CURDATE()';
+    }
+    if ($checkIn && $checkOut) {
+        $conditions[] = 'start_date < :check_out AND end_date >= :check_in';
+        $params['check_in'] = $checkIn->format('Y-m-d');
+        $params['check_out'] = $checkOut->format('Y-m-d');
+    }
+
+    $rateTypeSelect = 'rate_type';
+    try {
+        $pdo->query('SELECT rate_type FROM accommodation_rate_period LIMIT 0');
+    } catch (PDOException $e) {
+        if ((string) $e->getCode() === '42S22' || (int) ($e->errorInfo[1] ?? 0) === 1054) {
+            $rateTypeSelect = "'custom' AS rate_type";
+        } else {
+            throw $e;
+        }
+    }
+
+    $sql = 'SELECT accommodation_id, label, ' . $rateTypeSelect . ', start_date, end_date, price FROM accommodation_rate_period';
+    if ($conditions) {
+        $sql .= ' WHERE ' . implode(' AND ', $conditions);
+    }
+    $sql .= ' ORDER BY start_date';
+
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($params);
+    return $stmt->fetchAll();
+}
+
 function save_gallery_upload(PDO $pdo, ?array $file, string $caption, int $uploadedBy): bool|string
 {
     # check kalau tiada fail, nama fail kosong, atau ada error semasa upload, tolak terus
@@ -230,27 +316,52 @@ function compute_stay_price(float $weekdayPrice, ?float $weekendPrice, DateTime 
     $specialNights = 0;
     $total = 0.0;
     $cursor = clone $checkIn;
+    $dayRateTypes = ['weekday', 'weekend'];
+    $specialRatePriority = [
+        'seasonal' => 10,
+        'ramadan' => 20,
+        'school_holiday' => 30,
+        'public_holiday' => 40,
+        'custom' => 50,
+        'super_peak_cny' => 60,
+        'super_peak_eid' => 70,
+    ];
 
     while ($cursor < $checkOut) {
         $nightDate = $cursor->format('Y-m-d');
+        $isWeekend = in_array((int) $cursor->format('N'), [5, 6], true);
         $specialPrice = null;
+        $specialPriority = -1;
+        $dayPrice = null;
+
         foreach ($ratePeriods as $ratePeriod) {
-            if ($nightDate >= $ratePeriod['start_date'] && $nightDate <= $ratePeriod['end_date']) {
-                $specialPrice = (float) $ratePeriod['price'];
-                break;
+            if ($nightDate < $ratePeriod['start_date'] || $nightDate > $ratePeriod['end_date']) {
+                continue;
+            }
+
+            $rateType = $ratePeriod['rate_type'] ?? 'custom';
+            if ($rateType === 'weekday' && !$isWeekend) {
+                $dayPrice = (float) $ratePeriod['price'];
+            } elseif ($rateType === 'weekend' && $isWeekend) {
+                $dayPrice = (float) $ratePeriod['price'];
+            } elseif (!in_array($rateType, $dayRateTypes, true)) {
+                $priority = $specialRatePriority[$rateType] ?? $specialRatePriority['custom'];
+                if ($priority > $specialPriority) {
+                    $specialPriority = $priority;
+                    $specialPrice = (float) $ratePeriod['price'];
+                }
             }
         }
 
-        $isWeekend = in_array((int) $cursor->format('N'), [5, 6], true);
         if ($specialPrice !== null) {
             $specialNights++;
             $total += $specialPrice;
         } elseif ($isWeekend) {
             $weekendNights++;
-            $total += $weekendPrice;
+            $total += $dayPrice ?? $weekendPrice;
         } else {
             $weekdayNights++;
-            $total += $weekdayPrice;
+            $total += $dayPrice ?? $weekdayPrice;
         }
         $cursor->modify('+1 day');
     }

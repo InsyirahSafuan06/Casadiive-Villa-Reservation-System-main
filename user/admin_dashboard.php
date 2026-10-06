@@ -262,7 +262,7 @@ $bookings = $pdo->query(
 
 # calling method query() dari object $pdo that assign to variable name $accommodations untuk ambil semua senarai villa/campsite
 $accommodations = $pdo->query(
-    'SELECT accommodation_id, accommodation_name, accommodation_type, price, capacity, status
+    'SELECT accommodation_id, accommodation_name, accommodation_type, price, price_weekend, capacity, status
      FROM accommodation ORDER BY accommodation_type, accommodation_id'
 )->fetchAll();
 

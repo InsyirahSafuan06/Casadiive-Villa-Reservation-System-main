@@ -1,43 +1,10 @@
 <?php include __DIR__ . '/../../includes/header.php'; ?>
 
   <section class="hero" id="top" style="background-image:linear-gradient(rgba(124,106,70,.55), rgba(124,106,70,.55)), url('../assets/images/casa2-casa3-day.jpg');background-size:cover;background-position:center;">
-    <h1>4 Unit Chalet</h1>
-    <p>Casadive Villa, Kg Baru Pulau Sayak, Kedah. Keseluruhan chalet selesa untuk 12-16 orang.</p>
+    <h1>Villa package</h1>
+    <p>Relax with pool and sea view.</p>
     <a href="#packages" class="scroll-down" aria-label="Scroll down"><span></span></a>
   </section>
-
-  <section class="villa-overview">
-    <div class="container">
-      <div class="villa-overview-heading">
-        <div>
-          <h2>Kemudahan disediakan</h2>
-          <p>Kolam renang untuk tetamu dan ruang kemudahan bersama.</p>
-        </div>
-        <p class="villa-bbq">Sewaan BBQ Set <strong>RM <?= number_format(ADDON_BBQ_PRICE, 0) ?></strong></p>
-      </div>
-      <ul class="villa-facilities">
-        <li>Kolam renang</li>
-        <li>Parking luas</li>
-        <li>Ampaian baju</li>
-        <li>2 tandas</li>
-        <li>Shower luar</li>
-        <li>Singki luar</li>
-      </ul>
-      <div class="villa-checkin">
-        <span>Daftar masuk selepas 3.00 petang</span>
-        <span>Daftar keluar sebelum 12.00 tengah hari</span>
-        <span>Self check-in, tiada perkhidmatan resepsionis</span>
-        <span>Hubungi admin sehari sebelum tiba untuk kod kotak kunci</span>
-      </div>
-      <div class="villa-contact-links" aria-label="Contact and social media">
-        <a href="tel:+60103851892">010-385 1892</a>
-        <a href="https://www.tiktok.com/@casadive.villa" target="_blank" rel="noopener">TikTok: casadive.villa</a>
-        <a href="https://www.instagram.com/casadivevilla" target="_blank" rel="noopener">Instagram: Casadive Villa</a>
-        <a href="https://www.facebook.com/Casadive%20Villa" target="_blank" rel="noopener">Facebook: Casadive Villa</a>
-      </div>
-    </div>
-  </section>
-
   <section class="packages" id="packages">
     <div class="container">
 
@@ -114,16 +81,16 @@
           <hr class="package-divider">
           <div class="package-footer">
             <div class="package-rates">
-              <strong class="package-rates-heading">Harga 2 Hari 1 Malam</strong>
+              <strong class="package-rates-heading">Rates (2 days, 1 night)</strong>
               <div class="package-rate-row"><span>Weekday</span><strong>RM <?= number_format((float) $villa['price'], 0) ?></strong></div>
               <?php if ($villa['price_weekend'] !== null): ?>
                 <div class="package-rate-row"><span>Weekend</span><strong>RM <?= number_format((float) $villa['price_weekend'], 0) ?></strong></div>
               <?php endif; ?>
               <?php if ($villa['price_holiday'] !== null): ?>
-                <div class="package-rate-row"><span>Cuti umum / cuti sekolah</span><strong>RM <?= number_format((float) $villa['price_holiday'], 0) ?></strong></div>
+                <div class="package-rate-row"><span>Public holiday / school holiday</span><strong>RM <?= number_format((float) $villa['price_holiday'], 0) ?></strong></div>
               <?php endif; ?>
-              <?php if ($villa['price_seasonal'] !== null): ?>
-                <div class="package-rate-row"><span>Ramadan + musim hujan</span><strong>RM <?= number_format((float) $villa['price_seasonal'], 0) ?></strong></div>
+              <?php if (($villa['price_seasonal'] ?? null) !== null): ?>
+                <div class="package-rate-row"><span>Ramadan / rainy season</span><strong>RM <?= number_format((float) $villa['price_seasonal'], 0) ?></strong></div>
               <?php endif; ?>
               <?php foreach ($villaRatePeriods as $villaRatePeriod): ?>
                 <div class="package-rate-row package-rate-special">

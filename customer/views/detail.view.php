@@ -54,7 +54,7 @@
           </div>
           <?php endif; ?>
 
-          <h2 class="detail-heading">Harga 2 Hari 1 Malam</h2>
+          <h2 class="detail-heading">Rates (2 days, 1 night)</h2>
           <div class="rates-card">
             <div class="rates-row">
               <span class="rates-label">Weekday</span>
@@ -70,13 +70,13 @@
             <?php # check kalau ada price_holiday punya rate, baru papar row public holiday ?>
             <?php if ($accommodation['price_holiday'] !== null): ?>
             <div class="rates-row">
-              <span class="rates-label">Cuti umum / cuti sekolah</span>
+              <span class="rates-label">Public holiday / school holiday</span>
               <span class="rates-value">RM <?= number_format((float) $accommodation['price_holiday'], 0) ?></span>
             </div>
             <?php endif; ?>
-            <?php if ($accommodation['price_seasonal'] !== null): ?>
+            <?php if (($accommodation['price_seasonal'] ?? null) !== null): ?>
             <div class="rates-row">
-              <span class="rates-label">Ramadan + musim hujan</span>
+              <span class="rates-label">Ramadan / rainy season</span>
               <span class="rates-value">RM <?= number_format((float) $accommodation['price_seasonal'], 0) ?></span>
             </div>
             <?php endif; ?>
