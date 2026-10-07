@@ -6,22 +6,22 @@
       <span class="step-label">Details</span>
     </div>
     <span class="step-line"></span>
-    <div class="step">
+    <div class="step<?= ($payment['payment_status'] ?? null) === 'paid' ? '' : ' is-active' ?>">
       <span class="step-circle">2</span>
       <span class="step-label">Payment</span>
     </div>
     <span class="step-line"></span>
-    <div class="step is-active">
+    <div class="step<?= ($payment['payment_status'] ?? null) === 'paid' ? ' is-active' : '' ?>">
       <span class="step-circle">3</span>
       <span class="step-label">Complete</span>
     </div>
   </div>
 
-  <?php # check kalau $booking kosong/tak jumpa untuk suruh user cari balik kat mybooking ?>
+  <?php # Show a successful state only after a manager-approved paid payment exists. ?>
   <?php if (!$booking): ?>
 
     <div class="container page-title">
-      <h1>Payment Successful!</h1>
+      <h1>Booking Not Found</h1>
     </div>
     <section class="payment-section">
       <div class="container">
@@ -29,6 +29,93 @@
           <p class="success-lead">We couldn't find that booking. Please look it up from MyBooking.</p>
           <div class="success-actions">
             <a href="mybooking.php" class="success-btn">Go to MyBooking</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  <?php elseif (($payment['payment_status'] ?? null) === 'pending'): ?>
+
+    <section class="payment-section payment-status-section">
+      <div class="container payment-status-container">
+        <div class="payment-status-card">
+          <div class="payment-status-art" aria-hidden="true">
+            <svg viewBox="0 0 360 280" role="img">
+              <ellipse cx="173" cy="245" rx="142" ry="17" fill="#fbe8d5"/>
+              <circle cx="172" cy="137" r="104" fill="#fff0df"/>
+              <path d="M70 207c-27 14-37 27-35 37 1 6 20 9 51 9h174c25 0 42-3 43-10 2-10-15-20-43-31" fill="#f9e1c9"/>
+              <path d="m91 69 151-12a13 13 0 0 1 14 12l13 147a13 13 0 0 1-12 14l-151 12a13 13 0 0 1-14-12L79 83a13 13 0 0 1 12-14Z" fill="#c9824f"/>
+              <path d="m97 78 137-11a8 8 0 0 1 9 8l12 132a8 8 0 0 1-8 9l-137 11a8 8 0 0 1-9-8L89 87a8 8 0 0 1 8-9Z" fill="#fffaf4"/>
+              <path d="m144 66-2-20a9 9 0 0 1 8-10l34-3a9 9 0 0 1 10 8l2 20" fill="#844525"/>
+              <path d="m113 112 91-8m-88 29 70-6m-67 28 61-5" stroke="#e8d2bd" stroke-width="9" stroke-linecap="round"/>
+              <circle cx="213" cy="171" r="45" fill="#9b5a32"/>
+              <circle cx="213" cy="171" r="32" fill="#fff8ed"/>
+              <path d="m237 204 36 38a10 10 0 0 0 15-13l-36-39" fill="#844525"/>
+              <path d="m196 170 12 12 23-27" fill="none" stroke="#e57832" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="m273 88 11-10m-2 25 16-3m-28-17 2-16" stroke="#e57832" stroke-width="5" stroke-linecap="round"/>
+              <path d="M51 203c-13-8-21-19-26-34m30 37c3-16 10-28 23-39" fill="none" stroke="#74816a" stroke-width="7" stroke-linecap="round"/>
+              <ellipse cx="42" cy="188" rx="18" ry="8" transform="rotate(35 42 188)" fill="#74816a"/>
+              <ellipse cx="67" cy="178" rx="18" ry="8" transform="rotate(-42 67 178)" fill="#74816a"/>
+            </svg>
+          </div>
+          <div class="payment-status-content">
+            <span class="payment-status-badge">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 7v5l3 2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+              Payment Under Review
+            </span>
+            <h1>Receipt Under Review</h1>
+            <p class="payment-status-subtitle">Your payment is not confirmed until a manager reviews your receipt.</p>
+            <div class="payment-status-note">
+              <span class="payment-status-info" aria-hidden="true">i</span>
+              <p><strong>Thank you, <?= htmlspecialchars($booking['full_name']) ?>.</strong><br>
+                Your receipt for booking <?= htmlspecialchars(format_booking_ref((int) $booking['booking_id'])) ?> is awaiting review.</p>
+            </div>
+            <p class="payment-status-reminder">We’ll confirm your booking once it’s approved.</p>
+            <div class="success-actions">
+              <a href="mybooking.php?ref=<?= (int) $booking['booking_id'] ?>&phone=<?= urlencode($booking['phone']) ?>" class="success-btn">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M7 3v4m10-4v4M3 10h18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                View Booking
+                <span aria-hidden="true">→</span>
+              </a>
+              <a href="<?= $base ?>index.php" class="success-btn success-btn-outline">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-6v-7h-4v7H4a1 1 0 0 1-1-1z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+                Back to Home
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  <?php elseif (($payment['payment_status'] ?? null) !== 'paid'): ?>
+
+    <div class="container page-title">
+      <h1>
+        <?= ($payment['payment_status'] ?? null) === 'failed' && $booking['booking_status'] === 'cancelled'
+          ? 'Booking Cancelled'
+          : (($payment['payment_status'] ?? null) === 'failed' ? 'Payment Failed' : 'Payment Not Received') ?>
+      </h1>
+      <?php if (($payment['payment_status'] ?? null) !== 'failed'): ?>
+        <p>No approved payment is recorded for this booking yet.</p>
+      <?php endif; ?>
+    </div>
+    <section class="payment-section">
+      <div class="container">
+        <div class="success-card">
+          <p class="success-lead">
+            <?= ($payment['payment_status'] ?? null) === 'failed'
+              ? ($booking['booking_status'] === 'cancelled'
+                ? 'Your receipt was rejected and marked invalid. This booking has been cancelled.'
+                : 'Your receipt was rejected. Please resubmit your payment.')
+              : 'Your booking is not confirmed until your payment receipt has been reviewed and approved.' ?>
+          </p>
+          <div class="success-actions">
+            <?php if (($payment['payment_status'] ?? null) === 'failed' && $booking['booking_status'] === 'cancelled'): ?>
+              <a href="mybooking.php?ref=<?= (int) $booking['booking_id'] ?>&phone=<?= urlencode($booking['phone']) ?>" class="success-btn">View Receipt</a>
+            <?php else: ?>
+              <a href="payment.php?booking_id=<?= (int) $booking['booking_id'] ?>" class="success-btn">Submit Payment Proof</a>
+            <?php endif; ?>
+            <a href="<?= $base ?>index.php" class="success-btn success-btn-outline">Back to Home</a>
           </div>
         </div>
       </div>

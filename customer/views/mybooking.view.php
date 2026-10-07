@@ -40,7 +40,7 @@
         </div>
 
         <?php # check kalau booking dah cancelled & ada latest payment status, baru papar block refund ?>
-        <?php if ($booking['booking_status'] === 'cancelled' && $latestPaymentStatus): ?>
+        <?php if ($booking['booking_status'] === 'cancelled' && in_array($latestPaymentStatus, ['refunded', 'paid', 'partial'], true)): ?>
         <div class="receipt-block">
           <h3>Deposit Refund</h3>
           <?php # check kalau payment status 'refunded', papar mesej dah refund ?>
@@ -49,6 +49,28 @@
           <?php # calling function in_array() untuk check payment status masih 'paid' atau 'partial', kalau ya tunjuk mesej proses refund ?>
           <?php elseif (in_array($latestPaymentStatus, ['paid', 'partial'], true)): ?>
             <p>Your payment of RM <?= number_format($amountPaid, 2) ?> is being processed for refund. Since refunds are handled manually (bank transfer/cash), please allow a few business days, or contact us directly if you need it sooner.</p>
+          <?php endif; ?>
+        </div>
+        <?php endif; ?>
+
+        <?php if ($latestPaymentStatus === 'failed'): ?>
+        <div class="receipt-block invalid-payment-receipt">
+          <h3>Payment Receipt <span class="invalid-receipt-badge">Invalid</span></h3>
+          <p class="invalid-receipt-notice">This receipt was rejected and the booking was cancelled.</p>
+          <?php if ($latestPaymentReceipt): ?>
+            <div class="invalid-receipt-preview">
+              <?php if ($latestPaymentReceiptType === 'image'): ?>
+                <a href="<?= htmlspecialchars($latestPaymentReceiptUrl) ?>" target="_blank" rel="noopener noreferrer">
+                  <img src="<?= htmlspecialchars($latestPaymentReceiptUrl) ?>" alt="Rejected payment receipt">
+                </a>
+              <?php else: ?>
+                <object data="<?= htmlspecialchars($latestPaymentReceiptUrl) ?>" type="application/pdf" aria-label="Rejected payment receipt PDF">
+                  <a href="<?= htmlspecialchars($latestPaymentReceiptUrl) ?>" target="_blank" rel="noopener noreferrer">Open rejected receipt (PDF)</a>
+                </object>
+              <?php endif; ?>
+            </div>
+          <?php else: ?>
+            <p>The uploaded receipt file is no longer available.</p>
           <?php endif; ?>
         </div>
         <?php endif; ?>

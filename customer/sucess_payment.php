@@ -39,22 +39,26 @@ if ($bookingId !== false && $phone !== '') {
         # calling method fetchAll() dari object $stmt that assign to variable name $items untuk ambil semua row item booking
         $items = $stmt->fetchAll();
 
-        # calling method prepare() dari object $pdo that assign to variable name $stmt untuk sediakan query ambil rekod bayaran terkini yang paid
+        # Load the latest payment so the page can distinguish pending, rejected, and approved receipts.
         $stmt = $pdo->prepare(
-            "SELECT payment_method, deposit_paid FROM payment
-             WHERE booking_id = :id AND payment_status = 'paid'
-             ORDER BY payment_id DESC LIMIT 1"
+            'SELECT payment_method, deposit_paid, payment_status FROM payment
+             WHERE booking_id = :id ORDER BY payment_id DESC LIMIT 1'
         );
-        # calling method execute() dari object $stmt untuk jalankan query ikut $bookingId
         $stmt->execute(['id' => $bookingId]);
-        # calling method fetch() dari object $stmt that assign to variable name $payment untuk ambil detail bayaran terkini
         $payment = $stmt->fetch();
     }
 }
 
 $base = '../';
 $active = '';
-$pageTitle = 'Payment Successful — Casadive Villa';
+$paymentPageStatus = $payment['payment_status'] ?? null;
+$pageTitle = match (true) {
+    !$booking => 'Booking Not Found — Casadive Villa',
+    $paymentPageStatus === 'paid' => 'Payment Successful — Casadive Villa',
+    $paymentPageStatus === 'pending' => 'Receipt Under Review — Casadive Villa',
+    $paymentPageStatus === 'failed' => 'Payment Failed — Casadive Villa',
+    default => 'Payment Status — Casadive Villa',
+};
 $pageCss = 'style/sucess_payment.css';
 
 require __DIR__ . '/views/sucess_payment.view.php';

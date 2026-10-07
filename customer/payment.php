@@ -9,6 +9,8 @@ $booking = null;
 $items = [];
 $errors = [];
 $paid = false;
+$paymentPending = false;
+$bookingCancelled = false;
 
 # check kalau $bookingId valid (bukan false) baru proceed ambil data booking
 if ($bookingId !== false) {
@@ -37,19 +39,20 @@ if ($bookingId !== false) {
         # calling method fetchAll() dari object $stmt that assign to variable name $items untuk ambil semua row item booking
         $items = $stmt->fetchAll();
 
-        # calling method prepare() dari object $pdo that assign to variable name $stmt untuk sediakan query check payment yang dah paid
+        # Get the latest payment status to prevent duplicate payment submissions during review.
         $stmt = $pdo->prepare(
-            "SELECT payment_id FROM payment WHERE booking_id = :id AND payment_status = 'paid' LIMIT 1"
+            'SELECT payment_status FROM payment WHERE booking_id = :id ORDER BY payment_id DESC LIMIT 1'
         );
-        # calling method execute() dari object $stmt untuk jalankan query check status paid
         $stmt->execute(['id' => $bookingId]);
-        # calling method fetch() dari object $stmt that assign to variable name $paid untuk tahu booking ni dah paid ke belum
-        $paid = (bool) $stmt->fetch();
+        $paymentStatus = $stmt->fetchColumn();
+        $paid = $paymentStatus === 'paid';
+        $paymentPending = $paymentStatus === 'pending';
+        $bookingCancelled = $booking['booking_status'] === 'cancelled';
     }
 }
 
 # check kalau booking wujud, belum paid, dan request method POST baru proses pilihan kaedah bayaran
-if ($booking && !$paid && $_SERVER['REQUEST_METHOD'] === 'POST') {
+if ($booking && !$paid && !$paymentPending && !$bookingCancelled && $_SERVER['REQUEST_METHOD'] === 'POST') {
     # ambil value $_POST['method'] that assign to variable name $method
     $method = $_POST['method'] ?? '';
     # calling function in_array() untuk check $method yang dipilih valid ke tidak

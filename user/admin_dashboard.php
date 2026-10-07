@@ -65,6 +65,89 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'delet
     exit;
 }
 
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'review_payment') {
+    if (!csrf_verify()) {
+        http_response_code(400);
+        exit('Invalid security token. Please refresh and try again.');
+    }
+
+    $paymentId = filter_var($_POST['payment_id'] ?? '', FILTER_VALIDATE_INT);
+    $bookingId = filter_var($_POST['booking_id'] ?? '', FILTER_VALIDATE_INT);
+    $decision = $_POST['decision'] ?? '';
+    if (!$paymentId || $paymentId < 1 || !$bookingId || $bookingId < 1 || !in_array($decision, ['approve', 'reject'], true)) {
+        http_response_code(400);
+        exit('Invalid payment review request.');
+    }
+
+    $pdo->beginTransaction();
+    try {
+        $stmt = $pdo->prepare(
+            'SELECT p.payment_status, p.receipt, p.booking_id, b.booking_status,
+                    (SELECT MAX(p2.payment_id) FROM payment p2 WHERE p2.booking_id = p.booking_id) AS latest_payment_id
+             FROM payment p
+             JOIN booking b ON b.booking_id = p.booking_id
+             WHERE p.payment_id = :payment_id AND p.booking_id = :booking_id
+             FOR UPDATE'
+        );
+        $stmt->execute(['payment_id' => $paymentId, 'booking_id' => $bookingId]);
+        $paymentReview = $stmt->fetch();
+
+        if (
+            !$paymentReview
+            || $paymentReview['payment_status'] !== 'pending'
+            || (int) $paymentReview['latest_payment_id'] !== $paymentId
+            || ($decision === 'approve' && empty($paymentReview['receipt']))
+            || !in_array($paymentReview['booking_status'], ['pending', 'confirmed'], true)
+        ) {
+            $pdo->rollBack();
+            header('Location: admin_dashboard.php?paymentreviewerror=1');
+            exit;
+        }
+
+        $newPaymentStatus = $decision === 'approve' ? 'paid' : 'failed';
+        $stmt = $pdo->prepare(
+            'UPDATE payment SET payment_status = :status
+             WHERE payment_id = :payment_id AND payment_status = \'pending\''
+        );
+        $stmt->execute(['status' => $newPaymentStatus, 'payment_id' => $paymentId]);
+        if ($stmt->rowCount() !== 1) {
+            $pdo->rollBack();
+            header('Location: admin_dashboard.php?paymentreviewerror=1');
+            exit;
+        }
+
+        $newBookingStatus = $decision === 'approve' ? 'confirmed' : 'cancelled';
+        if ($paymentReview['booking_status'] !== $newBookingStatus) {
+            $stmt = $pdo->prepare(
+                'UPDATE booking SET booking_status = :status
+                 WHERE booking_id = :booking_id AND booking_status = :previous_status'
+            );
+            $stmt->execute([
+                'status' => $newBookingStatus,
+                'booking_id' => $bookingId,
+                'previous_status' => $paymentReview['booking_status'],
+            ]);
+            if ($stmt->rowCount() !== 1) {
+                throw new RuntimeException('Booking status changed during payment review.');
+            }
+        }
+
+        $pdo->commit();
+    } catch (Throwable $e) {
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        throw $e;
+    }
+
+    if ($paymentReview['booking_status'] !== $newBookingStatus) {
+        send_status_email($pdo, $bookingId, $newBookingStatus);
+    }
+
+    header('Location: admin_dashboard.php?' . ($decision === 'approve' ? 'paymentapproved=1' : 'paymentrejected=1'));
+    exit;
+}
+
 # assign array status booking yang valid ke $validStatuses untuk dipakai semasa validate input
 $validStatuses = ['pending', 'confirmed', 'checked_in', 'checked_out', 'cancelled'];
 # assign value false ke $updated untuk flag default (belum ada update)
@@ -243,6 +326,9 @@ $refunded = isset($_GET['refunded']);
 $taskCreated = isset($_GET['taskcreated']);
 $taskDeleted = isset($_GET['taskdeleted']);
 $taskError = isset($_GET['taskerror']);
+$paymentApproved = isset($_GET['paymentapproved']);
+$paymentRejected = isset($_GET['paymentrejected']);
+$paymentReviewError = isset($_GET['paymentreviewerror']);
 
 # calling method query() dari object $pdo that assign to variable name $bookings untuk ambil 50 booking terkini sekali dengan detail customer & payment
 $bookings = $pdo->query(
@@ -250,6 +336,8 @@ $bookings = $pdo->query(
             b.total_amount, b.deposit_amount, b.booking_status, b.addon_bbq, b.addon_mattress, b.discount_amount,
             GROUP_CONCAT(a.accommodation_name SEPARATOR ', ') AS accommodations,
             (SELECT p.payment_status FROM payment p WHERE p.booking_id = b.booking_id ORDER BY p.payment_id DESC LIMIT 1) AS latest_payment_status,
+            (SELECT p.payment_id FROM payment p WHERE p.booking_id = b.booking_id ORDER BY p.payment_id DESC LIMIT 1) AS latest_payment_id,
+            (SELECT p.receipt FROM payment p WHERE p.booking_id = b.booking_id ORDER BY p.payment_id DESC LIMIT 1) AS latest_payment_receipt,
             (SELECT p.deposit_paid FROM payment p WHERE p.booking_id = b.booking_id AND p.payment_status = 'paid' ORDER BY p.payment_id DESC LIMIT 1) AS amount_paid
      FROM booking b
      JOIN customer c ON c.customer_id = b.customer_id

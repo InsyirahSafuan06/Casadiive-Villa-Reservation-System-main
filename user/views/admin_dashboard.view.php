@@ -12,7 +12,7 @@
   <div class="manager-shell">
     <aside class="manager-sidebar">
       <a href="admin_dashboard.php" class="manager-brand">
-        <span>Casadive Villa</span>
+        <img src="../assets/images/logo.png" alt="Casadive Villa" class="manager-brand-logo">
         <small>Booking &amp; Management System</small>
       </a>
       <nav class="manager-nav" aria-label="Manager navigation">
@@ -93,6 +93,15 @@
       <?php endif; ?>
       <?php if ($taskError): ?>
         <p class="flash flash-error">Could not save that task. Check the title and active staff assignment, then try again.</p>
+      <?php endif; ?>
+      <?php if ($paymentApproved): ?>
+        <p class="flash">Payment receipt approved and booking confirmed.</p>
+      <?php endif; ?>
+      <?php if ($paymentRejected): ?>
+        <p class="flash">Payment receipt rejected and booking cancelled.</p>
+      <?php endif; ?>
+      <?php if ($paymentReviewError): ?>
+        <p class="flash flash-error">That receipt is no longer awaiting review. Refresh the booking list and try again.</p>
       <?php endif; ?>
 
       <div class="stat-grid">
@@ -262,6 +271,33 @@
                       <input type="number" name="refund_amount" min="0" step="0.01" value="<?= number_format((float) ($b['amount_paid'] ?? $b['deposit_amount']), 2, '.', '') ?>" required>
                       <button type="submit" class="btn btn-sm btn-outline">Mark Refunded</button>
                     </form>
+                  <?php elseif ($b['latest_payment_status'] === 'pending'): ?>
+                    <span class="status-badge status-pending">Awaiting review</span>
+                    <?php if (!empty($b['latest_payment_receipt'])): ?>
+                      <a class="payment-receipt-link" href="../<?= htmlspecialchars(ltrim($b['latest_payment_receipt'], '/')) ?>" target="_blank" rel="noopener noreferrer">View receipt</a>
+                    <?php else: ?>
+                      <span class="text-muted">Receipt file unavailable</span>
+                    <?php endif; ?>
+                    <div class="payment-review-actions">
+                      <?php if (!empty($b['latest_payment_receipt'])): ?>
+                        <form method="post">
+                          <?= csrf_field() ?>
+                          <input type="hidden" name="action" value="review_payment">
+                          <input type="hidden" name="payment_id" value="<?= (int) $b['latest_payment_id'] ?>">
+                          <input type="hidden" name="booking_id" value="<?= (int) $b['booking_id'] ?>">
+                          <input type="hidden" name="decision" value="approve">
+                          <button type="submit" class="btn btn-sm btn-approve">Approve</button>
+                        </form>
+                      <?php endif; ?>
+                      <form method="post">
+                        <?= csrf_field() ?>
+                        <input type="hidden" name="action" value="review_payment">
+                        <input type="hidden" name="payment_id" value="<?= (int) $b['latest_payment_id'] ?>">
+                        <input type="hidden" name="booking_id" value="<?= (int) $b['booking_id'] ?>">
+                        <input type="hidden" name="decision" value="reject">
+                        <button type="submit" class="btn btn-sm btn-reject">Reject</button>
+                      </form>
+                    </div>
                   <?php elseif ($b['latest_payment_status']): ?>
                     <?= htmlspecialchars(ucfirst($b['latest_payment_status'])) ?>
                   <?php else: ?>

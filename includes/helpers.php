@@ -258,26 +258,32 @@ function booking_grand_total(array $booking): float
     return (float) $booking['total_amount'] + (float) $booking['deposit_amount'];
 }
 
-function record_booking_payment(PDO $pdo, int $bookingId, float $amount, string $paymentMethod, ?string $receipt = null): bool
+function submit_booking_payment(PDO $pdo, int $bookingId, float $amount, string $paymentMethod, ?string $receipt = null): bool
 {
-    # calling method prepare() dari object $pdo that assign to variable name $stmt untuk sediakan query check payment sedia ada
-    $stmt = $pdo->prepare("SELECT payment_id FROM payment WHERE booking_id = :id AND payment_status = 'paid' LIMIT 1");
-    # calling method execute() dari object $stmt untuk jalankan query, isi placeholder :id dgn $bookingId
-    $stmt->execute(['id' => $bookingId]);
-    # check kalau booking ni dah ada payment yang 'paid', tak payah rekod bayaran baru
-    if ($stmt->fetch()) {
-        return false;
-    }
-
-    # calling method beginTransaction() dari object $pdo untuk mula transaction supaya kedua-dua query jaya sama-sama atau gagal sama-sama
     $pdo->beginTransaction();
     try {
-        # calling method prepare() dari object $pdo that assign to variable name $stmt untuk sediakan query insert rekod payment baru
+        $stmt = $pdo->prepare('SELECT booking_status FROM booking WHERE booking_id = :id FOR UPDATE');
+        $stmt->execute(['id' => $bookingId]);
+        $bookingStatus = $stmt->fetchColumn();
+        if (!in_array($bookingStatus, ['pending', 'confirmed'], true)) {
+            $pdo->commit();
+            return false;
+        }
+
+        $stmt = $pdo->prepare(
+            'SELECT payment_status FROM payment WHERE booking_id = :id ORDER BY payment_id DESC LIMIT 1'
+        );
+        $stmt->execute(['id' => $bookingId]);
+        $latestStatus = $stmt->fetchColumn();
+        if (in_array($latestStatus, ['paid', 'pending'], true)) {
+            $pdo->commit();
+            return false;
+        }
+
         $stmt = $pdo->prepare(
             "INSERT INTO payment (booking_id, deposit_paid, payment_method, payment_status, receipt)
-             VALUES (:booking_id, :deposit_paid, :payment_method, 'paid', :receipt)"
+             VALUES (:booking_id, :deposit_paid, :payment_method, 'pending', :receipt)"
         );
-        # calling method execute() dari object $stmt untuk simpan rekod payment baru dalam database
         $stmt->execute([
             'booking_id' => $bookingId,
             'deposit_paid' => $amount,
@@ -285,19 +291,12 @@ function record_booking_payment(PDO $pdo, int $bookingId, float $amount, string 
             'receipt' => $receipt,
         ]);
 
-        # calling method prepare() dari object $pdo that assign to variable name $stmt untuk sediakan query kemaskini status booking jadi confirmed
-        $stmt = $pdo->prepare(
-            "UPDATE booking SET booking_status = 'confirmed' WHERE booking_id = :id AND booking_status = 'pending'"
-        );
-        # calling method execute() dari object $stmt untuk jalankan kemaskini status booking
-        $stmt->execute(['id' => $bookingId]);
-
-        # calling method commit() dari object $pdo untuk sahkan kedua-dua perubahan tadi disimpan betul-betul
         $pdo->commit();
         return true;
     } catch (Throwable $e) {
-        # calling method rollBack() dari object $pdo untuk batalkan semua perubahan tadi sbb ada error
-        $pdo->rollBack();
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
         throw $e;
     }
 }
@@ -308,16 +307,14 @@ function payment_needs_refund(string $bookingStatus, ?string $paymentStatus): bo
     return $bookingStatus === 'cancelled' && in_array($paymentStatus, ['paid', 'partial'], true);
 }
 
-function compute_stay_price(float $weekdayPrice, ?float $weekendPrice, DateTime $checkIn, DateTime $checkOut, array $ratePeriods = []): array
+function accommodation_rate_for_date(array $accommodation, DateTimeInterface $date, array $ratePeriods = []): array
 {
-    $weekendPrice ??= $weekdayPrice;
-    $weekdayNights = 0;
-    $weekendNights = 0;
-    $specialNights = 0;
-    $total = 0.0;
-    $cursor = clone $checkIn;
-    $dayRateTypes = ['weekday', 'weekend'];
-    $specialRatePriority = [
+    $nightDate = $date->format('Y-m-d');
+    $isWeekend = in_array((int) $date->format('N'), [5, 6], true);
+    $dayRate = null;
+    $specialRate = null;
+    $specialRatePriority = -1;
+    $specialRatePriorities = [
         'seasonal' => 10,
         'ramadan' => 20,
         'school_holiday' => 30,
@@ -327,42 +324,82 @@ function compute_stay_price(float $weekdayPrice, ?float $weekendPrice, DateTime 
         'super_peak_eid' => 70,
     ];
 
-    while ($cursor < $checkOut) {
-        $nightDate = $cursor->format('Y-m-d');
-        $isWeekend = in_array((int) $cursor->format('N'), [5, 6], true);
-        $specialPrice = null;
-        $specialPriority = -1;
-        $dayPrice = null;
-
-        foreach ($ratePeriods as $ratePeriod) {
-            if ($nightDate < $ratePeriod['start_date'] || $nightDate > $ratePeriod['end_date']) {
-                continue;
-            }
-
-            $rateType = $ratePeriod['rate_type'] ?? 'custom';
-            if ($rateType === 'weekday' && !$isWeekend) {
-                $dayPrice = (float) $ratePeriod['price'];
-            } elseif ($rateType === 'weekend' && $isWeekend) {
-                $dayPrice = (float) $ratePeriod['price'];
-            } elseif (!in_array($rateType, $dayRateTypes, true)) {
-                $priority = $specialRatePriority[$rateType] ?? $specialRatePriority['custom'];
-                if ($priority > $specialPriority) {
-                    $specialPriority = $priority;
-                    $specialPrice = (float) $ratePeriod['price'];
-                }
-            }
+    foreach ($ratePeriods as $ratePeriod) {
+        if ($nightDate < $ratePeriod['start_date'] || $nightDate > $ratePeriod['end_date']) {
+            continue;
         }
 
-        if ($specialPrice !== null) {
+        $rateType = $ratePeriod['rate_type'] ?? 'custom';
+        if ($rateType === 'weekday' && !$isWeekend) {
+            $dayRate = ['price' => (float) $ratePeriod['price'], 'label' => 'Weekday', 'category' => 'weekday'];
+        } elseif ($rateType === 'weekend' && $isWeekend) {
+            $dayRate = ['price' => (float) $ratePeriod['price'], 'label' => 'Weekend', 'category' => 'weekend'];
+        } elseif (!in_array($rateType, ['weekday', 'weekend'], true)) {
+            $priority = $specialRatePriorities[$rateType] ?? $specialRatePriorities['custom'];
+            if ($priority > $specialRatePriority) {
+                $specialRatePriority = $priority;
+                $specialRate = [
+                    'price' => (float) $ratePeriod['price'],
+                    'label' => $ratePeriod['label'],
+                    'category' => 'special',
+                ];
+            }
+        }
+    }
+
+    if ($specialRate !== null) {
+        return $specialRate;
+    }
+    if ($dayRate !== null) {
+        return $dayRate;
+    }
+    if ($isWeekend) {
+        return [
+            'price' => (float) ($accommodation['price_weekend'] ?? $accommodation['price']),
+            'label' => 'Weekend',
+            'category' => 'weekend',
+        ];
+    }
+
+    return ['price' => (float) $accommodation['price'], 'label' => 'Weekday', 'category' => 'weekday'];
+}
+
+function resolve_accommodation_rate_date(?string $date): DateTimeImmutable
+{
+    if ($date !== null && $date !== '') {
+        $parsed = DateTimeImmutable::createFromFormat('!Y-m-d', $date);
+        $dateErrors = DateTimeImmutable::getLastErrors();
+        if (
+            $parsed
+            && $parsed->format('Y-m-d') === $date
+            && (!$dateErrors || ($dateErrors['warning_count'] === 0 && $dateErrors['error_count'] === 0))
+        ) {
+            return $parsed;
+        }
+    }
+
+    return new DateTimeImmutable('today');
+}
+
+function compute_stay_price(float $weekdayPrice, ?float $weekendPrice, DateTime $checkIn, DateTime $checkOut, array $ratePeriods = []): array
+{
+    $accommodation = ['price' => $weekdayPrice, 'price_weekend' => $weekendPrice ?? $weekdayPrice];
+    $weekdayNights = 0;
+    $weekendNights = 0;
+    $specialNights = 0;
+    $total = 0.0;
+    $cursor = clone $checkIn;
+
+    while ($cursor < $checkOut) {
+        $rate = accommodation_rate_for_date($accommodation, $cursor, $ratePeriods);
+        if ($rate['category'] === 'special') {
             $specialNights++;
-            $total += $specialPrice;
-        } elseif ($isWeekend) {
+        } elseif ($rate['category'] === 'weekend') {
             $weekendNights++;
-            $total += $dayPrice ?? $weekendPrice;
         } else {
             $weekdayNights++;
-            $total += $dayPrice ?? $weekdayPrice;
         }
+        $total += $rate['price'];
         $cursor->modify('+1 day');
     }
 

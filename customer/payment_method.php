@@ -2,7 +2,6 @@
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/helpers.php';
-require_once __DIR__ . '/../includes/email_notify.php';
 
 $methodLabels = ['qr' => 'QR Payment'];
 
@@ -14,6 +13,8 @@ $booking = null;
 $items = [];
 $errors = [];
 $paid = false;
+$paymentPending = false;
+$bookingCancelled = false;
 $nights = 0;
 
 # calling function in_array() untuk check $method valid ke tidak, kalau tak valid kosongkan balik
@@ -48,14 +49,15 @@ if ($bookingId !== false) {
         # calling method fetchAll() dari object $stmt that assign to variable name $items untuk ambil semua row item booking
         $items = $stmt->fetchAll();
 
-        # calling method prepare() dari object $pdo that assign to variable name $stmt untuk sediakan query check payment yang dah paid
+        # Get the latest payment status so customers cannot submit another proof while one is under review.
         $stmt = $pdo->prepare(
-            "SELECT payment_id FROM payment WHERE booking_id = :id AND payment_status = 'paid' LIMIT 1"
+            'SELECT payment_status FROM payment WHERE booking_id = :id ORDER BY payment_id DESC LIMIT 1'
         );
-        # calling method execute() dari object $stmt untuk jalankan query check status paid
         $stmt->execute(['id' => $bookingId]);
-        # calling method fetch() dari object $stmt that assign to variable name $paid untuk tahu booking ni dah paid ke belum
-        $paid = (bool) $stmt->fetch();
+        $paymentStatus = $stmt->fetchColumn();
+        $paid = $paymentStatus === 'paid';
+        $paymentPending = $paymentStatus === 'pending';
+        $bookingCancelled = $booking['booking_status'] === 'cancelled';
 
         # calling method createFromFormat() that assign to variable name $checkIn untuk tukar date check_in string jadi object DateTime
         $checkIn = DateTime::createFromFormat('Y-m-d', (string) $booking['check_in']);
@@ -70,7 +72,7 @@ if ($bookingId !== false) {
 }
 
 # check kalau booking wujud, belum paid, method dah dipilih, dan request method POST baru proses bayaran
-if ($booking && !$paid && $method !== '' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+if ($booking && !$paid && !$paymentPending && !$bookingCancelled && $method !== '' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     # calling function csrf_verify() untuk pastikan form ni submit dgn token csrf yang sah
     if (!csrf_verify()) {
         $errors[] = 'Your session expired. Please try again.';
@@ -134,16 +136,16 @@ if ($booking && !$paid && $method !== '' && $_SERVER['REQUEST_METHOD'] === 'POST
 
         # check kalau takde error langsung baru rekod bayaran
         if (!$errors) {
-            # calling function record_booking_payment() that assign to variable name $paidNow untuk simpan rekod bayaran qr dalam database
-            $paidNow = record_booking_payment($pdo, $bookingId, booking_grand_total($booking), 'qr', $receiptPath);
+            # Save the uploaded proof as pending until a manager reviews it.
+            $proofSubmitted = submit_booking_payment($pdo, $bookingId, booking_grand_total($booking), 'qr', $receiptPath);
 
-            # check kalau rekod bayaran gagal (dah paid awal) atau berjaya
-            if (!$paidNow) {
-                $errors[] = 'This booking has already been paid for.';
+            if (!$proofSubmitted) {
+                if ($receiptPath !== null && is_file(__DIR__ . '/../' . $receiptPath) && !unlink(__DIR__ . '/../' . $receiptPath)) {
+                    error_log('Could not remove an unsubmitted payment receipt: ' . $receiptPath);
+                }
+                $errors[] = 'A payment is already paid or awaiting review for this booking.';
             } else {
-                # calling function send_status_email() untuk hantar email notify booking dah confirmed
-                send_status_email($pdo, $bookingId, 'confirmed');
-                # calling function header() untuk redirect browser ke page sucess_payment.php
+                # Show the customer the payment review status, not a success confirmation.
                 header('Location: sucess_payment.php?ref=' . $bookingId . '&phone=' . urlencode($booking['phone']));
                 exit;
             }

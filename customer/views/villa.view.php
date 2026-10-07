@@ -50,6 +50,7 @@
         $mediaStyle = $villa['image'] ? ' style="background-image:url(\'' . htmlspecialchars($villa['image']) . '\');background-size:cover;background-position:center;"' : '';
         $unitFeatures = array_slice(array_filter(array_map('trim', explode("\n", $villa['features'] ?? ''))), 0, 3);
         $villaRatePeriods = $ratePeriodsByAccommodation[(int) $villa['accommodation_id']] ?? [];
+        $villaRate = accommodation_rate_for_date($villa, $rateDate, $villaRatePeriods);
       ?>
       <article class="package-card">
         <div class="package-media"<?= $mediaStyle ?>>
@@ -81,29 +82,17 @@
           <hr class="package-divider">
           <div class="package-footer">
             <div class="package-rates">
-              <strong class="package-rates-heading">Rates (2 days, 1 night)</strong>
-              <div class="package-rate-row"><span>Weekday</span><strong>RM <?= number_format((float) $villa['price'], 0) ?></strong></div>
-              <?php if ($villa['price_weekend'] !== null): ?>
-                <div class="package-rate-row"><span>Weekend</span><strong>RM <?= number_format((float) $villa['price_weekend'], 0) ?></strong></div>
-              <?php endif; ?>
-              <?php if ($villa['price_holiday'] !== null): ?>
-                <div class="package-rate-row"><span>Public holiday / school holiday</span><strong>RM <?= number_format((float) $villa['price_holiday'], 0) ?></strong></div>
-              <?php endif; ?>
-              <?php if (($villa['price_seasonal'] ?? null) !== null): ?>
-                <div class="package-rate-row"><span>Ramadan / rainy season</span><strong>RM <?= number_format((float) $villa['price_seasonal'], 0) ?></strong></div>
-              <?php endif; ?>
-              <?php foreach ($villaRatePeriods as $villaRatePeriod): ?>
-                <div class="package-rate-row package-rate-special">
-                  <span><?= htmlspecialchars($villaRatePeriod['label']) ?><small><?= date('d M Y', strtotime($villaRatePeriod['start_date'])) ?> - <?= date('d M Y', strtotime($villaRatePeriod['end_date'])) ?></small></span>
-                  <strong>RM <?= number_format((float) $villaRatePeriod['price'], 0) ?></strong>
-                </div>
-              <?php endforeach; ?>
-            </div>
-            <div class="package-actions">
-              <a href="detail.php?id=<?= (int) $villa['accommodation_id'] ?>" class="btn view-detail">View Detail</a>
+              <strong class="package-rates-heading">Rate for <?= htmlspecialchars($rateDate->format('D, d M Y')) ?></strong>
+              <div class="package-rate-row">
+                <span><?= htmlspecialchars($villaRate['label']) ?></span>
+                <strong>RM <?= number_format($villaRate['price'], 0) ?> / night</strong>
+              </div>
+              </div>
+              <div class="package-actions">
+                <a href="detail.php?id=<?= (int) $villa['accommodation_id'] ?>&amp;rate_date=<?= urlencode($rateDate->format('Y-m-d')) . $searchQuery ?>" class="btn view-detail">View Detail</a>
               <?php # calling function urlencode() untuk selamatkan nama villa dalam url, gabung dgn $searchQuery supaya carian tak hilang ?>
-              <a href="bookingform.php?accommodation=<?= urlencode($villa['accommodation_name']) . $searchQuery ?>" class="btn book-now">Book now</a>
-            </div>
+                <a href="bookingform.php?accommodation=<?= urlencode($villa['accommodation_name']) . $searchQuery ?>" class="btn book-now">Book now</a>
+              </div>
           </div>
         </div>
       </article>

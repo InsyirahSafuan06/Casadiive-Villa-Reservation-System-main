@@ -46,6 +46,18 @@
           <a href="sucess_payment.php?ref=<?= $bookingId ?>&phone=<?= urlencode($booking['phone']) ?>" class="pay-btn" style="max-width:320px;margin:24px auto 0;">View Confirmation</a>
         </div>
 
+      <?php elseif ($paymentPending): ?>
+        <div class="payment-card" style="text-align:center;">
+          <p class="payment-error">Your payment proof is awaiting manager review. You cannot submit another receipt until the review is complete.</p>
+          <a href="sucess_payment.php?ref=<?= $bookingId ?>&phone=<?= urlencode($booking['phone']) ?>" class="pay-btn" style="max-width:320px;margin:24px auto 0;">View Payment Status</a>
+        </div>
+
+      <?php elseif ($bookingCancelled): ?>
+        <div class="payment-card" style="text-align:center;">
+          <p class="payment-error">This booking has been cancelled. Payment cannot be submitted for it.</p>
+          <a href="mybooking.php?ref=<?= $bookingId ?>&phone=<?= urlencode($booking['phone']) ?>" class="pay-btn" style="max-width:320px;margin:24px auto 0;">View Receipt</a>
+        </div>
+
       <?php else: ?>
 
         <?php # check kalau ada $errors untuk papar mesej error kat atas form ?>

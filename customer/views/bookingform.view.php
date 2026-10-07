@@ -156,10 +156,30 @@ $errors = $errors ?? [];
                         <div class="summary-row"><span>Nights</span><span id="s-nights">1</span></div>
                         <div class="summary-row"><span>Rate</span><span id="s-price">RM 0.00</span></div>
                         <div class="summary-row"><span>Add-ons</span><span id="s-addons">—</span></div>
-                        <div class="summary-row"><span>Total</span><span id="s-total">RM 0.00</span></div>
+                        <div class="summary-row" id="s-discount-row" hidden><span>Long Stay Discount</span><span id="s-discount">-RM 0.00</span></div>
+                        <div class="summary-row"><span>Deposit</span><span id="s-deposit">RM 0.00</span></div>
+                        <div class="summary-row total"><span>Total Price</span><span id="s-total">RM 0.00</span></div>
                     </div>
-                    <button type="submit" class="btn btn-primary btn-block">Proceed to Payment</button>
                 </aside>
+            </div>
+
+            <div class="form-checks">
+                <label class="form-check">
+                    <input type="checkbox" id="agree-terms" name="agree_terms" <?= !empty($old['agree_terms']) ? 'checked' : '' ?> required>
+                    I have read and agree to the booking Terms &amp; Conditions.
+                </label>
+                <label class="form-check">
+                    <input type="checkbox" name="whatsapp_optin" <?= !empty($old['whatsapp_optin']) ? 'checked' : '' ?>>
+                    Send me booking updates via WhatsApp.
+                </label>
+            </div>
+
+            <div class="form-actions">
+                <a href="../index.php" class="proceed-btn proceed-btn-outline">Back to Homepage</a>
+                <button type="submit" class="proceed-btn">
+                    Proceed to Payment
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                </button>
             </div>
         </form>
     </div>
@@ -172,6 +192,9 @@ $errors = $errors ?? [];
     // ---------- Config ----------
     var ADDON_BBQ_PRICE      = <?= json_encode((float) ADDON_BBQ_PRICE) ?>;
     var ADDON_MATTRESS_PRICE = <?= json_encode((float) ADDON_MATTRESS_PRICE) ?>;
+    var LONG_STAY_DISCOUNT_MIN_NIGHTS = <?= json_encode((int) LONG_STAY_DISCOUNT_MIN_NIGHTS) ?>;
+    var LONG_STAY_DISCOUNT_AMOUNT = <?= json_encode((float) LONG_STAY_DISCOUNT_AMOUNT) ?>;
+    var BOOKING_DEPOSIT_AMOUNT = <?= json_encode((float) BOOKING_DEPOSIT_AMOUNT) ?>;
     // Malam yang kira weekend rate: 0=Ahad, 1=Isnin ... 5=Jumaat, 6=Sabtu
     // (Jumaat & Sabtu malam = weekend. Tukar kalau hotel kau lain.)
     var WEEKEND_NIGHTS = [5, 6];
@@ -254,27 +277,40 @@ $errors = $errors ?? [];
         };
     }
 
-    // Cari rate period yang cover tarikh malam tu
-    function findPeriod(acc, d) {
+    function nightRate(acc, d) {
         var iso = toISO(d);
+        var isWeekend = WEEKEND_NIGHTS.indexOf(d.getDay()) !== -1;
+        var dayRate = null;
+        var specialRate = null;
+        var priorities = {
+            seasonal: 10,
+            ramadan: 20,
+            school_holiday: 30,
+            public_holiday: 40,
+            custom: 50,
+            super_peak_cny: 60,
+            super_peak_eid: 70
+        };
+
         for (var i = 0; i < acc.periods.length; i++) {
             var p = acc.periods[i];
-            if (p.start_date && p.end_date && iso >= p.start_date && iso <= p.end_date) return p;
-        }
-        return null;
-    }
+            if (!p.start_date || !p.end_date || iso < p.start_date || iso > p.end_date) continue;
 
-    function nightRate(acc, d) {
-        var weekend = WEEKEND_NIGHTS.indexOf(d.getDay()) !== -1;
-        var period = findPeriod(acc, d);
-        var base = acc.price, wk = acc.priceWeekend;
-        if (period) {
-            if (period.price != null && period.price !== '') base = parseFloat(period.price);
-            wk = (period.price_weekend != null && period.price_weekend !== '')
-                ? parseFloat(period.price_weekend)
-                : base;
+            if (p.rate_type === 'weekday' && !isWeekend) {
+                dayRate = Number(p.price);
+            } else if (p.rate_type === 'weekend' && isWeekend) {
+                dayRate = Number(p.price);
+            } else if (p.rate_type !== 'weekday' && p.rate_type !== 'weekend') {
+                var priority = priorities[p.rate_type] || priorities.custom;
+                if (!specialRate || priority > specialRate.priority) {
+                    specialRate = { price: Number(p.price), priority: priority };
+                }
+            }
         }
-        return weekend ? wk : base;
+
+        if (specialRate) return specialRate.price;
+        if (dayRate !== null) return dayRate;
+        return isWeekend ? acc.priceWeekend : acc.price;
     }
 
     // ---------- Main update ----------
@@ -353,7 +389,14 @@ $errors = $errors ?? [];
         if (addonMat.checked) { addonLabels.push('Extra Mattress'); addonTotal += ADDON_MATTRESS_PRICE; }
         setText(sAddons, addonLabels.length ? addonLabels.join(', ') + ' (' + money(addonTotal) + ')' : '');
 
-        sTotal.textContent = money(roomTotal + addonTotal);
+        var discount = nights >= LONG_STAY_DISCOUNT_MIN_NIGHTS
+            ? Math.min(roomTotal, LONG_STAY_DISCOUNT_AMOUNT)
+            : 0;
+        var deposit = acc && acc.type === 'Villa' ? BOOKING_DEPOSIT_AMOUNT : 0;
+        el('s-discount-row').hidden = discount <= 0;
+        el('s-discount').textContent = '-' + money(discount);
+        el('s-deposit').textContent = money(deposit);
+        el('s-total').textContent = money(roomTotal + addonTotal + deposit - discount);
     }
 
     // ---------- Validation (client-side, sebab form ada novalidate) ----------
@@ -391,6 +434,7 @@ $errors = $errors ?? [];
         } else if (acc && acc.capacity > 0 && g > acc.capacity) {
             errors.push('This package allows up to ' + acc.capacity + ' guests only.');
         }
+        if (!el('agree-terms').checked) errors.push('You must agree to the booking terms.');
         return errors;
     }
 

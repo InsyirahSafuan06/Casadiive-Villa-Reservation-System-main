@@ -63,6 +63,7 @@ $ratePeriodRows = fetch_accommodation_rate_periods($pdo, upcomingOnly: true);
 foreach ($ratePeriodRows as $ratePeriod) {
     $ratePeriodsByAccommodation[(int) $ratePeriod['accommodation_id']][] = $ratePeriod;
 }
+$rateDate = resolve_accommodation_rate_date($searchCheckIn !== '' ? $searchCheckIn : null);
 
 $icons = [
     'room' => '<svg viewBox="0 0 32 32"><path d="M4 18v8h2v-3h20v3h2v-8a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4z" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="10" cy="15" r="2.5"/></svg>',

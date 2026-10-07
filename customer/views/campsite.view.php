@@ -46,6 +46,8 @@
         $siteLabel = ($hasPool || $hasTent) ? 'Site' : 'Site Only';
         # check kalau campsite ni ada image, calling function htmlspecialchars() untuk bina inline style background image, kalau takde style kosong je
         $mediaStyle = $campsite['image'] ? ' style="background-image:url(\'' . htmlspecialchars($campsite['image']) . '\');background-size:cover;background-position:center;"' : '';
+        $campsiteRatePeriods = $ratePeriodsByAccommodation[(int) $campsite['accommodation_id']] ?? [];
+        $campsiteRate = accommodation_rate_for_date($campsite, $rateDate, $campsiteRatePeriods);
       ?>
       <article class="package-card">
         <div class="package-media"<?= $mediaStyle ?>>
@@ -68,9 +70,15 @@
           </div>
           <hr class="package-divider">
           <div class="package-footer">
-            <span class="package-price">RM <?= number_format((float) $campsite['price'], 0) ?></span>
+            <div class="package-rates">
+              <strong class="package-rates-heading">Rate for <?= htmlspecialchars($rateDate->format('D, d M Y')) ?></strong>
+              <div class="package-rate-row">
+                <span><?= htmlspecialchars($campsiteRate['label']) ?></span>
+                <strong>RM <?= number_format($campsiteRate['price'], 0) ?> / night</strong>
+              </div>
+            </div>
             <div class="package-actions">
-              <a href="detail.php?id=<?= (int) $campsite['accommodation_id'] ?>" class="btn view-detail">View Detail</a>
+              <a href="detail.php?id=<?= (int) $campsite['accommodation_id'] ?>&amp;rate_date=<?= urlencode($rateDate->format('Y-m-d')) . $searchQuery ?>" class="btn view-detail">View Detail</a>
               <?php # calling function urlencode() untuk bina link book now dgn nama accommodation + search query yg dah disimpan tadi ?>
               <a href="bookingform.php?accommodation=<?= urlencode($campsite['accommodation_name']) . $searchQuery ?>" class="btn book-now">Book now</a>
             </div>

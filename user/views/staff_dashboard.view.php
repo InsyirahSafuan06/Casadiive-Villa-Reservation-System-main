@@ -13,7 +13,7 @@
   <div class="manager-shell">
     <aside class="manager-sidebar">
       <a href="staff_dashboard.php" class="manager-brand">
-        <span>Casadive Villa</span>
+        <img src="../assets/images/logo.png" alt="Casadive Villa" class="manager-brand-logo">
         <small>Booking &amp; Management System</small>
       </a>
       <nav class="manager-nav" aria-label="Staff navigation">

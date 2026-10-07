@@ -204,6 +204,9 @@ $items = [];
 $existingReview = null;
 # assign null ke $latestPaymentStatus sbb belum tahu status payment terkini
 $latestPaymentStatus = null;
+$latestPaymentReceipt = null;
+$latestPaymentReceiptUrl = null;
+$latestPaymentReceiptType = null;
 # assign 0.0 ke $amountPaid untuk default jumlah dibayar
 $amountPaid = 0.0;
 
@@ -213,24 +216,35 @@ if ($lookupAttempted) {
     if ($phone === '') {
         $lookupError = 'Please enter the phone number used to book.';
     } else {
-        # calling method prepare() dari object $pdo that assign to variable name $stmt untuk sediakan query cari booking terkini ikut phone
-        $stmt = $pdo->prepare(
-            'SELECT b.*, c.full_name, c.phone, c.plate_num
-             FROM booking b
-             JOIN customer c ON c.customer_id = b.customer_id
-             WHERE c.phone = :phone
-             ORDER BY b.booking_id DESC
-             LIMIT 1'
-        );
-        # calling method execute() dari object $stmt untuk jalankan query cari booking
-        $stmt->execute(['phone' => $phone]);
-        # calling method fetch() dari object $stmt that assign to variable name $booking untuk ambil 1 row booking terkini
-        $booking = $stmt->fetch();
+        $requestedRef = $ref !== '' ? filter_var($ref, FILTER_VALIDATE_INT) : null;
+        if ($ref !== '' && (!$requestedRef || $requestedRef < 1)) {
+            $lookupError = 'Invalid booking reference.';
+        } else {
+            $bookingQuery = $requestedRef
+                ? 'SELECT b.*, c.full_name, c.phone, c.plate_num
+                   FROM booking b
+                   JOIN customer c ON c.customer_id = b.customer_id
+                   WHERE b.booking_id = :ref AND c.phone = :phone
+                   LIMIT 1'
+                : 'SELECT b.*, c.full_name, c.phone, c.plate_num
+                   FROM booking b
+                   JOIN customer c ON c.customer_id = b.customer_id
+                   WHERE c.phone = :phone
+                   ORDER BY b.booking_id DESC
+                   LIMIT 1';
+            $stmt = $pdo->prepare($bookingQuery);
+            $params = ['phone' => $phone];
+            if ($requestedRef) {
+                $params['ref'] = $requestedRef;
+            }
+            $stmt->execute($params);
+            $booking = $stmt->fetch();
+        }
 
         # check takde booking jumpa untuk phone ni
-        if (!$booking) {
+        if (!$lookupError && !$booking) {
             $lookupError = 'No booking found for that phone number. Please double-check and try again.';
-        } else {
+        } elseif ($booking) {
             # calling method prepare() dari object $pdo that assign to variable name $stmt untuk sediakan query ambil item accommodation dalam booking ni
             $stmt = $pdo->prepare(
                 'SELECT bi.quantity, bi.price, a.accommodation_name, a.accommodation_type,
@@ -252,11 +266,25 @@ if ($lookupAttempted) {
             $existingReview = $stmt->fetch() ?: null;
 
             # calling method prepare() dari object $pdo that assign to variable name $stmt untuk sediakan query ambil status payment terkini
-            $stmt = $pdo->prepare('SELECT payment_status FROM payment WHERE booking_id = :id ORDER BY payment_id DESC LIMIT 1');
+            $stmt = $pdo->prepare('SELECT payment_status, receipt FROM payment WHERE booking_id = :id ORDER BY payment_id DESC LIMIT 1');
             # calling method execute() dari object $stmt untuk jalankan query ambil status payment
             $stmt->execute(['id' => $booking['booking_id']]);
             # calling method fetchColumn() dari object $stmt that assign to variable name $latestPaymentStatus untuk ambil status payment terkini
-            $latestPaymentStatus = $stmt->fetchColumn() ?: null;
+            $latestPayment = $stmt->fetch();
+            $latestPaymentStatus = $latestPayment['payment_status'] ?? null;
+            $receiptPath = $latestPayment['receipt'] ?? '';
+            if (
+                $latestPaymentStatus === 'failed'
+                && str_starts_with($receiptPath, 'assets/uploads/payments/')
+                && is_file(__DIR__ . '/../' . $receiptPath)
+            ) {
+                $receiptExtension = strtolower(pathinfo($receiptPath, PATHINFO_EXTENSION));
+                if (in_array($receiptExtension, ['jpg', 'jpeg', 'png', 'webp', 'pdf'], true)) {
+                    $latestPaymentReceipt = $receiptPath;
+                    $latestPaymentReceiptUrl = '../' . $receiptPath;
+                    $latestPaymentReceiptType = $receiptExtension === 'pdf' ? 'pdf' : 'image';
+                }
+            }
 
             # calling method prepare() dari object $pdo that assign to variable name $stmt untuk sediakan query ambil jumlah deposit yang dah dibayar
             $stmt = $pdo->prepare("SELECT deposit_paid FROM payment WHERE booking_id = :id AND payment_status = 'paid' ORDER BY payment_id DESC LIMIT 1");

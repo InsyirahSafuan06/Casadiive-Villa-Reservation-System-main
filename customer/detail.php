@@ -26,8 +26,13 @@ if ($accommodation && !empty($accommodation['features'])) {
     $features = array_filter(array_map('trim', explode("\n", $accommodation['features'])));
 }
 $ratePeriods = [];
+$rateDate = resolve_accommodation_rate_date(
+    trim((string) ($_GET['rate_date'] ?? $_GET['check_in'] ?? ''))
+);
+$displayRate = null;
 if ($accommodation) {
     $ratePeriods = fetch_accommodation_rate_periods($pdo, (int) $accommodation['accommodation_id'], true);
+    $displayRate = accommodation_rate_for_date($accommodation, $rateDate, $ratePeriods);
 }
 
 # assign value '../' ke variable $base untuk set path relative balik ke root folder

@@ -64,6 +64,12 @@ if ($searchActive) {
     )->fetchAll();
 }
 
+$ratePeriodsByAccommodation = [];
+foreach (fetch_accommodation_rate_periods($pdo, upcomingOnly: true) as $ratePeriod) {
+    $ratePeriodsByAccommodation[(int) $ratePeriod['accommodation_id']][] = $ratePeriod;
+}
+$rateDate = resolve_accommodation_rate_date($searchCheckIn !== '' ? $searchCheckIn : null);
+
 # assign array svg icon ke $icons untuk paparan ikon kat page campsite
 $icons = [
     'site' => '<svg viewBox="0 0 32 32"><path d="M6 14a5 5 0 0 1 10 0v2H6z"/><rect x="4" y="16" width="24" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="2"/></svg>',

@@ -54,41 +54,12 @@
           </div>
           <?php endif; ?>
 
-          <h2 class="detail-heading">Rates (2 days, 1 night)</h2>
+          <h2 class="detail-heading">Rate for <?= htmlspecialchars($rateDate->format('D, d M Y')) ?></h2>
           <div class="rates-card">
             <div class="rates-row">
-              <span class="rates-label">Weekday</span>
-              <span class="rates-value">RM <?= number_format((float) $accommodation['price'], 0) ?></span>
+              <span class="rates-label"><?= htmlspecialchars($displayRate['label']) ?></span>
+              <span class="rates-value">RM <?= number_format($displayRate['price'], 0) ?> / night</span>
             </div>
-            <?php # check kalau ada price_weekend punya rate, baru papar row weekend ?>
-            <?php if ($accommodation['price_weekend'] !== null): ?>
-            <div class="rates-row">
-              <span class="rates-label">Weekend</span>
-              <span class="rates-value">RM <?= number_format((float) $accommodation['price_weekend'], 0) ?></span>
-            </div>
-            <?php endif; ?>
-            <?php # check kalau ada price_holiday punya rate, baru papar row public holiday ?>
-            <?php if ($accommodation['price_holiday'] !== null): ?>
-            <div class="rates-row">
-              <span class="rates-label">Public holiday / school holiday</span>
-              <span class="rates-value">RM <?= number_format((float) $accommodation['price_holiday'], 0) ?></span>
-            </div>
-            <?php endif; ?>
-            <?php if (($accommodation['price_seasonal'] ?? null) !== null): ?>
-            <div class="rates-row">
-              <span class="rates-label">Ramadan / rainy season</span>
-              <span class="rates-value">RM <?= number_format((float) $accommodation['price_seasonal'], 0) ?></span>
-            </div>
-            <?php endif; ?>
-            <?php foreach ($ratePeriods as $ratePeriod): ?>
-            <div class="rates-row">
-              <span class="rates-label">
-                <?= htmlspecialchars($ratePeriod['label']) ?>
-                <small><?= date('d M Y', strtotime($ratePeriod['start_date'])) ?> - <?= date('d M Y', strtotime($ratePeriod['end_date'])) ?></small>
-              </span>
-              <span class="rates-value">RM <?= number_format((float) $ratePeriod['price'], 0) ?></span>
-            </div>
-            <?php endforeach; ?>
           </div>
 
           <?php # check kalau status accommodation bukan 'available', papar mesej tak boleh book ?>

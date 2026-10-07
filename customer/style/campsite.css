@@ -244,20 +244,37 @@
   }
   .package-footer{
     display:flex;
-    align-items:center;
+    align-items:flex-start;
     justify-content:space-between;
+    gap:18px;
   }
-  .package-price{
-    font-family:'Poppins', sans-serif;
-    font-weight:500;
-    font-size: 24px;
-    color: var(--brown-price);
+  .package-rates{
+    display:flex;
+    flex:1;
+    flex-direction:column;
+    gap:8px;
+    font-family:'Raleway', sans-serif;
   }
+  .package-rates-heading{
+    color:var(--brown);
+    font-size:15px;
+    margin-bottom:2px;
+  }
+  .package-rate-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:14px;
+    color:#454545;
+    font-size:14px;
+    line-height:1.45;
+  }
+  .package-rate-row strong{ color:var(--brown-price); white-space:nowrap; }
   .package-actions{
     display:flex;
     align-items:center;
-    gap: 10px;
-    flex-wrap: wrap;
+    gap:10px;
+    flex-wrap:wrap;
   }
   .book-now{
     background: var(--orange-deep);
@@ -388,6 +405,7 @@
     .nav-links{ display:none; }
     .navbar .container{ height:80px; }
     .package-body{ padding: 22px 20px; }
+    .package-footer{ flex-direction:column; }
     .package-features{ gap:16px; }
     .feature span{ font-size:16px; }
     .footer-grid{ grid-template-columns: 1fr; }
